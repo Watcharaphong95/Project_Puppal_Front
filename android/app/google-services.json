@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "97928966779",
+    "project_id": "puppal-image",
+    "storage_bucket": "puppal-image.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:97928966779:android:e652748581c8b7fa18a8de",
+        "android_client_info": {
+          "package_name": "com.example.puppal_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnknFPx_t37vKFMz-bC4K86Bzg8jZIB00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

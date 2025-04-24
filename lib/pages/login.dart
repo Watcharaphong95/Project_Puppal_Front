@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'อีเมล์',
+                                'อีเมล',
                                 style: TextStyle(fontSize: 20),
                               ),
                               Material(

@@ -8,8 +8,13 @@ class RegisterclinicPage extends StatefulWidget {
 }
 
 class _RegisterclinicPageState extends State<RegisterclinicPage> {
+  late double screenWidth;
+  late double screenHeight;
+
   @override
   Widget build(BuildContext context) {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Container(),
     );
