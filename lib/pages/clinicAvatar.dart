@@ -1,27 +1,25 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/controller/registerGeneralCtl.dart';
-import 'package:puppal_application/model/generalPost.dart';
+import 'package:puppal_application/controller/registerClinicCtl.dart';
+import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/login.dart';
-import 'package:puppal_application/pages/registerUser.dart';
-import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 
-class UseravatarPage extends StatefulWidget {
-  const UseravatarPage({super.key});
+class ClinicavatarPage extends StatefulWidget {
+  const ClinicavatarPage({super.key});
 
   @override
-  State<UseravatarPage> createState() => _UseravatarPageState();
+  State<ClinicavatarPage> createState() => _ClinicavatarPageState();
 }
 
-class _UseravatarPageState extends State<UseravatarPage> {
+class _ClinicavatarPageState extends State<ClinicavatarPage> {
   late double screenWidth;
   late double screenHeight;
 
@@ -29,7 +27,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
   File? _imageFile;
 
-  final controller = Get.find<RegisterGeneralCtl>();
+  final controller = Get.find<registerClinicCtl>();
 
   @override
   void initState() {
@@ -68,13 +66,13 @@ class _UseravatarPageState extends State<UseravatarPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('อัพโหลดรูปโปรไฟล์',
+                const Text('อัพโหลดรูปโปรไฟล์คลินิก',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
                 const Text(
-                  'เพิ่มรูปโปรไฟล์ของคุณ',
+                  'เพิ่มรูปโปรไฟล์คลินิกของคุณ',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
@@ -134,7 +132,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('general-image') // Use your actual bucket name here
+          .from('clinic-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -145,7 +143,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('general-image')
+          .from('clinic-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");
@@ -162,12 +160,13 @@ class _UseravatarPageState extends State<UseravatarPage> {
     showLoadingDialog(context, message: "กำลังโหลด...");
     await userCheck();
 
-    GeneralPost req2 = GeneralPost(
+    ClinicPost req2 = ClinicPost(
       userEmail: controller.email.value,
-      username: controller.username.value,
       name: controller.name.value,
-      surname: controller.surname.value,
       phone: controller.phone.value,
+      open: controller.open.value,
+      close: controller.close.value,
+      numPerTime: controller.numPerTime.value,
       address: controller.address.value,
       lat: controller.lat.value,
       lng: controller.lng.value,
@@ -175,9 +174,9 @@ class _UseravatarPageState extends State<UseravatarPage> {
     );
 
     var res = await http.post(
-      Uri.parse("$url/general"),
+      Uri.parse("$url/clinic"),
       headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: generalPostToJson(req2),
+      body: clinicPostToJson(req2),
     );
     log(res.statusCode.toString());
 
@@ -204,6 +203,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                // ที่เปลี่ยนหน้า
                 Get.to(() => IndexPage());
               },
               style: ElevatedButton.styleFrom(
@@ -258,8 +258,8 @@ class _UseravatarPageState extends State<UseravatarPage> {
     UserPost req = UserPost(
       email: controller.email.value,
       password: controller.password.value,
-      general: 1,
-      clinic: null,
+      general: null,
+      clinic: 1,
     );
 
     var res = await http.post(

@@ -1,7 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:puppal_application/controller/registerUserCtl.dart';
+import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/controller/registerGeneralCtl.dart';
+import 'package:puppal_application/pages/index.dart';
 import 'package:puppal_application/pages/userLocationSelect.dart';
+import 'package:http/http.dart' as http;
 
 class RegisteruserPage extends StatefulWidget {
   const RegisteruserPage({super.key});
@@ -17,7 +22,9 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  final controller = Get.find<Registeruserctl>();
+  String url = "";
+
+  final controller = Get.find<RegisterGeneralCtl>();
 
   TextEditingController usernameCtl = TextEditingController();
   TextEditingController nameCtl = TextEditingController();
@@ -29,6 +36,14 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
   TextEditingController addressCtl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
@@ -36,7 +51,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       appBar: AppBar(
         title: Text(
           'สมัครสมาชิกผู้ใช้ทั่วไป',
-          textAlign: TextAlign.center,
         ),
         backgroundColor: Color(0xFF916B44),
       ),
@@ -314,7 +328,7 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     );
   }
 
-  void userRegisterNextButton() {
+  Future<void> userRegisterNextButton() async {
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -344,8 +358,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF8B5E3C),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,
         borderRadius: 12,
         margin: const EdgeInsets.all(16),
@@ -361,8 +375,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านไม่ตรงกัน',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF8B5E3C),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,
         borderRadius: 12,
         margin: const EdgeInsets.all(16),
@@ -381,6 +395,27 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     controller.phone.value = phoneCtl.text;
     controller.address.value = addressCtl.text;
 
-    Get.to(() => UserlocationselectPage());
+    // var res = await http.get(Uri.parse("$url/general/${emailCtl.text}"));
+
+    var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
+
+    if (res.statusCode == 200) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นคลินิกแล้วต้องการเปลี่ยนไปยังผู้ใช้ทั่วไป',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    } else {
+      Get.to(() => UserlocationselectPage());
+    }
+    log(res.body);
   }
 }

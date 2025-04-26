@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-class Registeruserctl extends GetxController {
+class RegisterGeneralCtl extends GetxController {
   var username = ''.obs;
   var name = ''.obs;
   var surname = ''.obs;
