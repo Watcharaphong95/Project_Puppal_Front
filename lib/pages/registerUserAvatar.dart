@@ -1,25 +1,27 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/model/clinicPost.dart';
+import 'package:puppal_application/controller/registerGeneralCtl.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/index.dart';
+import 'package:puppal_application/pages/login.dart';
+import 'package:puppal_application/pages/registerUser.dart';
+import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 
-class ClinicavatarPage extends StatefulWidget {
-  const ClinicavatarPage({super.key});
+class UseravatarPage extends StatefulWidget {
+  const UseravatarPage({super.key});
 
   @override
-  State<ClinicavatarPage> createState() => _ClinicavatarPageState();
+  State<UseravatarPage> createState() => _UseravatarPageState();
 }
 
-class _ClinicavatarPageState extends State<ClinicavatarPage> {
+class _UseravatarPageState extends State<UseravatarPage> {
   late double screenWidth;
   late double screenHeight;
 
@@ -27,7 +29,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
   File? _imageFile;
 
-  final controller = Get.find<registerClinicCtl>();
+  final controller = Get.find<RegisterGeneralCtl>();
 
   @override
   void initState() {
@@ -66,13 +68,13 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('อัพโหลดรูปโปรไฟล์คลินิก',
+                const Text('อัพโหลดรูปโปรไฟล์',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
                 const Text(
-                  'เพิ่มรูปโปรไฟล์คลินิกของคุณ',
+                  'เพิ่มรูปโปรไฟล์ของคุณ',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
@@ -132,7 +134,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('clinic-image') // Use your actual bucket name here
+          .from('general-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -143,7 +145,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('clinic-image')
+          .from('general-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");
@@ -160,13 +162,12 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
     showLoadingDialog(context, message: "กำลังโหลด...");
     await userCheck();
 
-    ClinicPost req2 = ClinicPost(
+    GeneralPost req2 = GeneralPost(
       userEmail: controller.email.value,
+      username: controller.username.value,
       name: controller.name.value,
+      surname: controller.surname.value,
       phone: controller.phone.value,
-      open: controller.open.value,
-      close: controller.close.value,
-      numPerTime: controller.numPerTime.value,
       address: controller.address.value,
       lat: controller.lat.value,
       lng: controller.lng.value,
@@ -174,9 +175,9 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
     );
 
     var res = await http.post(
-      Uri.parse("$url/clinic"),
+      Uri.parse("$url/general"),
       headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: clinicPostToJson(req2),
+      body: generalPostToJson(req2),
     );
     log(res.statusCode.toString());
 
@@ -184,6 +185,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
     if (res.statusCode == 201) {
       showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFFFFF3F3),
@@ -203,7 +205,6 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                // ที่เปลี่ยนหน้า
                 Get.to(() => IndexPage());
               },
               style: ElevatedButton.styleFrom(
@@ -258,8 +259,8 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
     UserPost req = UserPost(
       email: controller.email.value,
       password: controller.password.value,
-      general: null,
-      clinic: 1,
+      general: 1,
+      clinic: null,
     );
 
     var res = await http.post(

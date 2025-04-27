@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
-import 'package:puppal_application/pages/userAvatar.dart';
+import 'package:puppal_application/pages/registerUserAvatar.dart';
 
 class UserlocationselectPage extends StatefulWidget {
   const UserlocationselectPage({super.key});
@@ -188,7 +188,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
       log('Selected LatLng: ${selectedLatLng!.latitude.toString()}, ${selectedLatLng!.longitude.toString()}');
 
       // ไปที่หน้าถัดไป
-      // Get.to(() => UseravatarPage());
+      Get.to(() => UseravatarPage());
     } else {
       // ถ้า selectedLatLng เป็น null ให้แสดง Snackbar
       Get.snackbar(

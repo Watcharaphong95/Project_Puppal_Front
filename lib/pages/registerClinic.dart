@@ -6,7 +6,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:http/http.dart' as http;
-import 'package:puppal_application/pages/clinicLocationSelect.dart';
+import 'package:puppal_application/pages/registerClinicLocationSelect.dart';
 
 class RegisterclinicPage extends StatefulWidget {
   const RegisterclinicPage({super.key});
@@ -414,6 +414,24 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
+    // Email format check
+    RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกอีเมลที่ถูกต้อง',
         snackPosition: SnackPosition.TOP,
         backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,

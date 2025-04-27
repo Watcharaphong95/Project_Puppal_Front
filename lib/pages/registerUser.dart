@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/userLocationSelect.dart';
+import 'package:puppal_application/pages/registerUserLocationSelect.dart';
 import 'package:http/http.dart' as http;
 
 class RegisteruserPage extends StatefulWidget {
@@ -342,6 +342,24 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
         'กรุณากรอกข้อมูลให้ครบถ้วน',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFF8B5E3C),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
+    // Email format check
+    RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกอีเมลที่ถูกต้อง',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,
         borderRadius: 12,
         margin: const EdgeInsets.all(16),
