@@ -4,39 +4,30 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/model/clinicPost.dart';
-import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/registerClinicDoctor.dart';
+import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/pages/register/registerClinic/registerClinicDoctor.dart';
+import 'package:puppal_application/pages/register/registerClinic/doctor/registerDocter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 
-class ClinicavatarPage extends StatefulWidget {
-  const ClinicavatarPage({super.key});
+class RegisterdoctoravatarPage extends StatefulWidget {
+  const RegisterdoctoravatarPage({super.key});
 
   @override
-  State<ClinicavatarPage> createState() => _ClinicavatarPageState();
+  State<RegisterdoctoravatarPage> createState() =>
+      _RegisterdoctoravatarPageState();
 }
 
-class _ClinicavatarPageState extends State<ClinicavatarPage> {
+class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
   late double screenWidth;
   late double screenHeight;
 
-  String url = "";
-
   File? _imageFile;
 
-  final controller = Get.find<registerClinicCtl>();
-
-  @override
-  void initState() {
-    super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-    });
-  }
+  final controller = Get.find<registerDoctorCtl>();
+  final clinic = Get.find<registerClinicCtl>();
+  final doctorList = Get.find<doctorDataList>();
 
   @override
   Widget build(BuildContext context) {
@@ -67,13 +58,13 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('อัพโหลดรูปโปรไฟล์คลินิก',
+                const Text('อัพโหลดรูปคุณหมอ',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
                 const Text(
-                  'เพิ่มรูปโปรไฟล์คลินิกของคุณ',
+                  'เพิ่มรูปคุณหมอ',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
@@ -87,9 +78,9 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
               ),
               onPressed: () {
                 if (_imageFile == null) {
-                  showAlert(
+                  showAlertConfirm(
                     context: context,
-                    title: 'ไม่มีรูปโปรไฟล์',
+                    title: 'ไม่มีรูปคุณหมอ',
                     message: 'กรุณาเลือกรูปก่อนทำการยืนยัน',
                   );
                   return;
@@ -97,13 +88,13 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
                 showAlert(
                   context: context,
-                  title: 'ยืนยันรูปโปรไฟล์',
-                  message: 'คุณต้องการยืนยันรูปโปรไฟล์นี้หรือไม่?',
+                  title: 'ยืนยันรูปคุณหมอ',
+                  message: 'คุณต้องการยืนยันรูปคุณหมอนี้หรือไม่?',
                   onConfirm: confirmAvatarButton,
                 );
               },
               child: const Text(
-                'ยืนยันรูปโปรไฟล์',
+                'ยืนยันรูปคุณหมอ',
                 style: TextStyle(
                     fontSize: 20,
                     color: Colors.white,
@@ -117,6 +108,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
   }
 
   void confirmAvatarButton() async {
+    showLoadingDialog(context, message: "กำลังโหลด...");
     await Supabase.instance.client.auth.signInWithPassword(
       email: '65011212077@msu.ac.th',
       password: '1234',
@@ -133,7 +125,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('clinic-image') // Use your actual bucket name here
+          .from('doctor-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -144,137 +136,28 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('clinic-image')
+          .from('doctor-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");
       log("Public image URL: $publicUrl");
-      controller.imageUrl.value = publicUrl;
+      controller.image.value = publicUrl;
 
-      await insertToDB();
+      DoctorPost newDoctor = DoctorPost(
+        userEmail: clinic.email.value,
+        name: controller.name.value,
+        surname: controller.surname.value,
+        careerNo: controller.careerNo.value,
+        special: controller.special.value,
+        image: controller.image.value,
+      );
+
+      doctorList.addDoctor(newDoctor);
+
+      Get.to(() => RegisterclinicdoctorPage());
     } catch (e) {
       log("Error during upload: $e");
     }
-  }
-
-  Future<void> insertToDB() async {
-    showLoadingDialog(context, message: "กำลังโหลด...");
-    // await userCheck();
-
-    // await clinicPost();
-
-    Get.to(() => RegisterclinicdoctorPage());
-  }
-
-  Future<void> clinicPost() async {
-    ClinicPost req2 = ClinicPost(
-      userEmail: controller.email.value,
-      name: controller.name.value,
-      phone: controller.phone.value,
-      open: controller.open.value,
-      close: controller.close.value,
-      numPerTime: controller.numPerTime.value,
-      address: controller.address.value,
-      lat: controller.lat.value,
-      lng: controller.lng.value,
-      image: controller.imageUrl.value,
-    );
-
-    var res = await http.post(
-      Uri.parse("$url/clinic"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: clinicPostToJson(req2),
-    );
-    log(res.statusCode.toString());
-
-    Get.back();
-
-    if (res.statusCode == 201) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "สมัครสมาชิกสำเร็จ",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                // ที่เปลี่ยนหน้า
-                Get.to(() => IndexPage());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "เกิดข้อผิดพลาด",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> userCheck() async {
-    UserPost req = UserPost(
-      email: controller.email.value,
-      password: controller.password.value,
-      general: null,
-      clinic: 1,
-    );
-
-    var res = await http.post(
-      Uri.parse("$url/user"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: userPostToJson(req),
-    );
-    log(res.statusCode.toString());
   }
 
   Future<void> _pickImage() async {
@@ -370,6 +253,47 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
                 TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
             child: const Text('ยกเลิก'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onConfirm != null) onConfirm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF795548),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showAlertConfirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFFF3F3),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF795548),
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.black87),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);

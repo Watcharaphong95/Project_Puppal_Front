@@ -1,27 +1,26 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/controller/registerGeneralCtl.dart';
-import 'package:puppal_application/model/generalPost.dart';
+import 'package:puppal_application/controller/registerClinicCtl.dart';
+import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/login.dart';
-import 'package:puppal_application/pages/registerUser.dart';
-import 'package:supabase/supabase.dart';
+import 'package:puppal_application/pages/register/registerClinic/registerClinicDoctor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 
-class UseravatarPage extends StatefulWidget {
-  const UseravatarPage({super.key});
+class ClinicavatarPage extends StatefulWidget {
+  const ClinicavatarPage({super.key});
 
   @override
-  State<UseravatarPage> createState() => _UseravatarPageState();
+  State<ClinicavatarPage> createState() => _ClinicavatarPageState();
 }
 
-class _UseravatarPageState extends State<UseravatarPage> {
+class _ClinicavatarPageState extends State<ClinicavatarPage> {
   late double screenWidth;
   late double screenHeight;
 
@@ -29,7 +28,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
   File? _imageFile;
 
-  final controller = Get.find<RegisterGeneralCtl>();
+  final controller = Get.find<registerClinicCtl>();
 
   @override
   void initState() {
@@ -68,13 +67,13 @@ class _UseravatarPageState extends State<UseravatarPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('อัพโหลดรูปโปรไฟล์',
+                const Text('อัพโหลดรูปโปรไฟล์คลินิก',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
                 const Text(
-                  'เพิ่มรูปโปรไฟล์ของคุณ',
+                  'เพิ่มรูปโปรไฟล์คลินิกของคุณ',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
@@ -88,7 +87,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
               ),
               onPressed: () {
                 if (_imageFile == null) {
-                  showAlert(
+                  showAlertConfirm(
                     context: context,
                     title: 'ไม่มีรูปโปรไฟล์',
                     message: 'กรุณาเลือกรูปก่อนทำการยืนยัน',
@@ -118,6 +117,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
   }
 
   void confirmAvatarButton() async {
+    showLoadingDialog(context, message: "กำลังโหลด...");
     await Supabase.instance.client.auth.signInWithPassword(
       email: '65011212077@msu.ac.th',
       password: '1234',
@@ -134,7 +134,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('general-image') // Use your actual bucket name here
+          .from('clinic-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -145,130 +145,22 @@ class _UseravatarPageState extends State<UseravatarPage> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('general-image')
+          .from('clinic-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");
       log("Public image URL: $publicUrl");
       controller.imageUrl.value = publicUrl;
 
-      await insertToDB();
+      Get.to(() => RegisterclinicdoctorPage());
+      // await insertToDB();
     } catch (e) {
       log("Error during upload: $e");
     }
   }
 
   Future<void> insertToDB() async {
-    showLoadingDialog(context, message: "กำลังโหลด...");
-    await userCheck();
-
-    GeneralPost req2 = GeneralPost(
-      userEmail: controller.email.value,
-      username: controller.username.value,
-      name: controller.name.value,
-      surname: controller.surname.value,
-      phone: controller.phone.value,
-      address: controller.address.value,
-      lat: controller.lat.value,
-      lng: controller.lng.value,
-      image: controller.imageUrl.value,
-    );
-
-    var res = await http.post(
-      Uri.parse("$url/general"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: generalPostToJson(req2),
-    );
-    log(res.statusCode.toString());
-
-    Get.back();
-
-    if (res.statusCode == 201) {
-      showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "สมัครสมาชิกสำเร็จ",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.to(() => IndexPage());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "เกิดข้อผิดพลาด",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> userCheck() async {
-    UserPost req = UserPost(
-      email: controller.email.value,
-      password: controller.password.value,
-      general: 1,
-      clinic: null,
-    );
-
-    var res = await http.post(
-      Uri.parse("$url/user"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: userPostToJson(req),
-    );
-    log(res.statusCode.toString());
+    Get.to(() => RegisterclinicdoctorPage());
   }
 
   Future<void> _pickImage() async {
@@ -364,6 +256,47 @@ class _UseravatarPageState extends State<UseravatarPage> {
                 TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
             child: const Text('ยกเลิก'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onConfirm != null) onConfirm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF795548),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showAlertConfirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFFF3F3),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF795548),
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.black87),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);

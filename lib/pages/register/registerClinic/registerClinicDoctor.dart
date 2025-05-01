@@ -10,7 +10,7 @@ import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/registerDocter.dart';
+import 'package:puppal_application/pages/register/registerClinic/doctor/registerDocter.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterclinicdoctorPage extends StatefulWidget {
@@ -211,7 +211,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
             ),
           ),
           content: Text(
-            "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
+            "สมัครสมาชิกคลินิกสำเร็จแล้ว",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:

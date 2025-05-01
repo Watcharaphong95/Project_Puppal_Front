@@ -4,22 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/pages/registerClinicAvatar.dart';
+import 'package:puppal_application/controller/registerGeneralCtl.dart';
+import 'package:puppal_application/pages/register/registerGeneral/registerUserAvatar.dart';
 
-class CliniclocationselectPage extends StatefulWidget {
-  const CliniclocationselectPage({super.key});
+class UserlocationselectPage extends StatefulWidget {
+  const UserlocationselectPage({super.key});
 
   @override
-  State<CliniclocationselectPage> createState() =>
-      _CliniclocationselectPageState();
+  State<UserlocationselectPage> createState() => _UserlocationselectPageState();
 }
 
-class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
+class _UserlocationselectPageState extends State<UserlocationselectPage> {
   late double screenWidth;
   late double screenHeight;
 
-  final controller = Get.find<registerClinicCtl>();
+  final controller = Get.find<RegisterGeneralCtl>();
 
   LatLng? selectedLatLng;
   GoogleMapController? mapController;
@@ -48,6 +47,7 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
           title: Text('เลือกปักหมุดที่อยู่'),
@@ -180,14 +180,17 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
   // Function to confirm location //
 
   void onConfirmLocation() {
+    // ตรวจสอบว่า selectedLatLng ไม่เป็น null ก่อน
     if (selectedLatLng != null) {
       controller.lat.value = selectedLatLng!.latitude.toString();
       controller.lng.value = selectedLatLng!.longitude.toString();
 
       log('Selected LatLng: ${selectedLatLng!.latitude.toString()}, ${selectedLatLng!.longitude.toString()}');
 
-      Get.to(() => ClinicavatarPage());
+      // ไปที่หน้าถัดไป
+      Get.to(() => UseravatarPage());
     } else {
+      // ถ้า selectedLatLng เป็น null ให้แสดง Snackbar
       Get.snackbar(
         'เลือกตำแหน่ง',
         'กรุณาเลือกตำแหน่งก่อน',
@@ -201,6 +204,7 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
             EdgeInsets.symmetric(horizontal: 20, vertical: 12), // ระยะห่างภายใน
         duration: Duration(seconds: 2), // ระยะเวลาแสดง
       );
+      log('Selected LatLng is null. Please select a valid location.');
     }
   }
 

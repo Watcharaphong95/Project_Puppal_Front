@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinicMain.dart';
@@ -28,10 +29,15 @@ class _IndexPageState extends State<IndexPage> {
   bool isLoading = true;
 
   final box = GetStorage();
+  final GoogleSignIn _google = GoogleSignIn(
+    scopes: ['email'],
+  );
 
   @override
   void initState() {
     super.initState();
+    _google.signOut();
+    box.erase();
     init();
   }
 
@@ -189,7 +195,30 @@ class _IndexPageState extends State<IndexPage> {
     Get.to(() => RegistertypePage());
   }
 
-  void googleLoginButton() {}
+  Future<void> googleLoginButton() async {
+    try {
+      final GoogleSignInAccount? account = await _google.signIn();
+      if (account != null) {
+        box.write('email', account.email);
+
+        var res = await http.get(Uri.parse("$url/user/${box.read('email')}"));
+        if (res.statusCode == 200) {
+          final user = userPostFromJson(res.body);
+          if (user.general == 1 && user.clinic == 1) {
+            Get.to(() => LogintypeselectPage());
+          } else if (user.general == 1) {
+            Get.to(() => GeneralmainPage());
+          } else if (user.clinic == 1) {
+            Get.to(() => ClinicmainPage());
+          }
+        } else {
+          Get.to(() => RegistertypePage());
+        }
+      }
+    } catch (error) {
+      log("Google Sign-In error: $error");
+    }
+  }
 
   void loginButton() {
     Get.to(() => LoginPage());

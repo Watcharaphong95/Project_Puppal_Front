@@ -209,6 +209,22 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> loginButton() async {
+    if (emailCtl.text.trim().isEmpty || passwordCtl.text.trim().isEmpty) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกข้อมูลให้ครบถ้วน',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
     UserPost req = UserPost(
         email: emailCtl.text,
         password: passwordCtl.text,

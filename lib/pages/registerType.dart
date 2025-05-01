@@ -2,8 +2,11 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:puppal_application/pages/registerClinic.dart';
-import 'package:puppal_application/pages/registerUser.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/pages/register/registerClinic/registerClinic.dart';
+import 'package:puppal_application/pages/register/registerClinic/registerClinicGoogle.dart';
+import 'package:puppal_application/pages/register/registerGeneral/registerUser.dart';
+import 'package:puppal_application/pages/register/registerGeneral/registerUserGoogle.dart';
 
 class RegistertypePage extends StatefulWidget {
   const RegistertypePage({super.key});
@@ -15,6 +18,8 @@ class RegistertypePage extends StatefulWidget {
 class _RegistertypePageState extends State<RegistertypePage> {
   late double screenWidth;
   late double screenHeight;
+
+  final box = GetStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -101,10 +106,18 @@ class _RegistertypePageState extends State<RegistertypePage> {
   }
 
   void clinicType() {
-    Get.to(() => RegisterclinicPage());
+    if (box.read('email') != '') {
+      Get.to(() => RegisterclinicgooglePage());
+    } else {
+      Get.to(() => RegisterclinicPage());
+    }
   }
 
   void userType() {
-    Get.to(() => RegisteruserPage());
+    if (box.read('email') != '') {
+      Get.to(() => RegisterusergooglePage());
+    } else {
+      Get.to(() => RegisteruserPage());
+    }
   }
 }

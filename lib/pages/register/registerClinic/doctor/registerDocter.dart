@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
-import 'package:puppal_application/pages/registerDoctorAvatar.dart';
+import 'package:puppal_application/pages/register/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterdocterPage extends StatefulWidget {
