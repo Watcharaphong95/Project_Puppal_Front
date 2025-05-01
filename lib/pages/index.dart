@@ -1,7 +1,16 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/userPost.dart';
+import 'package:puppal_application/pages/clinicMain.dart';
+import 'package:puppal_application/pages/generalMain.dart';
 import 'package:puppal_application/pages/login.dart';
+import 'package:puppal_application/pages/loginTypeSelect.dart';
 import 'package:puppal_application/pages/registerType.dart';
+import 'package:http/http.dart' as http;
 
 class IndexPage extends StatefulWidget {
   const IndexPage({super.key});
@@ -14,10 +23,38 @@ class _IndexPageState extends State<IndexPage> {
   late double screenWidth;
   late double screenHeight;
 
+  String url = '';
+
+  bool isLoading = true;
+
+  final box = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    init();
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+    await checkLogout();
+    setState(() => isLoading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
+
+    if (isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -156,5 +193,21 @@ class _IndexPageState extends State<IndexPage> {
 
   void loginButton() {
     Get.to(() => LoginPage());
+  }
+
+  Future<void> checkLogout() async {
+    if (box.read('email') != "") {
+      var res = await http.get(Uri.parse("$url/user/${box.read('email')}"));
+      if (res.statusCode == 200) {
+        final user = userPostFromJson(res.body);
+        if (user.general == 1 && user.clinic == 1) {
+          Get.to(() => LogintypeselectPage());
+        } else if (user.general == 1) {
+          Get.to(() => GeneralmainPage());
+        } else if (user.clinic == 1) {
+          Get.to(() => ClinicmainPage());
+        }
+      }
+    }
   }
 }

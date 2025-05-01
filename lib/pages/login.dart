@@ -1,4 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/userPost.dart';
+import 'package:puppal_application/pages/clinicMain.dart';
+import 'package:puppal_application/pages/generalMain.dart';
+import 'package:puppal_application/pages/loginTypeSelect.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +20,24 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   late double screenWidth;
   late double screenHeight;
+
+  final box = GetStorage();
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  String url = '';
+
+  TextEditingController emailCtl = TextEditingController();
+  TextEditingController passwordCtl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                                 child: SizedBox(
                                   height: screenHeight * 0.055,
                                   child: TextField(
+                                    controller: emailCtl,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.white,
@@ -91,14 +120,18 @@ class _LoginPageState extends State<LoginPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('รหัสผ่าน',
-                                      style: TextStyle(fontSize: 20)),
+                                  Text(
+                                    'รหัสผ่าน',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
                                   Material(
                                     elevation: 5,
                                     borderRadius: BorderRadius.circular(10),
                                     child: SizedBox(
                                       height: screenHeight * 0.055,
                                       child: TextField(
+                                        controller: passwordCtl,
+                                        obscureText: _obscurePassword,
                                         decoration: InputDecoration(
                                           filled: true,
                                           fillColor: Colors.white,
@@ -107,10 +140,21 @@ class _LoginPageState extends State<LoginPage> {
                                                 BorderRadius.circular(10),
                                             borderSide: BorderSide.none,
                                           ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                            ),
+                                            onPressed: () {
+                                              setState(() => _obscurePassword =
+                                                  !_obscurePassword);
+                                            },
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -164,7 +208,45 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void loginButton() {}
+  Future<void> loginButton() async {
+    UserPost req = UserPost(
+        email: emailCtl.text,
+        password: passwordCtl.text,
+        general: null,
+        clinic: null);
+
+    var res = await http.post(
+      Uri.parse("$url/user/login"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: userPostToJson(req),
+    );
+
+    if (res.statusCode == 200) {
+      final user = userPostFromJson(res.body);
+      box.write('email', user.email);
+      if (user.general == 1 && user.clinic == 1) {
+        Get.to(() => LogintypeselectPage());
+      } else if (user.general == 1) {
+        Get.to(() => GeneralmainPage());
+      } else if (user.clinic == 1) {
+        Get.to(() => ClinicmainPage());
+      }
+    } else {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกอีเมลและรหัสผ่านที่ถูกต้อง',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+  }
 
   void forgetPasswordButton() {}
 }

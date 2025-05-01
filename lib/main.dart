@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
@@ -11,6 +12,7 @@ import 'firebase_options.dart';
 import 'package:supabase/supabase.dart';
 
 Future<void> main() async {
+  await GetStorage.init();
   await Supabase.initialize(
       url: 'https://ombydonicueujwrhhcnl.supabase.co',
       anonKey:
@@ -28,7 +30,6 @@ final supabase = Supabase.instance.client;
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
