@@ -4,30 +4,39 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/controller/registerDoctorCtl.dart';
-import 'package:puppal_application/model/doctorPost.dart';
-import 'package:puppal_application/pages/register/registerClinic/registerClinicDoctor.dart';
-import 'package:puppal_application/pages/register/registerClinic/doctor/registerDocter.dart';
+import 'package:puppal_application/model/clinicPost.dart';
+import 'package:puppal_application/model/userPost.dart';
+import 'package:puppal_application/pages/login/index.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicDoctor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
-class RegisterdoctoravatarPage extends StatefulWidget {
-  const RegisterdoctoravatarPage({super.key});
+class ClinicavatarPage extends StatefulWidget {
+  const ClinicavatarPage({super.key});
 
   @override
-  State<RegisterdoctoravatarPage> createState() =>
-      _RegisterdoctoravatarPageState();
+  State<ClinicavatarPage> createState() => _ClinicavatarPageState();
 }
 
-class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
+class _ClinicavatarPageState extends State<ClinicavatarPage> {
   late double screenWidth;
   late double screenHeight;
 
+  String url = "";
+
   File? _imageFile;
 
-  final controller = Get.find<registerDoctorCtl>();
-  final clinic = Get.find<registerClinicCtl>();
-  final doctorList = Get.find<doctorDataList>();
+  final controller = Get.find<registerClinicCtl>();
+
+  @override
+  void initState() {
+    super.initState();
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +67,13 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('อัพโหลดรูปคุณหมอ',
+                const Text('อัพโหลดรูปโปรไฟล์คลินิก',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
                 const Text(
-                  'เพิ่มรูปคุณหมอ',
+                  'เพิ่มรูปโปรไฟล์คลินิกของคุณ',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
@@ -80,7 +89,7 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
                 if (_imageFile == null) {
                   showAlertConfirm(
                     context: context,
-                    title: 'ไม่มีรูปคุณหมอ',
+                    title: 'ไม่มีรูปโปรไฟล์',
                     message: 'กรุณาเลือกรูปก่อนทำการยืนยัน',
                   );
                   return;
@@ -88,13 +97,13 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
 
                 showAlert(
                   context: context,
-                  title: 'ยืนยันรูปคุณหมอ',
-                  message: 'คุณต้องการยืนยันรูปคุณหมอนี้หรือไม่?',
+                  title: 'ยืนยันรูปโปรไฟล์',
+                  message: 'คุณต้องการยืนยันรูปโปรไฟล์นี้หรือไม่?',
                   onConfirm: confirmAvatarButton,
                 );
               },
               child: const Text(
-                'ยืนยันรูปคุณหมอ',
+                'ยืนยันรูปโปรไฟล์',
                 style: TextStyle(
                     fontSize: 20,
                     color: Colors.white,
@@ -125,7 +134,7 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('doctor-image') // Use your actual bucket name here
+          .from('clinic-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -136,28 +145,22 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('doctor-image')
+          .from('clinic-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");
       log("Public image URL: $publicUrl");
-      controller.image.value = publicUrl;
-
-      DoctorPost newDoctor = DoctorPost(
-        userEmail: clinic.email.value,
-        name: controller.name.value,
-        surname: controller.surname.value,
-        careerNo: controller.careerNo.value,
-        special: controller.special.value,
-        image: controller.image.value,
-      );
-
-      doctorList.addDoctor(newDoctor);
+      controller.imageUrl.value = publicUrl;
 
       Get.to(() => RegisterclinicdoctorPage());
+      // await insertToDB();
     } catch (e) {
       log("Error during upload: $e");
     }
+  }
+
+  Future<void> insertToDB() async {
+    Get.to(() => RegisterclinicdoctorPage());
   }
 
   Future<void> _pickImage() async {

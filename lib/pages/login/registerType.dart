@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:puppal_application/pages/register/registerClinic/registerClinic.dart';
-import 'package:puppal_application/pages/register/registerClinic/registerClinicGoogle.dart';
-import 'package:puppal_application/pages/register/registerGeneral/registerUser.dart';
-import 'package:puppal_application/pages/register/registerGeneral/registerUserGoogle.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinic.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUser.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 
 class RegistertypePage extends StatefulWidget {
   const RegistertypePage({super.key});
@@ -20,6 +20,14 @@ class _RegistertypePageState extends State<RegistertypePage> {
   late double screenHeight;
 
   final box = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    if (box.read('email') != '') {
+      log(box.read('email'));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

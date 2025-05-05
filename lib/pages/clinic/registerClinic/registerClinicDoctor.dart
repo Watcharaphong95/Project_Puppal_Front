@@ -9,8 +9,8 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/index.dart';
-import 'package:puppal_application/pages/register/registerClinic/doctor/registerDocter.dart';
+import 'package:puppal_application/pages/login/index.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDocter.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterclinicdoctorPage extends StatefulWidget {

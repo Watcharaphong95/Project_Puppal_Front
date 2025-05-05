@@ -6,7 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:http/http.dart' as http;
-import 'package:puppal_application/pages/register/registerClinic/registerClinicLocationSelect.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicLocationSelect.dart';
 
 class RegisterclinicgooglePage extends StatefulWidget {
   const RegisterclinicgooglePage({super.key});

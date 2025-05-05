@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:puppal_application/pages/clinicMain.dart';
-import 'package:puppal_application/pages/generalMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 
 class LogintypeselectPage extends StatefulWidget {
   const LogintypeselectPage({super.key});

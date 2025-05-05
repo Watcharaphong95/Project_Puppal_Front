@@ -6,7 +6,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:http/http.dart' as http;
-import 'package:puppal_application/pages/register/registerClinic/registerClinicLocationSelect.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicLocationSelect.dart';
 
 class RegisterclinicPage extends StatefulWidget {
   const RegisterclinicPage({super.key});
@@ -69,6 +69,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
         appBar: AppBar(
+          centerTitle: true,
           title: Text(
             'สมัครคลินิก',
           ),

@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
-import 'package:puppal_application/pages/register/registerGeneral/registerUserAvatar.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUserAvatar.dart';
 
 class UserlocationselectPage extends StatefulWidget {
   const UserlocationselectPage({super.key});

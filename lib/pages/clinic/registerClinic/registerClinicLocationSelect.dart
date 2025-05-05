@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/pages/register/registerClinic/registerClinicAvatar.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicAvatar.dart';
 
 class CliniclocationselectPage extends StatefulWidget {
   const CliniclocationselectPage({super.key});

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:puppal_application/pages/index.dart';
+import 'package:puppal_application/pages/login/index.dart';
 
 class ClinicmainPage extends StatefulWidget {
   const ClinicmainPage({super.key});
@@ -85,8 +85,15 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                   leading: Icon(Icons.logout, color: Colors.redAccent),
                   title: Text('ออกจากระบบ'),
                   onTap: () {
-                    box.erase();
-                    Get.to(() => IndexPage());
+                    showAlert(
+                      context: context,
+                      title: 'ออกจากระบบ?',
+                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                      onConfirm: () {
+                        box.erase();
+                        Get.to(() => IndexPage());
+                      },
+                    );
                   },
                 ),
               ],
@@ -95,6 +102,53 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
         ),
       ),
       body: PopScope(canPop: false, child: Container()),
+    );
+  }
+
+  void showAlert({
+    required BuildContext context,
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFFF3F3),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF795548),
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.black87),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style:
+                TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onConfirm != null) onConfirm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF795548),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
     );
   }
 }

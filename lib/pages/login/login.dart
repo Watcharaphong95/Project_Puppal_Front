@@ -6,9 +6,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/clinicMain.dart';
-import 'package:puppal_application/pages/generalMain.dart';
-import 'package:puppal_application/pages/loginTypeSelect.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/login/loginTypeSelect.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

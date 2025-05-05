@@ -6,11 +6,11 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/clinicMain.dart';
-import 'package:puppal_application/pages/generalMain.dart';
-import 'package:puppal_application/pages/login.dart';
-import 'package:puppal_application/pages/loginTypeSelect.dart';
-import 'package:puppal_application/pages/registerType.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/login/login.dart';
+import 'package:puppal_application/pages/login/loginTypeSelect.dart';
+import 'package:puppal_application/pages/login/registerType.dart';
 import 'package:http/http.dart' as http;
 
 class IndexPage extends StatefulWidget {
@@ -36,8 +36,6 @@ class _IndexPageState extends State<IndexPage> {
   @override
   void initState() {
     super.initState();
-    _google.signOut();
-    box.erase();
     init();
   }
 
@@ -196,6 +194,8 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   Future<void> googleLoginButton() async {
+    _google.signOut();
+    box.erase();
     try {
       final GoogleSignInAccount? account = await _google.signIn();
       if (account != null) {
