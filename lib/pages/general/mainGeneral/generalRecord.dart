@@ -126,7 +126,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
                       onConfirm: () {
-                        box.write('email', '');
+                        box.erase();
                         Get.to(() => IndexPage());
                       },
                     );

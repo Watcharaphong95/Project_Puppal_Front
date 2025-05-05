@@ -225,7 +225,7 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   Future<void> checkLogout() async {
-    if (box.read('email') != "") {
+    if (box.read('email') != null && box.read('email') != '') {
       var res = await http.get(Uri.parse("$url/user/${box.read('email')}"));
       if (res.statusCode == 200) {
         final user = userPostFromJson(res.body);

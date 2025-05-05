@@ -342,8 +342,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF8B5E3C),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,
         borderRadius: 12,
         margin: const EdgeInsets.all(16),

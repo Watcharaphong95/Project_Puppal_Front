@@ -148,7 +148,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
                       onConfirm: () {
-                        box.write('email', '');
+                        box.erase();
                         Get.to(() => IndexPage());
                       },
                     );

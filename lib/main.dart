@@ -4,12 +4,14 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'package:supabase/supabase.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   await GetStorage.init();
@@ -21,6 +23,7 @@ Future<void> main() async {
   Get.put(registerClinicCtl());
   Get.put(registerDoctorCtl());
   Get.put(doctorDataList());
+  Get.put(registerDogCtl());
 
   runApp(const MyApp());
 }
@@ -39,6 +42,15 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: GoogleFonts.notoSansThai().fontFamily,
       ),
+      supportedLocales: const [
+        Locale('th', 'TH'), // Thai
+        Locale('en', 'US'), // English fallback
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       home: const IndexPage(),
     );
   }

@@ -24,7 +24,7 @@ class _RegistertypePageState extends State<RegistertypePage> {
   @override
   void initState() {
     super.initState();
-    if (box.read('email') != '') {
+    if (box.read('email') != null) {
       log(box.read('email'));
     }
   }
@@ -114,7 +114,7 @@ class _RegistertypePageState extends State<RegistertypePage> {
   }
 
   void clinicType() {
-    if (box.read('email') != '') {
+    if (box.read('email') != null) {
       Get.to(() => RegisterclinicgooglePage());
     } else {
       Get.to(() => RegisterclinicPage());
@@ -122,7 +122,7 @@ class _RegistertypePageState extends State<RegistertypePage> {
   }
 
   void userType() {
-    if (box.read('email') != '') {
+    if (box.read('email') != null) {
       Get.to(() => RegisterusergooglePage());
     } else {
       Get.to(() => RegisteruserPage());

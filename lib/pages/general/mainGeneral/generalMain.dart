@@ -29,7 +29,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('หน้าหลัก'),
+      ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -140,7 +143,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
                       onConfirm: () {
-                        box.write('email', '');
+                        box.erase();
                         Get.to(() => IndexPage());
                       },
                     );

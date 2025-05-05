@@ -66,6 +66,13 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          'สมัครคลินิก',
+        ),
+        backgroundColor: Color(0xFF916B44),
+      ),
       body: SingleChildScrollView(
           child: Padding(
               padding: const EdgeInsets.all(20.0),
