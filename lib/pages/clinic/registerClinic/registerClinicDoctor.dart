@@ -168,6 +168,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
 
   void registerClinicAndAddDoctor() {
     insertToDB();
+    doctorListController.doctorList.clear();
   }
 
   Future<void> insertToDB() async {

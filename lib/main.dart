@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
+import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,6 +25,8 @@ Future<void> main() async {
   Get.put(registerDoctorCtl());
   Get.put(doctorDataList());
   Get.put(registerDogCtl());
+  Get.put(RegisterDogInjectionCtl());
+  Get.put(injectionRecordList());
 
   runApp(const MyApp());
 }

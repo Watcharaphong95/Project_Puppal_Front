@@ -10,6 +10,7 @@ class registerDogCtl extends GetxController {
   var disease = ''.obs;
   var sterilization = ''.obs;
   var hair = ''.obs;
+  var image = ''.obs;
 
   void setName(String value) {
     name.value = value;
@@ -45,5 +46,9 @@ class registerDogCtl extends GetxController {
 
   void setHair(String value) {
     hair.value = value;
+  }
+
+  void setImage(String value) {
+    image.value = value;
   }
 }

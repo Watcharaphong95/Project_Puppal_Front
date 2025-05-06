@@ -42,7 +42,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
         title: Text(
           'เพิ่มหมอ',
         ),
-        backgroundColor: Color(0xFF916B44),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

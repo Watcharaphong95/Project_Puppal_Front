@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
@@ -19,6 +20,11 @@ class GeneraldogPage extends StatefulWidget {
 
 class _GeneraldogPageState extends State<GeneraldogPage> {
   final box = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

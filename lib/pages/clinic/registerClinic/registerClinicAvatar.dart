@@ -153,14 +153,9 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
       controller.imageUrl.value = publicUrl;
 
       Get.to(() => RegisterclinicdoctorPage());
-      // await insertToDB();
     } catch (e) {
       log("Error during upload: $e");
     }
-  }
-
-  Future<void> insertToDB() async {
-    Get.to(() => RegisterclinicdoctorPage());
   }
 
   Future<void> _pickImage() async {

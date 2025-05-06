@@ -417,9 +417,17 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'ตำหนิ',
-                    style: TextStyle(fontSize: 20),
+                  Row(
+                    children: [
+                      Text(
+                        'ตำหนิ',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text(
+                        '(ถ้ามี)',
+                        style: TextStyle(fontSize: 20, color: Colors.grey),
+                      ),
+                    ],
                   ),
                   Material(
                     elevation: 5,
@@ -598,7 +606,7 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
           )),
       onConfirm: (date) {
         setState(() {
-          String formattedDate = "${date.day}/${date.month}/${date.year}";
+          String formattedDate = "${date.day}-${date.month}-${date.year}";
           birthdayCtl.text = formattedDate;
         });
       },
@@ -611,7 +619,6 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
         genderCtl.text.trim().isEmpty ||
         colorCtl.text.trim().isEmpty ||
         hairCtl.text.trim().isEmpty ||
-        defectCtl.text.trim().isEmpty ||
         birthdayCtl.text.trim().isEmpty ||
         sterilizationCtl.text.trim().isEmpty) {
       Get.snackbar(

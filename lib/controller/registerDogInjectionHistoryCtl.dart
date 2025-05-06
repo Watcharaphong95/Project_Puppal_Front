@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:puppal_application/model/injectionHistoryPost.dart';
+import 'package:puppal_application/model/injectionRecordPost.dart';
 
 class RegisterDogInjectionCtl extends GetxController {
   var clinicName = ''.obs;
@@ -19,14 +19,14 @@ class RegisterDogInjectionCtl extends GetxController {
   }
 }
 
-class injectionHistoryList extends GetxController {
-  var doctorList = <InjectionRecordPost>[].obs;
+class injectionRecordList extends GetxController {
+  var recordList = <InjectionRecordPost>[].obs;
 
-  void addDoctor(InjectionRecordPost data) {
-    doctorList.add(data);
+  void addRecord(InjectionRecordPost data) {
+    recordList.add(data);
   }
 
-  void removeDoctor(InjectionRecordPost data) {
-    doctorList.remove(data);
+  void removeRecord(InjectionRecordPost data) {
+    recordList.remove(data);
   }
 }

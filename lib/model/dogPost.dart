@@ -19,6 +19,7 @@ class DogPost {
   String congentialDisease;
   String sterilization;
   String hair;
+  String image;
 
   DogPost({
     required this.userEmail,
@@ -31,6 +32,7 @@ class DogPost {
     required this.congentialDisease,
     required this.sterilization,
     required this.hair,
+    required this.image,
   });
 
   factory DogPost.fromJson(Map<String, dynamic> json) => DogPost(
@@ -44,6 +46,7 @@ class DogPost {
         congentialDisease: json["congentialDisease"],
         sterilization: json["sterilization"],
         hair: json["hair"],
+        image: json["image"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -57,5 +60,6 @@ class DogPost {
         "congentialDisease": congentialDisease,
         "sterilization": sterilization,
         "hair": hair,
+        "image": image,
       };
 }
