@@ -43,8 +43,8 @@ class MyApp extends StatelessWidget {
         fontFamily: GoogleFonts.notoSansThai().fontFamily,
       ),
       supportedLocales: const [
-        Locale('th', 'TH'), // Thai
-        Locale('en', 'US'), // English fallback
+        Locale('th', 'TH'),
+        Locale('en', 'US'),
       ],
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
