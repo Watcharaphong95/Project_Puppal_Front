@@ -244,6 +244,16 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
             'name': 'วัคซีนป้องกันเชื้อโคโรนาไวรัสในสุนัข (Canine Coronavirus)',
             'id': '6'
           },
+          {'name': 'วัคซีนป้องกันโรคพยาธิในลำไส้', 'id': '7'},
+          {'name': 'วัคซีนป้องกันโรคพยาธิหัวใจ (Heartworm)', 'id': '8'},
+          {'name': 'วัคซีนป้องกันโรคปอดบวม (Pneumonia)', 'id': '9'},
+          {'name': 'วัคซีนป้องกันโรคหัดสุนัข (Canine Distemper)', 'id': '10'},
+          {
+            'name': 'วัคซีนป้องกันโรคไวรัสตับอักเสบ (Canine Adenovirus)',
+            'id': '11'
+          },
+          {'name': 'วัคซีนป้องกันโรคไข้ทับทิม (Canine Parvovirus)', 'id': '12'},
+          {'name': 'วัคซีนป้องกันโรคพยาธิในเลือด (Ehrlichiosis)', 'id': '13'},
         ];
 
         return Container(

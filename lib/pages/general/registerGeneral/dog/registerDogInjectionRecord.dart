@@ -27,6 +27,13 @@ class _RegisterdoginjectionrecordPageState
     '4': 'วัคซีนป้องกันโรคหลอดลมอักเสบ (Kennel Cough)',
     '5': 'วัคซีนป้องกันโรคลายม์ (Lyme Disease)',
     '6': 'วัคซีนป้องกันเชื้อโคโรนาไวรัสในสุนัข (Canine Coronavirus)',
+    '7': 'วัคซีนป้องกันโรคพยาธิในลำไส้',
+    '8': 'วัคซีนป้องกันโรคพยาธิหัวใจ (Heartworm)',
+    '9': 'วัคซีนป้องกันโรคปอดบวม (Pneumonia)',
+    '10': 'วัคซีนป้องกันโรคหัดสุนัข (Canine Distemper)',
+    '11': 'วัคซีนป้องกันโรคไวรัสตับอักเสบ (Canine Adenovirus)',
+    '12': 'วัคซีนป้องกันโรคไข้ทับทิม (Canine Parvovirus)',
+    '13': 'วัคซีนป้องกันโรคพยาธิในเลือด (Ehrlichiosis)',
   };
 
   @override
@@ -74,8 +81,11 @@ class _RegisterdoginjectionrecordPageState
                         child: Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
-                            title: Text(vaccineNameMap[record.vaccineType] ??
-                                'ไม่พบข้อมูลวัคซีน'),
+                            title: Text(
+                              vaccineNameMap[record.vaccineType] ??
+                                  'ไม่พบข้อมูลวัคซีน',
+                              style: TextStyle(overflow: TextOverflow.ellipsis),
+                            ),
                             subtitle: Column(
                               children: [
                                 Row(
@@ -136,10 +146,12 @@ class _RegisterdoginjectionrecordPageState
           onPressed: () {
             if (recordListController.recordList.isEmpty) {
               showAlert(
-                context: context,
-                title: 'ไม่มีประวัติการฉีดยา?',
-                message: 'หากมีประวัติการฉีดยาโปรดเพิ่ม',
-              );
+                  context: context,
+                  title: 'ไม่มีประวัติการฉีดยา?',
+                  message: 'สุนัขของคุณไม่มีประวัติการฉีดยา?',
+                  onConfirm: () {
+                    Get.to(() => RegisterdogavatarPage());
+                  });
               return;
             }
 

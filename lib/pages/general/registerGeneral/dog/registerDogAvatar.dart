@@ -170,8 +170,10 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
 
   Future<void> insertDogAndInjectRecord() async {
     await dogInsert();
-    await recordInsert();
-    recordListCtl.recordList.clear();
+    if (recordListCtl.recordList.isNotEmpty) {
+      await recordInsert();
+      recordListCtl.recordList.clear();
+    }
   }
 
   Future<void> dogInsert() async {
@@ -203,6 +205,81 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
     RegExp regExp = RegExp(r'\d+');
     String? number = regExp.firstMatch(res.body.toString())?.group(0);
     dogID = int.parse(number!);
+
+    if (recordListCtl.recordList.isEmpty) {
+      Get.back();
+
+      if (res.statusCode == 201) {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFFFFF3F3),
+            title: Text(
+              "สมัครสมาชิกสำเร็จ",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF795548),
+              ),
+            ),
+            content: Text(
+              "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
+              style: const TextStyle(color: Colors.black87),
+            ),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Get.to(() => GeneraldogPage());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFFFFF3F3),
+            title: Text(
+              "เกิดข้อผิดพลาด",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF795548),
+              ),
+            ),
+            content: Text(
+              "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+              style: const TextStyle(color: Colors.black87),
+            ),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
 
     if (res.statusCode != 201) {
       showDialog(
