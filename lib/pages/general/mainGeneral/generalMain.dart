@@ -8,7 +8,8 @@ import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalRecord.dart';
+import 'package:puppal_application/pages/general/recordDog/generalRecord.dart';
+import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
 class GeneralmainPage extends StatefulWidget {
@@ -115,7 +116,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                       Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
                   title: Text('ประวัติการฉีดยา'),
                   onTap: () {
-                    Get.to(() => GeneralrecordPage());
+                    Get.to(() => GeneralrecordsearchPage());
                   },
                 ),
                 ListTile(

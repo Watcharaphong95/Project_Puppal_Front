@@ -5,38 +5,36 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecord.dart';
-import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
-import 'package:puppal_application/pages/general/registerGeneral/dog/registerDog.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
 
-class GeneraldogPage extends StatefulWidget {
-  const GeneraldogPage({super.key});
+class GeneralrecordsearchPage extends StatefulWidget {
+  const GeneralrecordsearchPage({super.key});
 
   @override
-  State<GeneraldogPage> createState() => _GeneraldogPageState();
+  State<GeneralrecordsearchPage> createState() =>
+      _GeneralrecordsearchPageState();
 }
 
-class _GeneraldogPageState extends State<GeneraldogPage> {
+class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
-
-  bool isLoading = true;
 
   String url = '';
 
   List<DogsGetEmail> dogs = [];
   List<DogsGetEmail> filterDogs = [];
+
+  bool isLoading = true;
 
   TextEditingController searchDogCtl = TextEditingController();
 
@@ -61,21 +59,8 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
+        title: Text('ประวัติการฉีดยา'),
         centerTitle: true,
-        title: const Text('สุนัขของฉัน'),
-        actions: [
-          IconButton(
-              onPressed: () {
-                Get.to(() => RegisterdogPage());
-              },
-              icon: CircleAvatar(
-                backgroundColor: Color(0xFFDBA871),
-                child: Icon(
-                  FontAwesomeIcons.plus,
-                  color: Colors.white,
-                ),
-              ))
-        ],
       ),
       drawer: Drawer(
         child: Container(
@@ -144,21 +129,21 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                 ),
                 ListTile(
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
+                  title: Text('สุนัข'),
+                  onTap: () {
+                    Get.to(() => GeneraldogPage());
+                  },
+                ),
+                ListTile(
+                  leading:
+                      Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
                   title: Text(
-                    'สุนัข',
+                    'ประวัติการฉีดยา',
                     style: TextStyle(
                       color: Color(0xFF916b44),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
-                  title: Text('ประวัติการฉีดยา'),
-                  onTap: () {
-                    Get.to(() => GeneralrecordsearchPage());
-                  },
                 ),
                 ListTile(
                   leading: Icon(FontAwesomeIcons.userLarge,
@@ -260,79 +245,63 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else
-                    ...filterDogs.map((dog) {
-                      return SizedBox(
-                        width: screenWidth * 0.9,
-                        height: screenHeight * 0.15,
-                        child: Card(
+                    GridView.count(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio:
+                          (screenWidth * 0.9 / 3) / (screenHeight * 0.275),
+                      shrinkWrap: true,
+                      physics:
+                          NeverScrollableScrollPhysics(), // Let parent scroll handle it
+                      padding: EdgeInsets.all(12),
+                      children: filterDogs.map((dog) {
+                        return Card(
                           color: Color(0xFFF1F1F1),
-                          margin: EdgeInsets.symmetric(vertical: 8),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                           elevation: 2,
                           child: Padding(
                             padding: EdgeInsets.all(12),
-                            child: Row(
+                            child: Column(
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
                                     dog.image,
-                                    width: screenWidth * 0.2,
-                                    height: screenHeight * 0.1,
+                                    width: double.infinity,
+                                    height: screenHeight * 0.12,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        dog.name,
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'อายุ ${getDogAge(dog.birthday)}',
-                                        style:
-                                            TextStyle(color: Colors.grey[700]),
-                                      ),
-                                      Text(
-                                        'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday).toLocal())}...',
-                                        style:
-                                            TextStyle(color: Colors.grey[700]),
-                                      ),
-                                    ],
-                                  ),
+                                SizedBox(height: 8),
+                                Text(
+                                  dog.name,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
                                 ),
-                                Container(
-                                  height: 35,
-                                  width: 45,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFDBA871),
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  child: IconButton(
-                                    icon: Icon(Icons.arrow_forward,
-                                        color: Colors.white, size: 25),
+                                SizedBox(height: 8),
+                                ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFFDBA871)),
                                     onPressed: () {
-                                      // Get.to(() => GeneralrecordPage());
+                                      Get.to(() => GeneralrecordPage(
+                                            index: dog.dogId,
+                                          ));
                                     },
-                                    padding: EdgeInsets.zero,
-                                    constraints: BoxConstraints(),
-                                  ),
-                                ),
+                                    child: Text(
+                                      'ดูประวัติ',
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.white),
+                                    ))
                               ],
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }).toList(),
+                    )
                 ],
               ),
             ),
@@ -347,38 +316,6 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
       dogs =
           jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
       // log(res.body);
-    }
-  }
-
-  String getDogAge(String birthday) {
-    DateTime birthDate = DateTime.parse(birthday).toLocal();
-    DateTime today = DateTime.now();
-
-    int ageInDays = today.difference(birthDate).inDays;
-    int ageInWeeks = ageInDays ~/ 7;
-
-    // Show weeks if less than 12 weeks old
-    if (ageInWeeks < 12) {
-      return '$ageInWeeks สัปดาห์';
-    }
-
-    int years = today.year - birthDate.year;
-    int months = today.month - birthDate.month;
-
-    if (today.day < birthDate.day) {
-      months -= 1;
-    }
-    if (months < 0) {
-      years -= 1;
-      months += 12;
-    }
-
-    if (years > 0 && months > 0) {
-      return '$years ปี $months เดือน';
-    } else if (years > 0) {
-      return '$years ปี';
-    } else {
-      return '$months เดือน';
     }
   }
 

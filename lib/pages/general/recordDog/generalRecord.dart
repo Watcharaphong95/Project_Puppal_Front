@@ -103,6 +103,11 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       url = config['apiEndPoint'];
     });
     await getDogData();
+    for (int i = 0; i < dogs.length; i++) {
+      if (dogs[i].dogId == selectedIndex!) {
+        selectedIndex = i;
+      }
+    }
     dogData = dogs[selectedIndex!];
     dogId = dogData.dogId;
     dogBirthDay = dogData.birthday;
@@ -242,7 +247,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
         ),
       ),
       body: PopScope(
-        canPop: false,
+        canPop: true,
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : Padding(
@@ -472,13 +477,26 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                   FontAwesomeIcons.syringe,
                                             ),
                                             title: Text(
-                                              vaccineName,
+                                              record.clinicName.isNotEmpty
+                                                  ? record.clinicName
+                                                  : 'ไม่มีคลินิก',
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold),
                                             ),
-                                            subtitle: Text(
-                                              "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
-                                              style: TextStyle(fontSize: 15),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  vaccineName,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                Text(
+                                                  "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
+                                                ),
+                                              ],
                                             ),
                                             trailing: Icon(Icons.chevron_right),
                                             onTap: () {
