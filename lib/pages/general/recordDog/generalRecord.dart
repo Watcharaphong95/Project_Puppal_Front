@@ -598,7 +598,6 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     int ageInDays = today.difference(birthDate).inDays;
     int ageInWeeks = ageInDays ~/ 7;
 
-    // Show weeks if less than 12 weeks old
     if (ageInWeeks < 12) {
       return '$ageInWeeks สัปดาห์';
     }

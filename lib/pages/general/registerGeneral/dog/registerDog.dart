@@ -5,7 +5,6 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogInjectionRecord.dart';
 

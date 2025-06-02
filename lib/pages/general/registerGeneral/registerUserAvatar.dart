@@ -8,8 +8,6 @@ import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/login/index.dart';
-import 'package:puppal_application/pages/login/login.dart';
-import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 
