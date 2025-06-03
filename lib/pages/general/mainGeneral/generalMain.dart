@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
@@ -72,7 +73,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       'boost': [52]
     },
     '6': {
-      'baby': [9, 12],
+      'baby': [6, 9, 12],
       'mature': [0, 3],
       'boost': [52]
     },
@@ -83,17 +84,15 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     },
   };
 
-  final Map<DateTime, List<String>> eventMap = {
-    DateTime(2025, 6, 3): ['Meeting', 'Birthday'],
-    DateTime(2025, 6, 10): ['Conference'],
-    DateTime(2025, 6, 15): ['Workshop'],
-  };
-
   List<DogsGetEmail> dogs = [];
   late DogsGetEmail dogData;
 
   List<DogsRecordIdGet> dogRecord = [];
-  List<VaccineRecord> recordVaccine = [];
+
+  List<DogDataForCalcualtionAppointment> dogDataForCal = [];
+
+  Map<DateTime, List<String>> eventMap = {};
+  Map<int, int> dogAgesInWeeks = {};
 
   @override
   void initState() {
@@ -342,12 +341,59 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   Future<void> calculateForAppointmentDay() async {
     await getAllDogData();
     await getAllDogInjectionRecord();
+    await getAllDogDataForCalculate();
+
+    for (var dogData in dogDataForCal) {
+      log('ID: ${dogData.id}, Vaccine: ${dogData.vaccineId}, Date: ${dogData.date}, Age: ${dogData.age}');
+    }
+
+    List<Map<String, dynamic>> vaccineHistory = dogDataForCal
+        .map((dogData) => {
+              'ID': dogData.id,
+              'Vaccine': dogData.vaccineId.toString(),
+              'Date': dogData.date.toString() ?? '',
+              'Age': dogData.age,
+            })
+        .toList();
+
+    eventMap = calculateNextAppointmentsForDog(
+        vaccineHistory: vaccineHistory,
+        vaccineScheduleWeeks: vaccineScheduleWeeks,
+        dogAgesInWeeks: dogAgesInWeeks);
+  }
+
+  Future<void> getAllDogDataForCalculate() async {
     for (var dog in dogs) {
       Duration difference =
           DateTime.now().difference(DateTime.parse(dog.birthday));
       int ageInWeeks = (difference.inDays / 7).floor();
 
-      // log(ageInWeeks.toString());
+      dogAgesInWeeks[dog.dogId] = () {
+        try {
+          DateTime birthday = DateTime.parse(dog.birthday);
+          birthday = DateTime(birthday.year, birthday.month, birthday.day);
+          DateTime now = DateTime.now();
+          DateTime todayOnly = DateTime(now.year, now.month, now.day);
+          return todayOnly.difference(birthday).inDays ~/ 7;
+        } catch (e) {
+          log('Error parsing birthday for dog ${dog.dogId}: $e');
+          return 0;
+        }
+      }();
+      log(dogAgesInWeeks.toString());
+
+      // dogDataForCal.add(DogDataForCalcualtionAppointment(
+      //     ageInWeeks.toString(), '', dog.dogId.toString(), ''));
+
+      for (var record in dogRecord) {
+        if (dog.dogId == record.dogId) {
+          dogDataForCal.add(DogDataForCalcualtionAppointment(
+              ageInWeeks.toString(),
+              record.date,
+              dog.dogId.toString(),
+              record.vaccineType));
+        }
+      }
     }
   }
 
@@ -370,15 +416,153 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           .map<DogsRecordIdGet>((e) => DogsRecordIdGet.fromJson(e))
           .toList();
       // log(res.body);
-
-      for (var rec in dogRecord) {
-        recordVaccine.add(VaccineRecord(
-            rec.dogId.toString(), rec.vaccineType, rec.date.split('T').first));
-      }
-      for (var t in recordVaccine) {
-        log('ID: ${t.id}, Vaccine: ${t.vaccineId}, Date: ${t.date}');
-      }
     }
+  }
+
+  Map<DateTime, List<String>> calculateNextAppointmentsForDog({
+    required List<Map<String, dynamic>> vaccineHistory,
+    required Map<String, Map<String, List<int>>> vaccineScheduleWeeks,
+    required Map<int, int> dogAgesInWeeks, // dogId -> current age in weeks
+  }) {
+    Map<DateTime, Map<int, List<String>>> tempMap = {};
+    DateTime today = DateTime.now();
+    DateTime todayOnly = DateTime(today.year, today.month, today.day);
+
+    // Store vaccine history for each dog
+    Map<int, Map<String, List<DateTime>>> dogVaccineHistory = {};
+
+    // Process vaccine history
+    for (var record in vaccineHistory) {
+      final idRaw = record['ID'];
+      final vaccineRaw = record['Vaccine'];
+      final dateRaw = record['Date'];
+
+      if (vaccineRaw == null || vaccineRaw.toString().isEmpty) continue;
+      if (dateRaw == null || dateRaw.toString().isEmpty) continue;
+
+      final id = int.parse(idRaw.toString());
+      final vaccine = vaccineRaw.toString();
+      final date = DateTime.parse(dateRaw.toString());
+      final dateOnly = DateTime(date.year, date.month, date.day);
+
+      dogVaccineHistory.putIfAbsent(id, () => {});
+      dogVaccineHistory[id]!.putIfAbsent(vaccine, () => []);
+      dogVaccineHistory[id]![vaccine]!.add(dateOnly);
+    }
+
+    // Sort vaccine dates for each dog and vaccine
+    dogVaccineHistory.forEach((dogId, vaccines) {
+      vaccines.forEach((vaccine, dates) {
+        dates.sort();
+      });
+    });
+
+    dogAgesInWeeks.forEach((dogId, ageInWeeks) {
+      bool isMature = ageInWeeks >= 16;
+
+      vaccineScheduleWeeks.forEach((vaccineId, schedules) {
+        List<int> babyWeeks = schedules['baby'] ?? [];
+        List<int> matureWeeks = schedules['mature'] ?? [];
+        List<int> boostWeeks = schedules['boost'] ?? [];
+
+        // Sort schedules
+        babyWeeks.sort();
+        matureWeeks.sort();
+        boostWeeks.sort();
+
+        List<DateTime> vaccineDates =
+            dogVaccineHistory[dogId]?[vaccineId] ?? [];
+        int doseCount = vaccineDates.length;
+
+        if (isMature) {
+          // Mature dog: use last injection date + mature/boost schedule
+          if (doseCount == 0) {
+            if (matureWeeks.isNotEmpty) {
+              DateTime nextDate = todayOnly;
+              tempMap.putIfAbsent(nextDate, () => {});
+              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+            }
+          } else {
+            DateTime lastVaccineDate = vaccineDates.last;
+
+            if (doseCount < matureWeeks.length) {
+              int intervalWeeks = doseCount == 0
+                  ? matureWeeks[0]
+                  : matureWeeks[doseCount] - matureWeeks[doseCount - 1];
+              DateTime nextDate =
+                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
+              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
+
+              tempMap.putIfAbsent(nextDate, () => {});
+              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+            } else {
+              if (boostWeeks.isNotEmpty) {
+                DateTime nextDate =
+                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
+                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
+
+                tempMap.putIfAbsent(nextDate, () => {});
+                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+              }
+            }
+          }
+        } else {
+          // Puppy: use age-based scheduling for baby schedule
+          if (doseCount == 0) {
+            if (babyWeeks.isNotEmpty) {
+              DateTime nextDate;
+              int firstWeek = babyWeeks.first;
+
+              if (ageInWeeks >= firstWeek) {
+                nextDate = todayOnly;
+              } else {
+                int waitWeeks = firstWeek - ageInWeeks;
+                nextDate = todayOnly.add(Duration(days: waitWeeks * 7));
+              }
+
+              tempMap.putIfAbsent(nextDate, () => {});
+              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+            }
+          } else {
+            DateTime lastVaccineDate = vaccineDates.last;
+
+            if (doseCount < babyWeeks.length) {
+              // Calculate interval from previous dose
+              int intervalWeeks = doseCount == 0
+                  ? babyWeeks[0]
+                  : babyWeeks[doseCount] - babyWeeks[doseCount - 1];
+              DateTime nextDate =
+                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
+              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
+
+              tempMap.putIfAbsent(nextDate, () => {});
+              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+            } else {
+              if (boostWeeks.isNotEmpty) {
+                DateTime nextDate =
+                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
+                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
+
+                tempMap.putIfAbsent(nextDate, () => {});
+                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // Aggregate results
+    Map<DateTime, List<String>> eventMap = {};
+    tempMap.forEach((date, dogMap) {
+      List<String> grouped = [];
+      dogMap.forEach((dogId, vaccines) {
+        grouped.add('Dog ID: $dogId, Vaccines: ${vaccines.join(', ')}');
+      });
+      eventMap[date] = grouped;
+    });
+
+    return eventMap;
   }
 
   void showAlert({
@@ -429,10 +613,19 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 }
 
-class VaccineRecord {
+class DogDataForCalcualtionAppointment {
   final String id;
   final String vaccineId;
   final String date;
+  final String age;
 
-  VaccineRecord(this.id, this.vaccineId, this.date);
+  DogDataForCalcualtionAppointment(
+      this.age, this.date, this.id, this.vaccineId);
+}
+
+class Dog {
+  final int dogId;
+  final String birthday;
+
+  Dog({required this.dogId, required this.birthday});
 }
