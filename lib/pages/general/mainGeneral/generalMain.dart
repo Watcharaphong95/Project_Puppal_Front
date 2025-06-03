@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/dogRecordGetId.dart';
+import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
@@ -11,6 +15,7 @@ import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:http/http.dart' as http;
 
 class GeneralmainPage extends StatefulWidget {
   const GeneralmainPage({super.key});
@@ -23,6 +28,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
+
+  String url = '';
 
   var _selectedDay;
   var _focusedDay = DateTime.now();
@@ -77,10 +84,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   };
 
   final Map<DateTime, List<String>> eventMap = {
-    DateTime(2025, 6, 5): ['Meeting', 'Birthday'],
+    DateTime(2025, 6, 3): ['Meeting', 'Birthday'],
     DateTime(2025, 6, 10): ['Conference'],
     DateTime(2025, 6, 15): ['Workshop'],
   };
+
+  List<DogsGetEmail> dogs = [];
+  late DogsGetEmail dogData;
+
+  List<DogsRecordIdGet> dogRecord = [];
+  List<VaccineRecord> recordVaccine = [];
 
   @override
   void initState() {
@@ -88,9 +101,19 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       _focusedDay = box.read('focusedDay');
       _selectedDay = box.read('focusedDay');
       events = getEventsForDay(_selectedDay);
-      log(_focusedDay.toString());
+      log(events.toString());
+    } else {
+      events = getEventsForDay(_focusedDay);
     }
+    init();
     super.initState();
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+    calculateForAppointmentDay();
   }
 
   @override
@@ -316,6 +339,48 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     return events;
   }
 
+  Future<void> calculateForAppointmentDay() async {
+    await getAllDogData();
+    await getAllDogInjectionRecord();
+    for (var dog in dogs) {
+      Duration difference =
+          DateTime.now().difference(DateTime.parse(dog.birthday));
+      int ageInWeeks = (difference.inDays / 7).floor();
+
+      // log(ageInWeeks.toString());
+    }
+  }
+
+  Future<void> getAllDogData() async {
+    var res = await http.get(Uri.parse("$url/dog/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      var jsonData = json.decode(res.body);
+      dogs =
+          jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
+      // log(res.body);
+    }
+  }
+
+  Future<void> getAllDogInjectionRecord() async {
+    var res = await http
+        .get(Uri.parse("$url/injectionRecord/all/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      var jsonData = json.decode(res.body);
+      dogRecord = jsonData
+          .map<DogsRecordIdGet>((e) => DogsRecordIdGet.fromJson(e))
+          .toList();
+      // log(res.body);
+
+      for (var rec in dogRecord) {
+        recordVaccine.add(VaccineRecord(
+            rec.dogId.toString(), rec.vaccineType, rec.date.split('T').first));
+      }
+      for (var t in recordVaccine) {
+        log('ID: ${t.id}, Vaccine: ${t.vaccineId}, Date: ${t.date}');
+      }
+    }
+  }
+
   void showAlert({
     required BuildContext context,
     required String title,
@@ -362,4 +427,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       ),
     );
   }
+}
+
+class VaccineRecord {
+  final String id;
+  final String vaccineId;
+  final String date;
+
+  VaccineRecord(this.id, this.vaccineId, this.date);
 }
