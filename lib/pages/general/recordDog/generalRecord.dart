@@ -47,17 +47,11 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
   Map<String, String> vaccineNameMap = {
     '1': 'วัคซีนรวม 5 โรค (DHPPiL)',
     '2': 'วัคซีนพิษสุนัขบ้า',
-    '3': 'วัคซีนรวม 6 โรค (DHPPiL + Corona)',
-    '4': 'วัคซีนป้องกันโรคหลอดลมอักเสบ (Kennel Cough)',
-    '5': 'วัคซีนป้องกันโรคลายม์ (Lyme Disease)',
-    '6': 'วัคซีนป้องกันเชื้อโคโรนาไวรัสในสุนัข (Canine Coronavirus)',
-    '7': 'วัคซีนป้องกันโรคพยาธิในลำไส้',
-    '8': 'วัคซีนป้องกันโรคพยาธิหัวใจ (Heartworm)',
-    '9': 'วัคซีนป้องกันโรคปอดบวม (Pneumonia)',
-    '10': 'วัคซีนป้องกันโรคหัดสุนัข (Canine Distemper)',
-    '11': 'วัคซีนป้องกันโรคไวรัสตับอักเสบ (Canine Adenovirus)',
-    '12': 'วัคซีนป้องกันโรคไข้ทับทิม (Canine Parvovirus)',
-    '13': 'วัคซีนป้องกันโรคพยาธิในเลือด (Ehrlichiosis)',
+    '3': 'วัคซีนป้องกันโรคไข้ฉี่หนู',
+    '4': 'วัคซีนป้องกันเชื้อ Bordetella bronchiseptica',
+    '5': 'วัคซีนป้องกันโรคลายม์',
+    '6': 'วัคซีนป้องกันเชื้อโคโรนาไวรัส',
+    '7': 'วัคซีนถ่ายพยาธิ',
   };
 
   final Map<String, IconData> vaccineIcons = {
@@ -67,22 +61,45 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     '4': FontAwesomeIcons.wind,
     '5': FontAwesomeIcons.bug,
     '6': FontAwesomeIcons.virus,
-    '7': FontAwesomeIcons.dna,
-    '8': FontAwesomeIcons.heartCircleBolt,
-    '9': FontAwesomeIcons.lungs,
-    '10': FontAwesomeIcons.headSideCough,
-    '11': FontAwesomeIcons.virusCovid,
-    '12': FontAwesomeIcons.virusSlash,
-    '13': FontAwesomeIcons.droplet,
+    '7': FontAwesomeIcons.worm,
   };
 
-  final Map<RangeValues, List<String>> vaccineSchedule = {
-    RangeValues(6, 8): ['1'],
-    RangeValues(9, 11): ['1', '6', '4'],
-    RangeValues(12, 15): ['1', '2', '5'],
-    RangeValues(16, 20): ['1'],
-    RangeValues(24, 51): ['8', '13'],
-    RangeValues(52, 999): ['1', '2', '6', '4', '5', '8', '13'],
+  Map<String, Map<String, List<int>>> vaccineScheduleWeeks = {
+    '1': {
+      'baby': [8, 12, 16], // age if dog no need to + birthday if dog not mature
+      'mature': [0, 3], //need birthday + week for next vacination
+      'boost': [52] // 52 every year, 26 6 month
+    },
+    '2': {
+      'baby': [12],
+      'mature': [0],
+      'boost': [52]
+    },
+    '3': {
+      'baby': [8, 11],
+      'mature': [0, 3],
+      'boost': [52]
+    },
+    '4': {
+      'baby': [8, 12, 16],
+      'mature': [0, 3],
+      'boost': [52]
+    },
+    '5': {
+      'baby': [12, 15],
+      'mature': [0, 3],
+      'boost': [52]
+    },
+    '6': {
+      'baby': [6, 9, 12],
+      'mature': [0, 3],
+      'boost': [52]
+    },
+    '7': {
+      'baby': [8, 11],
+      'mature': [0, 3],
+      'boost': [26]
+    },
   };
 
   List<String> vaccineNext = [];
@@ -398,7 +415,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                 color: Colors.redAccent),
                                           ),
                                           subtitle: Text(
-                                            'ต้องได้รับ ${vaccineNext.map((id) => vaccineNameMap[id] ?? 'วัคซีนไม่ทราบชื่อ').join(', ')}',
+                                            'ต้องได้รับ ${vaccineNext.join(', ')}',
                                             style: TextStyle(
                                                 overflow:
                                                     TextOverflow.ellipsis),
@@ -537,58 +554,83 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       // log(res.body);
 
       List<String> givenVacId = [];
+      Map<String, DateTime> givenVacDate = {};
       for (var record in dogRecord) {
         givenVacId.add(record.vaccineType);
+        givenVacDate[record.vaccineType] = (DateTime.parse(record.date));
       }
-      log(givenVacId.toString());
 
-      vaccineNext = getNextVaccines(
-          birthDate: DateTime.parse(dogBirthDay), givenVaccineIds: givenVacId);
-      log(vaccineNext.toString());
-      log('${vaccineNext.map((id) => vaccineNameMap[id] ?? 'วัคซีนไม่ทราบชื่อ').join(', ')}');
+      vaccineNext = nextVaccineForDog(dogBirthDay, givenVacId);
     }
   }
 
-  List<String> getNextVaccines({
-    required DateTime birthDate,
-    required List<String> givenVaccineIds,
-  }) {
-    final Map<String, List<String>> vaccineCoverage = {
-      '1': ['1', '10', '11', '12', '7'], // DHPPiL
-      '3': ['3', '1', '10', '11', '12', '7', '6'], // DHPPiL + Corona
-      '2': ['2'],
-      '4': ['4'],
-      '5': ['5'],
-      '6': ['6'],
-      '7': ['7'],
-      '8': ['8'],
-      '9': ['9'],
-      '10': ['10'],
-      '11': ['11'],
-      '12': ['12'],
-      '13': ['13'],
-    };
-
-    final now = DateTime.now();
-    final ageInWeeks = now.difference(birthDate).inDays ~/ 7;
-
-    final Set<String> givenSet = {};
-    for (final id in givenVaccineIds) {
-      givenSet.addAll(vaccineCoverage[id] ?? [id]);
+  List<String> nextVaccineForDog(String birthday, List<String> givenVaccineId) {
+    List<String> nextVaccine = [];
+    int dogAge = dogAgeInWeeks(birthday);
+    Map<int, int> countsVaccinePerType = {};
+    Map<int, int> countsGiven = {};
+    for (var num in givenVaccineId) {
+      countsGiven[int.parse(num)] = (countsGiven[int.parse(num)] ?? 0) + 1;
     }
+    // log(givenVaccineId.toString());
 
-    for (var entry in vaccineSchedule.entries) {
-      final range = entry.key;
-      final vaccines = entry.value;
+    if (dogAge < 16) {
+      vaccineScheduleWeeks.forEach((vaccineId, schedule) {
+        List<int>? babySchedule = schedule['baby'];
+        if (babySchedule != null) {
+          for (var week in babySchedule) {
+            countsVaccinePerType[int.parse(vaccineId)] =
+                (countsVaccinePerType[int.parse(vaccineId)] ?? 0) + 1;
+            if (dogAge > week) {
+              if (!nextVaccine.contains(vaccineId)) {
+                nextVaccine.add(vaccineId);
+              }
+            }
+          }
 
-      if (ageInWeeks >= range.start && ageInWeeks <= range.end) {
-        final remaining =
-            vaccines.where((id) => !givenSet.contains(id)).toList();
-        return remaining;
-      }
+          for (var id in nextVaccine.toList()) {
+            final totalCount = countsVaccinePerType[int.parse(id)];
+            final givenCount = countsGiven[int.parse(id)];
+
+            if (totalCount != null && givenCount != null) {
+              if (givenCount >= totalCount) {
+                nextVaccine.remove(id); // ลบออกถ้าให้ครบแล้ว
+              }
+            }
+          }
+        }
+      });
+    } else {
+      vaccineScheduleWeeks.forEach((vaccineId, schedule) {
+        List<int>? matureSchedule = schedule['mature'];
+        if (matureSchedule != null) {
+          for (var week in matureSchedule) {
+            countsVaccinePerType[int.parse(vaccineId)] =
+                (countsVaccinePerType[int.parse(vaccineId)] ?? 0) + 1;
+            if (dogAge > week) {
+              if (!nextVaccine.contains(vaccineId)) {
+                nextVaccine.add(vaccineId);
+              }
+            }
+          }
+
+          for (var id in nextVaccine.toList()) {
+            final totalCount = countsVaccinePerType[int.parse(id)];
+            final givenCount = countsGiven[int.parse(id)];
+
+            if (totalCount != null && givenCount != null) {
+              if (givenCount >= totalCount) {
+                nextVaccine.remove(id); // ลบออกถ้าให้ครบแล้ว
+              }
+            }
+          }
+        }
+      });
     }
-
-    return [];
+    List<String> matchedNames = nextVaccine
+        .map((id) => vaccineNameMap[id] ?? 'ไม่พบชื่อวัคซีน')
+        .toList();
+    return matchedNames;
   }
 
   String getDogAge(String birthday) {
@@ -620,6 +662,12 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     } else {
       return '$months เดือน';
     }
+  }
+
+  int dogAgeInWeeks(String birthDate) {
+    final now = DateTime.now();
+    final duration = now.difference(DateTime.parse(birthDate));
+    return duration.inDays ~/ 7;
   }
 
   void showAlert({

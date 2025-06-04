@@ -30,9 +30,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   late double screenHeight;
   final box = GetStorage();
 
+  bool _loadingData = true;
+
   String url = '';
 
-  var _selectedDay;
+  var _selectedDay = DateTime.now();
   var _focusedDay = DateTime.now();
   var events = [];
 
@@ -99,10 +101,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     if (box.read('focusedDay') != null) {
       _focusedDay = box.read('focusedDay');
       _selectedDay = box.read('focusedDay');
-      events = getEventsForDay(_selectedDay);
-      log(events.toString());
-    } else {
-      events = getEventsForDay(_focusedDay);
     }
     init();
     super.initState();
@@ -112,7 +110,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    calculateForAppointmentDay();
+    await calculateForAppointmentDay();
+    events = getEventsForDay(DateTime.now());
+    setState(() {
+      _loadingData = false;
+    });
   }
 
   @override
@@ -247,82 +249,209 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       ),
       body: PopScope(
           canPop: false,
-          child: SingleChildScrollView(
-            child: Column(
+          child: _loadingData
+              ? Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFEF7FF),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: screenWidth * 0.9,
+                            child: TableCalendar(
+                              locale: 'th_TH',
+                              firstDay: DateTime(2020, 1, 1),
+                              lastDay: DateTime(DateTime.now().year + 10),
+                              focusedDay: _focusedDay,
+                              headerStyle: HeaderStyle(
+                                formatButtonVisible: false,
+                                titleCentered: true,
+                              ),
+                              calendarStyle: CalendarStyle(
+                                todayDecoration: BoxDecoration(
+                                    color: Color(0xFFE6C29C),
+                                    shape: BoxShape.circle),
+                                selectedDecoration: BoxDecoration(
+                                    color: Color(0xFFDBA871),
+                                    shape: BoxShape.circle),
+                              ),
+                              selectedDayPredicate: (day) {
+                                return isSameDay(_selectedDay, day);
+                              },
+                              onDaySelected: (selectedDay, focusedDay) {
+                                setState(() {
+                                  _focusedDay = focusedDay;
+                                  _selectedDay = selectedDay;
+                                  box.write('focusedDay', focusedDay);
+                                  events = getEventsForDay(_selectedDay);
+                                });
+                              },
+                              onPageChanged: (focusedDay) {
+                                _focusedDay = focusedDay;
+                              },
+                              eventLoader: getEventsForDay,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Divider(),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.1,
+                            vertical: screenHeight * 0.005),
+                        child: Row(
+                          children: [
+                            Text(
+                              DateFormat('d MMMM y', 'th').format(_selectedDay),
+                              style: TextStyle(
+                                  fontSize: 24, fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (events.isNotEmpty)
+                        SizedBox(
+                          width: screenWidth,
+                          height: screenHeight * 0.425,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: events.length,
+                                  itemBuilder: (context, index) {
+                                    return Card(
+                                      elevation: 2,
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.05,
+                                          vertical: screenHeight * 0.005),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: SizedBox(
+                                        height: screenHeight * 0.125,
+                                        child: ListTile(
+                                          title: SizedBox(
+                                            height: screenHeight * 0.11,
+                                            child: insideCardShowDogData(index),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            ],
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          width: screenWidth,
+                          height: screenHeight * 0.5,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'ไม่มีข้อมูลในวันนี้',
+                                style:
+                                    TextStyle(fontSize: 32, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                    ],
+                  ),
+                )),
+    );
+  }
+
+  Row insideCardShowDogData(int index) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 10,
+      children: <Widget>[
+        Container(
+          width: screenWidth * 0.02,
+          height: screenHeight * 0.1,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(50),
+          ),
+        ),
+        for (var item in dogs)
+          if (events[index]
+                  .toString()
+                  .split(', Vaccines:')
+                  .first
+                  .replaceAll(RegExp(r'[^0-9]'), '') ==
+              item.dogId.toString())
+            Row(
               children: [
-                Center(
-                  child: SizedBox(
-                    width: screenWidth * 0.9,
-                    child: TableCalendar(
-                      locale: 'th_TH',
-                      firstDay: DateTime(2020, 1, 1),
-                      lastDay: DateTime(DateTime.now().year + 10),
-                      focusedDay: _focusedDay,
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                      ),
-                      calendarStyle: CalendarStyle(
-                        todayDecoration: BoxDecoration(
-                            color: Color(0xFFE6C29C), shape: BoxShape.circle),
-                        selectedDecoration: BoxDecoration(
-                            color: Color(0xFFDBA871), shape: BoxShape.circle),
-                      ),
-                      selectedDayPredicate: (day) {
-                        return isSameDay(_selectedDay, day);
-                      },
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _focusedDay = focusedDay;
-                          _selectedDay = selectedDay;
-                          box.write('focusedDay', focusedDay);
-                          events = getEventsForDay(_selectedDay);
-                        });
-                      },
-                      onPageChanged: (focusedDay) {
-                        _focusedDay = focusedDay;
-                      },
-                      eventLoader: getEventsForDay,
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    item.image,
+                    width: screenWidth * 0.2,
+                    height: screenHeight * 0.1,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+                      return SizedBox(
+                        width: screenWidth * 0.2,
+                        height: screenHeight * 0.1,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    (loadingProgress.expectedTotalBytes ?? 1)
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                if (events.isNotEmpty)
-                  SizedBox(
-                    width: screenWidth,
-                    height: screenHeight * 0.5,
-                    child: Column(
-                      children: [
-                        ListView.builder(
-                          shrinkWrap: true,
-                          // physics: NeverScrollableScrollPhysics(),
-                          itemCount: events.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: Icon(Icons.event),
-                              title: Text(events[index]),
-                            );
-                          },
-                        )
-                      ],
-                    ),
-                  )
-                else
-                  SizedBox(
-                    width: screenWidth,
-                    height: screenHeight * 0.5,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'ไม่มีข้อมูลในวันนี้',
-                          style: TextStyle(fontSize: 32, color: Colors.grey),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      Text('อายุ ${getDogAge(item.birthday)}'),
+                      SizedBox(
+                        width: screenWidth * 0.45,
+                        child: Text(
+                          splitVaccineId(events[index])
+                              .map((id) =>
+                                  vaccineNameMap[id.trim()] ??
+                                  'วัคซีนไม่ทราบชื่อ')
+                              .join(', '),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                  )
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
-          )),
+      ],
     );
   }
 
@@ -563,6 +692,42 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     });
 
     return eventMap;
+  }
+
+  String getDogAge(String birthday) {
+    DateTime birthDate = DateTime.parse(birthday).toLocal();
+    DateTime today = DateTime.now();
+
+    int ageInDays = today.difference(birthDate).inDays;
+    int ageInWeeks = ageInDays ~/ 7;
+
+    // Show weeks if less than 12 weeks old
+    if (ageInWeeks < 12) {
+      return '$ageInWeeks สัปดาห์';
+    }
+
+    int years = today.year - birthDate.year;
+    int months = today.month - birthDate.month;
+
+    if (today.day < birthDate.day) {
+      months -= 1;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    if (years > 0 && months > 0) {
+      return '$years ปี $months เดือน';
+    } else if (years > 0) {
+      return '$years ปี';
+    } else {
+      return '$months เดือน';
+    }
+  }
+
+  List<String> splitVaccineId(String str) {
+    return str.toString().split('Vaccines:').last.split(',');
   }
 
   void showAlert({
