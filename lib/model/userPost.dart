@@ -9,16 +9,16 @@ UserPost userPostFromJson(String str) => UserPost.fromJson(json.decode(str));
 String userPostToJson(UserPost data) => json.encode(data.toJson());
 
 class UserPost {
-  String email;
-  String password;
+  String? email;
+  String? password;
   int? general;
   int? clinic;
 
   UserPost({
-    required this.email,
-    required this.password,
-    required this.general,
-    required this.clinic,
+    this.email,
+    this.password,
+    this.general,
+    this.clinic,
   });
 
   factory UserPost.fromJson(Map<String, dynamic> json) => UserPost(

@@ -6,12 +6,8 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
-import 'package:puppal_application/model/clinicPost.dart';
-import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/login/index.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicDoctor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 
 class ClinicavatarPage extends StatefulWidget {
   const ClinicavatarPage({super.key});

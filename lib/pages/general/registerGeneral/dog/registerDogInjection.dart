@@ -237,23 +237,11 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
         final List<Map<String, String>> dogVaccines = [
           {'name': 'วัคซีนรวม 5 โรค (DHPPiL)', 'id': '1'},
           {'name': 'วัคซีนพิษสุนัขบ้า', 'id': '2'},
-          {'name': 'วัคซีนรวม 6 โรค (DHPPiL + Corona)', 'id': '3'},
-          {'name': 'วัคซีนป้องกันโรคหลอดลมอักเสบ (Kennel Cough)', 'id': '4'},
-          {'name': 'วัคซีนป้องกันโรคลายม์ (Lyme Disease)', 'id': '5'},
-          {
-            'name': 'วัคซีนป้องกันเชื้อโคโรนาไวรัสในสุนัข (Canine Coronavirus)',
-            'id': '6'
-          },
-          {'name': 'วัคซีนป้องกันโรคพยาธิในลำไส้', 'id': '7'},
-          {'name': 'วัคซีนป้องกันโรคพยาธิหัวใจ (Heartworm)', 'id': '8'},
-          {'name': 'วัคซีนป้องกันโรคปอดบวม (Pneumonia)', 'id': '9'},
-          {'name': 'วัคซีนป้องกันโรคหัดสุนัข (Canine Distemper)', 'id': '10'},
-          {
-            'name': 'วัคซีนป้องกันโรคไวรัสตับอักเสบ (Canine Adenovirus)',
-            'id': '11'
-          },
-          {'name': 'วัคซีนป้องกันโรคไข้ทับทิม (Canine Parvovirus)', 'id': '12'},
-          {'name': 'วัคซีนป้องกันโรคพยาธิในเลือด (Ehrlichiosis)', 'id': '13'},
+          {'name': 'วัคซีนป้องกันโรคไข้ฉี่หนู', 'id': '3'},
+          {'name': 'วัคซีนป้องกันเชื้อ Bordetella bronchiseptica', 'id': '4'},
+          {'name': 'วัคซีนป้องกันโรคลายม์', 'id': '5'},
+          {'name': 'วัคซีนป้องกันเชื้อโคโรนาไวรัส', 'id': '6'},
+          {'name': 'วัคซีนถ่ายพยาธิ', 'id': '7'},
         ];
 
         return Container(

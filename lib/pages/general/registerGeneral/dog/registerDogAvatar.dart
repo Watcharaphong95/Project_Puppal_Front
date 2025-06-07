@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -216,14 +215,14 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
           builder: (context) => AlertDialog(
             backgroundColor: const Color(0xFFFFF3F3),
             title: Text(
-              "สมัครสมาชิกสำเร็จ",
+              "เพิ่มสุนัขสำเร็จ",
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF795548),
               ),
             ),
             content: Text(
-              "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
+              "เพิ่มสุนัขสำเร็จแล้ว",
               style: const TextStyle(color: Colors.black87),
             ),
             shape:
@@ -257,7 +256,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
               ),
             ),
             content: Text(
-              "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+              "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
               style: const TextStyle(color: Colors.black87),
             ),
             shape:
@@ -294,7 +293,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
             ),
           ),
           content: Text(
-            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+            "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:
@@ -344,14 +343,14 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFFFFF3F3),
           title: Text(
-            "สมัครสมาชิกสำเร็จ",
+            "เพิ่มสุนัขสำเร็จ",
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF795548),
             ),
           ),
           content: Text(
-            "สมัครสมาชิกทั่วไปสำเร็จแล้ว",
+            "เพิ่มสุนัขสำเร็จแล้ว",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:
@@ -385,7 +384,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
             ),
           ),
           content: Text(
-            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+            "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:
