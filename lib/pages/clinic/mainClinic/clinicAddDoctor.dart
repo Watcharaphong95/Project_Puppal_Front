@@ -1,30 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
-class ClinicmainPage extends StatefulWidget {
-  const ClinicmainPage({super.key});
+class Clinicadddoctor extends StatefulWidget {
+  const Clinicadddoctor({super.key});
 
   @override
-  State<ClinicmainPage> createState() => _ClinicmainPageState();
+  State<Clinicadddoctor> createState() => _ClinicadddoctorState();
 }
 
-class _ClinicmainPageState extends State<ClinicmainPage> {
+class _ClinicadddoctorState extends State<Clinicadddoctor> {
+  final List<String> doctors = List.generate(6, (index) => "B3");
   final box = GetStorage();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: const Text('คุณหมอประจำคลินิก'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_circle, color: Colors.white),
+            onPressed: () {
+              // Add new doctor
+            },
+          ),
+        ],
+      ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -77,6 +91,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                 ListTile(
                   leading: Icon(Icons.home, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
+                  onTap: () {
+                    Get.to(() => ClinicmainPage());
+                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.system_security_update,
@@ -129,7 +146,39 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
           ),
         ),
       ),
-      body: PopScope(canPop: false, child: Container()),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'ค้นหา',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            /// 👇 ห่อ GridView ด้วย Expanded แก้ปัญหา overflow
+            Expanded(
+              child: GridView.builder(
+                itemCount: doctors.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemBuilder: (context, index) {
+                  return DoctorCard(name: doctors[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -177,6 +226,50 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class DoctorCard extends StatelessWidget {
+  final String name;
+
+  const DoctorCard({super.key, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/indexBg.png',
+                    height: 70,
+                    width: 70,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[200],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {},
+                child: Text('ดูประวัติ'),
+              )
+            ],
+          )),
     );
   }
 }
