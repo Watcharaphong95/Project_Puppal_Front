@@ -110,8 +110,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    await calculateForAppointmentDay();
-    events = getEventsForDay(DateTime.now());
+    // events = getEventsForDay(DateTime.now());
     setState(() {
       _loadingData = false;
     });
@@ -300,7 +299,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                               onPageChanged: (focusedDay) {
                                 _focusedDay = focusedDay;
                               },
-                              eventLoader: getEventsForDay,
+                              // eventLoader: getEventsForDay,
                             ),
                           ),
                         ),
@@ -320,140 +319,140 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                           ],
                         ),
                       ),
-                      if (events.isNotEmpty)
-                        SizedBox(
-                          width: screenWidth,
-                          height: screenHeight * 0.425,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: events.length,
-                                  itemBuilder: (context, index) {
-                                    return Card(
-                                      elevation: 2,
-                                      margin: EdgeInsets.symmetric(
-                                          horizontal: screenWidth * 0.05,
-                                          vertical: screenHeight * 0.005),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: SizedBox(
-                                        height: screenHeight * 0.125,
-                                        child: ListTile(
-                                          title: SizedBox(
-                                            height: screenHeight * 0.11,
-                                            child: insideCardShowDogData(index),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            ],
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          width: screenWidth,
-                          height: screenHeight * 0.5,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'ไม่มีข้อมูลในวันนี้',
-                                style:
-                                    TextStyle(fontSize: 32, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        )
+                      // if (events.isNotEmpty)
+                      //   SizedBox(
+                      //     width: screenWidth,
+                      //     height: screenHeight * 0.425,
+                      //     child: Column(
+                      //       children: [
+                      //         Expanded(
+                      //           child: ListView.builder(
+                      //             shrinkWrap: true,
+                      //             itemCount: events.length,
+                      //             itemBuilder: (context, index) {
+                      //               return Card(
+                      //                 elevation: 2,
+                      //                 margin: EdgeInsets.symmetric(
+                      //                     horizontal: screenWidth * 0.05,
+                      //                     vertical: screenHeight * 0.005),
+                      //                 shape: RoundedRectangleBorder(
+                      //                   borderRadius: BorderRadius.circular(12),
+                      //                 ),
+                      //                 child: SizedBox(
+                      //                   height: screenHeight * 0.125,
+                      //                   child: ListTile(
+                      //                     title: SizedBox(
+                      //                       height: screenHeight * 0.11,
+                      //                       child: insideCardShowDogData(index),
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //               );
+                      //             },
+                      //           ),
+                      //         )
+                      //       ],
+                      //     ),
+                      //   )
+                      // else
+                      //   SizedBox(
+                      //     width: screenWidth,
+                      //     height: screenHeight * 0.5,
+                      //     child: Column(
+                      //       mainAxisAlignment: MainAxisAlignment.center,
+                      //       children: [
+                      //         Text(
+                      //           'ไม่มีข้อมูลในวันนี้',
+                      //           style:
+                      //               TextStyle(fontSize: 32, color: Colors.grey),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   )
                     ],
                   ),
                 )),
     );
   }
 
-  Row insideCardShowDogData(int index) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      spacing: 10,
-      children: <Widget>[
-        Container(
-          width: screenWidth * 0.02,
-          height: screenHeight * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(50),
-          ),
-        ),
-        for (var item in dogs)
-          if (events[index]
-                  .toString()
-                  .split(', Vaccines:')
-                  .first
-                  .replaceAll(RegExp(r'[^0-9]'), '') ==
-              item.dogId.toString())
-            Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    item.image,
-                    width: screenWidth * 0.2,
-                    height: screenHeight * 0.1,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-                      return SizedBox(
-                        width: screenWidth * 0.2,
-                        height: screenHeight * 0.1,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    (loadingProgress.expectedTotalBytes ?? 1)
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      Text('อายุ ${getDogAge(item.birthday)}'),
-                      SizedBox(
-                        width: screenWidth * 0.45,
-                        child: Text(
-                          splitVaccineId(events[index])
-                              .map((id) =>
-                                  vaccineNameMap[id.trim()] ??
-                                  'วัคซีนไม่ทราบชื่อ')
-                              .join(', '),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-      ],
-    );
-  }
+  // Row insideCardShowDogData(int index) {
+  //   return Row(
+  //     crossAxisAlignment: CrossAxisAlignment.center,
+  //     spacing: 10,
+  //     children: <Widget>[
+  //       Container(
+  //         width: screenWidth * 0.02,
+  //         height: screenHeight * 0.1,
+  //         decoration: BoxDecoration(
+  //           color: Colors.red,
+  //           borderRadius: BorderRadius.circular(50),
+  //         ),
+  //       ),
+  //       for (var item in dogs)
+  //         if (events[index]
+  //                 .toString()
+  //                 .split(', Vaccines:')
+  //                 .first
+  //                 .replaceAll(RegExp(r'[^0-9]'), '') ==
+  //             item.dogId.toString())
+  //           Row(
+  //             children: [
+  //               ClipRRect(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 child: Image.network(
+  //                   item.image,
+  //                   width: screenWidth * 0.2,
+  //                   height: screenHeight * 0.1,
+  //                   fit: BoxFit.cover,
+  //                   loadingBuilder: (context, child, loadingProgress) {
+  //                     if (loadingProgress == null) {
+  //                       return child;
+  //                     }
+  //                     return SizedBox(
+  //                       width: screenWidth * 0.2,
+  //                       height: screenHeight * 0.1,
+  //                       child: Center(
+  //                         child: CircularProgressIndicator(
+  //                           value: loadingProgress.expectedTotalBytes != null
+  //                               ? loadingProgress.cumulativeBytesLoaded /
+  //                                   (loadingProgress.expectedTotalBytes ?? 1)
+  //                               : null,
+  //                         ),
+  //                       ),
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Text(
+  //                       item.name,
+  //                       style: TextStyle(
+  //                           fontWeight: FontWeight.bold, fontSize: 20),
+  //                     ),
+  //                     Text('อายุ ${getDogAge(item.birthday)}'),
+  //                     SizedBox(
+  //                       width: screenWidth * 0.45,
+  //                       child: Text(
+  //                         splitVaccineId(events[index])
+  //                             .map((id) =>
+  //                                 vaccineNameMap[id.trim()] ??
+  //                                 'วัคซีนไม่ทราบชื่อ')
+  //                             .join(', '),
+  //                         overflow: TextOverflow.ellipsis,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               )
+  //             ],
+  //           ),
+  //     ],
+  //   );
+  // }
 
   List<String> getEventsForDay(DateTime day) {
     final events = eventMap.entries
@@ -465,65 +464,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         .toList();
 
     return events;
-  }
-
-  Future<void> calculateForAppointmentDay() async {
-    await getAllDogData();
-    await getAllDogInjectionRecord();
-    await getAllDogDataForCalculate();
-
-    for (var dogData in dogDataForCal) {
-      log('ID: ${dogData.id}, Vaccine: ${dogData.vaccineId}, Date: ${dogData.date}, Age: ${dogData.age}');
-    }
-
-    List<Map<String, dynamic>> vaccineHistory = dogDataForCal
-        .map((dogData) => {
-              'ID': dogData.id,
-              'Vaccine': dogData.vaccineId.toString(),
-              'Date': dogData.date.toString() ?? '',
-              'Age': dogData.age,
-            })
-        .toList();
-
-    eventMap = calculateNextAppointmentsForDog(
-        vaccineHistory: vaccineHistory,
-        vaccineScheduleWeeks: vaccineScheduleWeeks,
-        dogAgesInWeeks: dogAgesInWeeks);
-  }
-
-  Future<void> getAllDogDataForCalculate() async {
-    for (var dog in dogs) {
-      Duration difference =
-          DateTime.now().difference(DateTime.parse(dog.birthday));
-      int ageInWeeks = (difference.inDays / 7).floor();
-
-      dogAgesInWeeks[dog.dogId] = () {
-        try {
-          DateTime birthday = DateTime.parse(dog.birthday);
-          birthday = DateTime(birthday.year, birthday.month, birthday.day);
-          DateTime now = DateTime.now();
-          DateTime todayOnly = DateTime(now.year, now.month, now.day);
-          return todayOnly.difference(birthday).inDays ~/ 7;
-        } catch (e) {
-          log('Error parsing birthday for dog ${dog.dogId}: $e');
-          return 0;
-        }
-      }();
-      log(dogAgesInWeeks.toString());
-
-      // dogDataForCal.add(DogDataForCalcualtionAppointment(
-      //     ageInWeeks.toString(), '', dog.dogId.toString(), ''));
-
-      for (var record in dogRecord) {
-        if (dog.dogId == record.dogId) {
-          dogDataForCal.add(DogDataForCalcualtionAppointment(
-              ageInWeeks.toString(),
-              record.date,
-              dog.dogId.toString(),
-              record.vaccineType));
-        }
-      }
-    }
   }
 
   Future<void> getAllDogData() async {
@@ -546,152 +486,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           .toList();
       // log(res.body);
     }
-  }
-
-  Map<DateTime, List<String>> calculateNextAppointmentsForDog({
-    required List<Map<String, dynamic>> vaccineHistory,
-    required Map<String, Map<String, List<int>>> vaccineScheduleWeeks,
-    required Map<int, int> dogAgesInWeeks, // dogId -> current age in weeks
-  }) {
-    Map<DateTime, Map<int, List<String>>> tempMap = {};
-    DateTime today = DateTime.now();
-    DateTime todayOnly = DateTime(today.year, today.month, today.day);
-
-    // Store vaccine history for each dog
-    Map<int, Map<String, List<DateTime>>> dogVaccineHistory = {};
-
-    // Process vaccine history
-    for (var record in vaccineHistory) {
-      final idRaw = record['ID'];
-      final vaccineRaw = record['Vaccine'];
-      final dateRaw = record['Date'];
-
-      if (vaccineRaw == null || vaccineRaw.toString().isEmpty) continue;
-      if (dateRaw == null || dateRaw.toString().isEmpty) continue;
-
-      final id = int.parse(idRaw.toString());
-      final vaccine = vaccineRaw.toString();
-      final date = DateTime.parse(dateRaw.toString());
-      final dateOnly = DateTime(date.year, date.month, date.day);
-
-      dogVaccineHistory.putIfAbsent(id, () => {});
-      dogVaccineHistory[id]!.putIfAbsent(vaccine, () => []);
-      dogVaccineHistory[id]![vaccine]!.add(dateOnly);
-    }
-
-    // Sort vaccine dates for each dog and vaccine
-    dogVaccineHistory.forEach((dogId, vaccines) {
-      vaccines.forEach((vaccine, dates) {
-        dates.sort();
-      });
-    });
-
-    dogAgesInWeeks.forEach((dogId, ageInWeeks) {
-      bool isMature = ageInWeeks >= 16;
-
-      vaccineScheduleWeeks.forEach((vaccineId, schedules) {
-        List<int> babyWeeks = schedules['baby'] ?? [];
-        List<int> matureWeeks = schedules['mature'] ?? [];
-        List<int> boostWeeks = schedules['boost'] ?? [];
-
-        // Sort schedules
-        babyWeeks.sort();
-        matureWeeks.sort();
-        boostWeeks.sort();
-
-        List<DateTime> vaccineDates =
-            dogVaccineHistory[dogId]?[vaccineId] ?? [];
-        int doseCount = vaccineDates.length;
-
-        if (isMature) {
-          // Mature dog: use last injection date + mature/boost schedule
-          if (doseCount == 0) {
-            if (matureWeeks.isNotEmpty) {
-              DateTime nextDate = todayOnly;
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            }
-          } else {
-            DateTime lastVaccineDate = vaccineDates.last;
-
-            if (doseCount < matureWeeks.length) {
-              int intervalWeeks = doseCount == 0
-                  ? matureWeeks[0]
-                  : matureWeeks[doseCount] - matureWeeks[doseCount - 1];
-              DateTime nextDate =
-                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
-              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            } else {
-              if (boostWeeks.isNotEmpty) {
-                DateTime nextDate =
-                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
-                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-                tempMap.putIfAbsent(nextDate, () => {});
-                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-              }
-            }
-          }
-        } else {
-          // Puppy: use age-based scheduling for baby schedule
-          if (doseCount == 0) {
-            if (babyWeeks.isNotEmpty) {
-              DateTime nextDate;
-              int firstWeek = babyWeeks.first;
-
-              if (ageInWeeks >= firstWeek) {
-                nextDate = todayOnly;
-              } else {
-                int waitWeeks = firstWeek - ageInWeeks;
-                nextDate = todayOnly.add(Duration(days: waitWeeks * 7));
-              }
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            }
-          } else {
-            DateTime lastVaccineDate = vaccineDates.last;
-
-            if (doseCount < babyWeeks.length) {
-              // Calculate interval from previous dose
-              int intervalWeeks = doseCount == 0
-                  ? babyWeeks[0]
-                  : babyWeeks[doseCount] - babyWeeks[doseCount - 1];
-              DateTime nextDate =
-                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
-              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            } else {
-              if (boostWeeks.isNotEmpty) {
-                DateTime nextDate =
-                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
-                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-                tempMap.putIfAbsent(nextDate, () => {});
-                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-              }
-            }
-          }
-        }
-      });
-    });
-
-    // Aggregate results
-    Map<DateTime, List<String>> eventMap = {};
-    tempMap.forEach((date, dogMap) {
-      List<String> grouped = [];
-      dogMap.forEach((dogId, vaccines) {
-        grouped.add('Dog ID: $dogId, Vaccines: ${vaccines.join(', ')}');
-      });
-      eventMap[date] = grouped;
-    });
-
-    return eventMap;
   }
 
   String getDogAge(String birthday) {
