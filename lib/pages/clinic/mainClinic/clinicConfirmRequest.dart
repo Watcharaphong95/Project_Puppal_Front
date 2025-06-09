@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicAddDoctor.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -152,7 +152,7 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
-                    Get.to(() => Clinicadddoctor());
+                    Get.to(() => Cliniclistdoctors());
                   },
                 ),
                 ListTile(

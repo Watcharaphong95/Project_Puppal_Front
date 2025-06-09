@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
+
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+
 import 'package:puppal_application/pages/login/index.dart';
 
-class Clinicadddoctor extends StatefulWidget {
-  const Clinicadddoctor({super.key});
+class Cliniclistdoctors extends StatefulWidget {
+  const Cliniclistdoctors({super.key});
 
   @override
-  State<Clinicadddoctor> createState() => _ClinicadddoctorState();
+  State<Cliniclistdoctors> createState() => _CliniclistdoctorsState();
 }
 
-class _ClinicadddoctorState extends State<Clinicadddoctor> {
+class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
   final List<String> doctors = List.generate(6, (index) => "B3");
   final box = GetStorage();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +36,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
           IconButton(
             icon: Icon(Icons.add_circle, color: Colors.white),
             onPressed: () {
-              // Add new doctor
+              Get.to(() => Clinicadddoctor());
             },
           ),
         ],
