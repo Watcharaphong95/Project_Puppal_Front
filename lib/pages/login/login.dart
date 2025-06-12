@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -249,8 +250,18 @@ class _LoginPageState extends State<LoginPage> {
       if (user.general == 1 && user.clinic == 1) {
         Get.to(() => LogintypeselectPage());
       } else if (user.general == 1) {
+        var resGeneral =
+            await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
+        box.write('generalName', jsonDecode(resGeneral.body)['username']);
+        box.write('generalImage', jsonDecode(resGeneral.body)['image']);
+        log('Name ${box.read('generalName')}');
         Get.to(() => GeneralmainPage());
       } else if (user.clinic == 1) {
+        var resClinic =
+            await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+        box.write('clinicName', jsonDecode(resClinic.body)['name']);
+        box.write('clinicImage', jsonDecode(resClinic.body)['image']);
+        log('Name ${box.read('clinicName')}');
         Get.to(() => ClinicmainPage());
       }
     } else {
