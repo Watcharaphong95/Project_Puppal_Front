@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,13 +27,17 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
   TextEditingController nameCtl = TextEditingController();
   TextEditingController surnameCtl = TextEditingController();
   TextEditingController careerNoCtl = TextEditingController();
-  TextEditingController specialNoCtl = TextEditingController();
+  // TextEditingController specialNoCtl = TextEditingController();
+
+  List<SpecialPost> special = [];
+  String? selectedSpecialty;
 
   @override
   void initState() {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
+      getSpecialData();
     });
   }
 
@@ -118,25 +126,39 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
                               'ความเชี่ยวชาญ',
                               style: TextStyle(fontSize: 20),
                             ),
-                            Text('(เช่น ผ่าตัด, ยา)',
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.grey)),
+                            Text(
+                              '(เช่น ผ่าตัด, ยา)',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.grey),
+                            ),
                           ],
                         ),
+                        SizedBox(height: 10),
                         Material(
                           elevation: 5,
                           borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
                             height: screenHeight * 0.055,
-                            child: TextField(
-                              controller: specialNoCtl,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: selectedSpecialty,
+                              items: special
+                                  .map((sp) => DropdownMenuItem<String>(
+                                        value: sp.name,
+                                        child: Text(sp.name),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedSpecialty = value!;
+                                });
+                              },
                               decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
+                                border: InputBorder.none,
                               ),
                             ),
                           ),
@@ -200,10 +222,32 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     );
   }
 
+  Future<void> getSpecialData() async {
+    try {
+      var res = await http.get(Uri.parse("$url/special/"));
+      if (res.statusCode == 200) {
+        var jsonData = json.decode(res.body);
+
+        setState(() {
+          special =
+              (jsonData as List).map((e) => SpecialPost.fromJson(e)).toList();
+        });
+
+        for (var s in special) {
+          log(s.toString());
+        }
+      } else {
+        print("Failed to load specialties: ${res.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching specialties: $e");
+    }
+  }
+
   Future<void> doctorAddNextButton() async {
     if (nameCtl.text.trim().isEmpty ||
         surnameCtl.text.trim().isEmpty ||
-        specialNoCtl.text.trim().isEmpty ||
+        selectedSpecialty == null ||
         careerNoCtl.text.trim().isEmpty) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -219,10 +263,21 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
       );
       return;
     }
+    int? selectedSpecialId;
+
+    onChanged:
+    (value) {
+      setState(() {
+        selectedSpecialId =
+            special.firstWhere((sp) => sp.name == value).specialId;
+        selectedSpecialty = value;
+      });
+    };
 
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
-    controller.special.value = specialNoCtl.text;
+    controller.special.value = selectedSpecialId?.toString() ?? '';
+    controller.special.value = selectedSpecialty ?? '';
     controller.careerNo.value = careerNoCtl.text;
 
     var res = await http.get(Uri.parse("$url/doctor/${careerNoCtl.text}"));

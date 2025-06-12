@@ -8,6 +8,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -131,7 +132,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
-                    Get.to(() => Clinicadddoctor());
+                    Get.to(() => Cliniclistdoctors());
                   },
                 ),
                 ListTile(

@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicAddDoctor.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
@@ -193,7 +194,7 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
-                    Get.to(() => Clinicadddoctor());
+                    Get.to(() => Cliniclistdoctors());
                   },
                 ),
                 ListTile(
