@@ -30,7 +30,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
   // TextEditingController specialNoCtl = TextEditingController();
 
   List<SpecialPost> special = [];
-  String? selectedSpecialty;
+  List<String> selectedSpecialty = [];
 
   @override
   void initState() {
@@ -137,31 +137,29 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
                         Material(
                           elevation: 5,
                           borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            height: screenHeight * 0.055,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
+                          child: InkWell(
+                              onTap: _showSelectSpecialty,
                               borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: DropdownButtonFormField<String>(
-                              value: selectedSpecialty,
-                              items: special
-                                  .map((sp) => DropdownMenuItem<String>(
-                                        value: sp.name,
-                                        child: Text(sp.name),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedSpecialty = value!;
-                                });
-                              },
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                height: screenHeight * 0.055,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  selectedSpecialty.isEmpty
+                                      ? 'เลือกความเชี่ยวชาญ'
+                                      : selectedSpecialty.join(', '),
+                                  style: TextStyle(
+                                    color: selectedSpecialty.isEmpty
+                                        ? Colors.grey
+                                        : Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )),
                         ),
                       ],
                     ),
@@ -244,6 +242,186 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     }
   }
 
+  Future<void> specialAdd(String selectedSpecialty) async {
+    SpecialPost req = SpecialPost(
+      name: selectedSpecialty,
+      specialId: 0,
+    );
+
+    final res = await http.post(
+      Uri.parse("$url/special"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: specialPostToJson([req]),
+    );
+
+    // log("STATUS: ${res.statusCode}");
+    // log("BODY: ${res.body}");
+  }
+
+  void _showSelectSpecialty() {
+    TextEditingController searchController = TextEditingController();
+    TextEditingController otherSpecialtyController = TextEditingController();
+    List<String> allSpecialties = [...special.map((s) => s.name), "อื่นๆ"];
+    List<String> filtered = List<String>.from(allSpecialties);
+
+    bool isOtherSelected = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 16),
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          if (!isOtherSelected)
+                            TextField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                hintText: 'ค้นหาความเชี่ยวชาญ',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                prefixIcon: Icon(Icons.search),
+                                suffixIcon: searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear),
+                                        onPressed: () {
+                                          searchController.clear();
+                                          setModalState(() {
+                                            filtered = List<String>.from(
+                                                allSpecialties);
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              onChanged: (value) {
+                                setModalState(() {
+                                  filtered = allSpecialties
+                                      .where((s) => s
+                                          .toLowerCase()
+                                          .contains(value.toLowerCase()))
+                                      .toList();
+                                });
+                              },
+                            ),
+                          SizedBox(height: 16),
+                          if (!isOtherSelected)
+                            ConstrainedBox(
+                              constraints: BoxConstraints(maxHeight: 300),
+                              child: filtered.isEmpty
+                                  ? Center(child: Text('ไม่พบความเชี่ยวชาญ'))
+                                  : ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: filtered.length,
+                                      itemBuilder: (context, index) {
+                                        final item = filtered[index];
+
+                                        return Card(
+                                          child: item == "อื่นๆ"
+                                              ? ListTile(
+                                                  title: Text("อื่นๆ"),
+                                                  trailing: Icon(
+                                                      Icons.arrow_forward_ios),
+                                                  onTap: () {
+                                                    setModalState(() {
+                                                      isOtherSelected = true;
+                                                    });
+                                                  },
+                                                )
+                                              : CheckboxListTile(
+                                                  title: Text(item),
+                                                  value: selectedSpecialty
+                                                      ?.contains(item),
+                                                  onChanged: (bool? selected) {
+                                                    setModalState(() {
+                                                      if (selected == true) {
+                                                        selectedSpecialty
+                                                            .add(item);
+                                                      } else {
+                                                        selectedSpecialty
+                                                            .remove(item);
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          // ignore: dead_code
+                          if (isOtherSelected) ...[
+                            TextField(
+                              controller: otherSpecialtyController,
+                              decoration: InputDecoration(
+                                hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () async {
+                                if (isOtherSelected &&
+                                    otherSpecialtyController.text
+                                        .trim()
+                                        .isNotEmpty) {
+                                  selectedSpecialty.add(
+                                      otherSpecialtyController.text.trim());
+                                  await specialAdd(
+                                      otherSpecialtyController.text.trim());
+                                }
+
+                                setState(() {
+                                  selectedSpecialty =
+                                      List.from(selectedSpecialty);
+                                });
+
+                                Navigator.pop(context);
+                              },
+                              child: Text("ยืนยัน"),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> doctorAddNextButton() async {
     if (nameCtl.text.trim().isEmpty ||
         surnameCtl.text.trim().isEmpty ||
@@ -277,7 +455,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
     controller.special.value = selectedSpecialId?.toString() ?? '';
-    controller.special.value = selectedSpecialty ?? '';
+    controller.special.value = selectedSpecialty.join(', ');
     controller.careerNo.value = careerNoCtl.text;
 
     var res = await http.get(Uri.parse("$url/doctor/${careerNoCtl.text}"));

@@ -8,6 +8,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/clinicPost.dart';
+import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/model/userPost.dart';
@@ -38,6 +39,8 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
 
   List<SpecialPost> special = [];
   String? selectedSpecialty;
+
+  String? get specialName => null;
 
   @override
   void initState() {
@@ -194,13 +197,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
                                     width: 50,
                                     height: 50), // Default if no image
                             title: Text(doctor.name),
-                            subtitle: Text(
-                              doctor.special?.isNotEmpty == true
-                                  ? doctor.special
-                                  : "ไม่มีความสามารถพิเศษ",
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
+
                             trailing: IconButton(
                               icon: Icon(
                                 Icons.delete,
@@ -287,24 +284,33 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       log("doctorspecial is null or empty");
       return;
     }
-    log("Fetching specialties for: $doctorspecial");
+
+    final names = doctorspecial.split(',').map((e) => e.trim()).toList();
+    log("Fetching specialties for: ${names.join(', ')}");
+
     try {
-      final res =
-          await http.get(Uri.parse("$url/special/search?name=$doctorspecial"));
+      List<SpecialPost> allResults = [];
 
-      if (res.statusCode == 200) {
-        var jsonData = json.decode(res.body);
+      for (var name in names) {
+        final res = await http.get(Uri.parse("$url/special/search?name=$name"));
 
-        setState(() {
-          special =
+        if (res.statusCode == 200) {
+          var jsonData = json.decode(res.body);
+          final result =
               (jsonData as List).map((e) => SpecialPost.fromJson(e)).toList();
-        });
 
-        for (var s in special) {
-          log(s.specialId.toString() + " " + s.name);
+          allResults.addAll(result);
+        } else {
+          log("Failed to load specialty for $name: ${res.statusCode}");
         }
-      } else {
-        log("Failed to load specialties: ${res.statusCode}");
+      }
+
+      setState(() {
+        special = allResults;
+      });
+
+      for (var s in special) {
+        log("${s.specialId} ${s.name}");
       }
     } catch (e) {
       log("Error fetching specialties: $e");
@@ -345,18 +351,10 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
     showLoadingDialog(context, message: "กำลังโหลด...");
 
     for (var doc in doctorListController.doctorList) {
-      int? specialId = await getSpecialIdByName(doc.special ?? '');
-
-      if (specialId == null) {
-        log('ไม่พบ specialId สำหรับชื่อ: ${doc.special}');
-        continue;
-      }
-
       DoctorPost req = DoctorPost(
         userEmail: box.read("email"),
         name: doc.name,
         surname: doc.surname,
-        special: specialId.toString(),
         careerNo: doc.careerNo,
         image: doc.image,
       );
@@ -368,6 +366,26 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       );
 
       log(res.statusCode.toString());
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        var jsonResponse = json.decode(res.body);
+        String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+
+        for (var special in special) {
+          if (special.specialId == null) {
+            log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
+            continue;
+          }
+          log("doctorId: ${doc.careerNo}, specialId: ${special.specialId}");
+
+          await docspecialAdd(
+            doctorId: doc.careerNo,
+            specialId: special.specialId!,
+          );
+        }
+      } else {
+        log("Failed to add doctor ${doc.name} ${doc.surname}");
+      }
     }
 
     Get.back();
@@ -405,6 +423,24 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         ],
       ),
     );
+  }
+
+  Future<void> docspecialAdd({
+    required String doctorId,
+    required int specialId,
+  }) async {
+    final req = DocSpecialPost(
+      doctorId: doctorId,
+      specialId: specialId,
+    );
+
+    final res = await http.post(
+      Uri.parse("$url/docspecial"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: jsonEncode(req),
+    );
+
+    log("ส่ง doctorId: $doctorId, specialId: $specialId => status: ${res.statusCode}");
   }
 
   Future<void> userAdd() async {

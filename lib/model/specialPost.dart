@@ -24,6 +24,8 @@ class SpecialPost {
         name: json["name"] ?? '',
       );
 
+  get length => null;
+
   Map<String, dynamic> toJson() => {
         "special_id": specialId,
         "name": name,

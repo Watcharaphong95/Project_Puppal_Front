@@ -14,7 +14,7 @@ class DoctorPost {
   String name;
   String surname;
   String careerNo;
-  String special;
+
   String image;
 
   DoctorPost({
@@ -22,7 +22,6 @@ class DoctorPost {
     required this.name,
     required this.surname,
     required this.careerNo,
-    required this.special,
     required this.image,
   });
 
@@ -31,7 +30,6 @@ class DoctorPost {
         name: json["name"],
         surname: json["surname"],
         careerNo: json["careerNo"],
-        special: json["special"],
         image: json["image"],
       );
 
@@ -40,7 +38,6 @@ class DoctorPost {
         "name": name,
         "surname": surname,
         "careerNo": careerNo,
-        "special": special,
         "image": image,
       };
 }

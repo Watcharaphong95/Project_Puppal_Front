@@ -147,7 +147,6 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
         name: controller.name.value,
         surname: controller.surname.value,
         careerNo: controller.careerNo.value,
-        special: controller.special.value,
         image: controller.image.value,
       );
 

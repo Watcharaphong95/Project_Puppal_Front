@@ -37,8 +37,8 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
   TextEditingController searchController = TextEditingController();
 
   List<SpecialPost> special = [];
-  String? selectedSpecialty;
-
+  // String? selectedSpecialty;
+  List<String> selectedSpecialty = [];
   @override
   void initState() {
     super.initState();
@@ -247,27 +247,28 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                           elevation: 5,
                           borderRadius: BorderRadius.circular(10),
                           child: InkWell(
-                            onTap: _showSelectSpecialty,
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              height: screenHeight * 0.055,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                selectedSpecialty ?? 'เลือกความเชี่ยวชาญ',
-                                style: TextStyle(
-                                  color: selectedSpecialty == null
-                                      ? Colors.grey
-                                      : Colors.black,
-                                  fontSize: 16,
+                              onTap: _showSelectSpecialty,
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                height: screenHeight * 0.055,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              ),
-                            ),
-                          ),
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  selectedSpecialty.isEmpty
+                                      ? 'เลือกความเชี่ยวชาญ'
+                                      : selectedSpecialty.join(', '),
+                                  style: TextStyle(
+                                    color: selectedSpecialty.isEmpty
+                                        ? Colors.grey
+                                        : Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )),
                         ),
                       ],
                     ),
@@ -383,7 +384,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
     controller.special.value = selectedSpecialId?.toString() ?? '';
-    controller.special.value = selectedSpecialty ?? '';
+    controller.special.value = selectedSpecialty.join(', ');
     controller.careerNo.value = careerNoCtl.text;
 
     var res = await http.get(Uri.parse("$url/doctor/${careerNoCtl.text}"));
@@ -506,29 +507,41 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                                       shrinkWrap: true,
                                       itemCount: filtered.length,
                                       itemBuilder: (context, index) {
+                                        final item = filtered[index];
+
                                         return Card(
-                                          child: ListTile(
-                                            title: Center(
-                                              child: Text(filtered[index]),
-                                            ),
-                                            onTap: () {
-                                              if (filtered[index] == "อื่นๆ") {
-                                                setModalState(() {
-                                                  isOtherSelected = true;
-                                                });
-                                              } else {
-                                                setState(() {
-                                                  selectedSpecialty =
-                                                      filtered[index];
-                                                });
-                                                Navigator.pop(context);
-                                              }
-                                            },
-                                          ),
+                                          child: item == "อื่นๆ"
+                                              ? ListTile(
+                                                  title: Text("อื่นๆ"),
+                                                  trailing: Icon(
+                                                      Icons.arrow_forward_ios),
+                                                  onTap: () {
+                                                    setModalState(() {
+                                                      isOtherSelected = true;
+                                                    });
+                                                  },
+                                                )
+                                              : CheckboxListTile(
+                                                  title: Text(item),
+                                                  value: selectedSpecialty
+                                                      .contains(item),
+                                                  onChanged: (bool? selected) {
+                                                    setModalState(() {
+                                                      if (selected == true) {
+                                                        selectedSpecialty
+                                                            .add(item);
+                                                      } else {
+                                                        selectedSpecialty
+                                                            .remove(item);
+                                                      }
+                                                    });
+                                                  },
+                                                ),
                                         );
                                       },
                                     ),
                             ),
+                          // ignore: dead_code
                           if (isOtherSelected) ...[
                             TextField(
                               controller: otherSpecialtyController,
@@ -542,18 +555,22 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                             SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () async {
-                                if (otherSpecialtyController.text
-                                    .trim()
-                                    .isNotEmpty) {
-                                  setState(() {
-                                    selectedSpecialty =
-                                        otherSpecialtyController.text.trim();
-                                  });
-
-                                  await specialAdd(selectedSpecialty!);
-                                  FocusScope.of(context).unfocus();
-                                  Navigator.pop(context);
+                                if (isOtherSelected &&
+                                    otherSpecialtyController.text
+                                        .trim()
+                                        .isNotEmpty) {
+                                  selectedSpecialty.add(
+                                      otherSpecialtyController.text.trim());
+                                  await specialAdd(
+                                      otherSpecialtyController.text.trim());
                                 }
+
+                                setState(() {
+                                  selectedSpecialty =
+                                      List.from(selectedSpecialty);
+                                });
+
+                                Navigator.pop(context);
                               },
                               child: Text("ยืนยัน"),
                             ),

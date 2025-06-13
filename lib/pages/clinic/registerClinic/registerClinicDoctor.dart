@@ -1,13 +1,17 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/clinicPost.dart';
+import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDocter.dart';
@@ -30,12 +34,19 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   final clinic = Get.find<registerClinicCtl>();
   final doctor = Get.find<registerDoctorCtl>();
   final doctorListController = Get.find<doctorDataList>();
+  final box = GetStorage();
+
+  List<SpecialPost> special = [];
+  String? selectedSpecialty;
+
+  String? get specialName => null;
 
   @override
   void initState() {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
+      getSpecialData(doctor.special.value);
     });
   }
 
@@ -78,13 +89,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
                                     width: 50,
                                     height: 50), // Default if no image
                             title: Text(doctor.name),
-                            subtitle: Text(
-                              doctor.special?.isNotEmpty == true
-                                  ? doctor.special
-                                  : "ไม่มีความสามารถพิเศษ",
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
+
                             trailing: IconButton(
                               icon: Icon(
                                 Icons.delete,
@@ -171,34 +176,259 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
     doctorListController.doctorList.clear();
   }
 
+  Future<void> getSpecialData(String? doctorspecial) async {
+    log("doctor.special.value: ${doctor.special.value}");
+
+    if (doctorspecial == null || doctorspecial.isEmpty) {
+      log("doctorspecial is null or empty");
+      return;
+    }
+
+    final names = doctorspecial.split(',').map((e) => e.trim()).toList();
+    log("Fetching specialties for: ${names.join(', ')}");
+
+    try {
+      List<SpecialPost> allResults = [];
+
+      for (var name in names) {
+        final res = await http.get(Uri.parse("$url/special/search?name=$name"));
+
+        if (res.statusCode == 200) {
+          var jsonData = json.decode(res.body);
+          final result =
+              (jsonData as List).map((e) => SpecialPost.fromJson(e)).toList();
+
+          allResults.addAll(result);
+        } else {
+          log("Failed to load specialty for $name: ${res.statusCode}");
+        }
+      }
+
+      setState(() {
+        special = allResults;
+      });
+
+      for (var s in special) {
+        log("${s.specialId} ${s.name}");
+      }
+    } catch (e) {
+      log("Error fetching specialties: $e");
+    }
+  }
+
+  Future<int?> getSpecialIdByName(String specialName) async {
+    try {
+      final res =
+          await http.get(Uri.parse("$url/special/search?name=$specialName"));
+
+      if (res.statusCode == 200) {
+        var jsonData = json.decode(res.body);
+
+        List<SpecialPost> specials =
+            (jsonData as List).map((e) => SpecialPost.fromJson(e)).toList();
+
+        if (specials.isNotEmpty) {
+          return specials[0].specialId;
+        }
+        return null;
+      } else {
+        log("Failed to load specialties: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error fetching specialties: $e");
+      return null;
+    }
+  }
+
+  // Future<void> insertToDB() async {
+  //   showLoadingDialog(context, message: "กำลังโหลด...");
+  //   await userAdd();
+
+  //   ClinicPost req2 = ClinicPost(
+  //       userEmail: clinic.email.value,
+  //       name: clinic.name.value,
+  //       phone: clinic.name.value,
+  //       address: clinic.address.value,
+  //       lat: clinic.lat.value,
+  //       lng: clinic.lng.value,
+  //       image: clinic.imageUrl.value,
+  //       open: clinic.open.value,
+  //       close: clinic.close.value,
+  //       numPerTime: clinic.numPerTime.value);
+
+  //   var res = await http.post(
+  //     Uri.parse("$url/clinic"),
+  //     headers: {"Content-Type": "application/json; charset=utf-8"},
+  //     body: clinicPostToJson(req2),
+  //   );
+  //   log(res.statusCode.toString());
+
+  //   for (var doc in doctorListController.doctorList) {
+  //     DoctorPost req = DoctorPost(
+  //       userEmail: clinic.email.value,
+  //       name: doc.name,
+  //       surname: doc.surname,
+  //       careerNo: doc.careerNo,
+  //       image: doc.image,
+  //     );
+
+  //     var doctorRes = await http.post(
+  //       Uri.parse("$url/doctor"),
+  //       headers: {"Content-Type": "application/json; charset=utf-8"},
+  //       body: doctorPostToJson(req),
+  //     );
+
+  //     log("เพิ่มหมอ ${doc.name} => statusCode: ${doctorRes.statusCode}");
+
+  //     if (doctorRes.statusCode == 200 || doctorRes.statusCode == 201) {
+  //       var jsonResponse = json.decode(doctorRes.body);
+  //       String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+
+  //       for (var sp in special) {
+  //         if (sp.specialId == null) {
+  //           log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
+  //           continue;
+  //         }
+
+  //         log("เชื่อม doctorId: $doctorId กับ specialId: ${sp.specialId}");
+  //         await docspecialAdd(
+  //           doctorId: doctorId,
+  //           specialId: sp.specialId!,
+  //         );
+  //       }
+  //     } else {
+  //       log("ไม่สามารถเพิ่มหมอได้: ${doctorRes.statusCode}");
+  //     }
+  //   }
+
+  //   // Get.back();
+
+  //   if (res.statusCode == 201) {
+  //     showDialog(
+  //       barrierDismissible: false,
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //         backgroundColor: const Color(0xFFFFF3F3),
+  //         title: Text(
+  //           "สมัครสมาชิกสำเร็จ",
+  //           style: const TextStyle(
+  //             fontWeight: FontWeight.bold,
+  //             color: Color(0xFF795548),
+  //           ),
+  //         ),
+  //         content: Text(
+  //           "สมัครสมาชิกคลินิกสำเร็จแล้ว",
+  //           style: const TextStyle(color: Colors.black87),
+  //         ),
+  //         shape:
+  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  //         actions: [
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Get.to(() => IndexPage());
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: const Color(0xFF795548),
+  //               foregroundColor: Colors.white,
+  //               shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(10)),
+  //             ),
+  //             child: const Text('ตกลง'),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   } else {
+  //     showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //         backgroundColor: const Color(0xFFFFF3F3),
+  //         title: Text(
+  //           "เกิดข้อผิดพลาด",
+  //           style: const TextStyle(
+  //             fontWeight: FontWeight.bold,
+  //             color: Color(0xFF795548),
+  //           ),
+  //         ),
+  //         content: Text(
+  //           "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+  //           style: const TextStyle(color: Colors.black87),
+  //         ),
+  //         shape:
+  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  //         actions: [
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Get.back();
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: const Color(0xFF795548),
+  //               foregroundColor: Colors.white,
+  //               shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(10)),
+  //             ),
+  //             child: const Text('ตกลง'),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
+  // }
+
+  // Future<void> doctorAdd() async {
+  //   for (var doc in doctorListController.doctorList) {
+  //     DoctorPost req = DoctorPost(
+  //       userEmail: clinic.email.value,
+  //       name: doc.name,
+  //       surname: doc.surname,
+  //       careerNo: doc.careerNo,
+  //       image: doc.image,
+  //     );
+
+  //     var res = await http.post(
+  //       Uri.parse("$url/doctor"),
+  //       headers: {"Content-Type": "application/json; charset=utf-8"},
+  //       body: doctorPostToJson(req),
+  //     );
+  //     log(res.statusCode.toString());
+  //   }
+  // }
+
   Future<void> insertToDB() async {
     showLoadingDialog(context, message: "กำลังโหลด...");
-    await userAdd();
 
-    ClinicPost req2 = ClinicPost(
-        userEmail: clinic.email.value,
-        name: clinic.name.value,
-        phone: clinic.name.value,
-        address: clinic.address.value,
-        lat: clinic.lat.value,
-        lng: clinic.lng.value,
-        image: clinic.imageUrl.value,
-        open: clinic.open.value,
-        close: clinic.close.value,
-        numPerTime: clinic.numPerTime.value);
+    try {
+      await userAdd();
 
-    var res = await http.post(
-      Uri.parse("$url/clinic"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: clinicPostToJson(req2),
-    );
-    log(res.statusCode.toString());
+      ClinicPost req2 = ClinicPost(
+          userEmail: clinic.email.value,
+          name: clinic.name.value,
+          phone: clinic.phone.value,
+          address: clinic.address.value,
+          lat: clinic.lat.value,
+          lng: clinic.lng.value,
+          image: clinic.imageUrl.value,
+          open: clinic.open.value,
+          close: clinic.close.value,
+          numPerTime: clinic.numPerTime.value);
 
-    await doctorAdd();
+      var clinicRes = await http.post(
+        Uri.parse("$url/clinic"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: clinicPostToJson(req2),
+      );
 
-    Get.back();
+      log("Clinic creation status: ${clinicRes.statusCode}");
 
-    if (res.statusCode == 201) {
+      if (clinicRes.statusCode != 200 && clinicRes.statusCode != 201) {
+        throw Exception("Failed to create clinic");
+      }
+
+      await doctorAdd();
+
+      Get.back();
+
       showDialog(
         barrierDismissible: false,
         context: context,
@@ -212,7 +442,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
             ),
           ),
           content: Text(
-            "สมัครสมาชิกคลินิกสำเร็จแล้ว",
+            "สมัครสมาชิกคลินิกและเพิ่มหมอสำเร็จแล้ว",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:
@@ -233,7 +463,11 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
           ],
         ),
       );
-    } else {
+    } catch (e) {
+      Get.back();
+
+      log("Error in insertToDB: $e");
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -246,7 +480,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
             ),
           ),
           content: Text(
-            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง",
+            "ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง\nError: $e",
             style: const TextStyle(color: Colors.black87),
           ),
           shape:
@@ -271,23 +505,57 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   }
 
   Future<void> doctorAdd() async {
-    for (var doc in doctorListController.doctorList) {
-      DoctorPost req = DoctorPost(
-        userEmail: clinic.email.value,
-        name: doc.name,
-        surname: doc.surname,
-        special: doc.special,
-        careerNo: doc.careerNo,
-        image: doc.image,
-      );
+    DoctorPost doctorReq = DoctorPost(
+      userEmail: clinic.email.value,
+      name: doctor.name.value,
+      surname: doctor.surname.value,
+      careerNo: doctor.careerNo.value,
+      image: doctor.image.value,
+    );
 
-      var res = await http.post(
-        Uri.parse("$url/doctor"),
-        headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: doctorPostToJson(req),
-      );
-      log(res.statusCode.toString());
+    var doctorRes = await http.post(
+      Uri.parse("$url/doctor"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: doctorPostToJson(doctorReq),
+    );
+
+    log("Doctor ${doctor.name} creation status: ${doctorRes.statusCode}");
+
+    if (doctorRes.statusCode == 200 || doctorRes.statusCode == 201) {
+      for (var sp in special) {
+        if (sp.specialId == null) {
+          log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
+          continue;
+        }
+
+        log("Adding specialty - doctorId: ${doctor.careerNo}, specialId: ${sp.specialId}");
+
+        await docspecialAdd(
+          doctorId: doctor.careerNo.value,
+          specialId: sp.specialId!,
+        );
+      }
+    } else {
+      log("Failed to add doctor ${doctor.name} ${doctor.surname} - Status: ${doctorRes.statusCode}");
     }
+  }
+
+  Future<void> docspecialAdd({
+    required String doctorId,
+    required int specialId,
+  }) async {
+    final req = DocSpecialPost(
+      doctorId: doctorId,
+      specialId: specialId,
+    );
+
+    final res = await http.post(
+      Uri.parse("$url/docspecial"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: jsonEncode(req),
+    );
+
+    log("ส่ง doctorId: $doctorId, specialId: $specialId => status: ${res.statusCode}");
   }
 
   Future<void> userAdd() async {
