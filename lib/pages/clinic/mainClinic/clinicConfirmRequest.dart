@@ -1,9 +1,18 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
+import 'package:http/http.dart' as http;
+import 'package:shimmer/shimmer.dart';
 
 class ClinicConfirmRequest extends StatefulWidget {
   const ClinicConfirmRequest({super.key});
@@ -13,8 +22,19 @@ class ClinicConfirmRequest extends StatefulWidget {
 }
 
 class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
+  late double screenWidth;
+  late double screenHeight;
   bool isNormalSelected = true;
   final box = GetStorage();
+  String url = '';
+
+  @override
+  void initState() {
+    super.initState();
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+  }
 
   Widget _buildRequestCard(String status, String name, String time) {
     return Container(
@@ -76,6 +96,8 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
 
   @override
   Widget build(BuildContext context) {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(),
       drawer: Drawer(
@@ -112,12 +134,31 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.person, size: 50, color: Colors.white),
+                      ClipOval(
+                        child: Image.network(
+                          box.read('clinicImage'),
+                          width: screenWidth * 0.2,
+                          height: screenWidth * 0.2,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: screenWidth * 0.2,
+                                height: screenWidth * 0.2,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                       SizedBox(height: 10),
                       Text(
-                        box.read('email') ?? "ผู้ใช้งาน",
+                        box.read('clinicName') ?? "ผู้ใช้งาน",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -166,16 +207,46 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
                   onTap: () {},
                 ),
                 ListTile(
+                  leading:
+                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+                  title: Text('สลับโหมด'),
+                  onTap: () async {
+                    var resGeneral = await http.get(
+                        Uri.parse("$url/general/name/${box.read('email')}"));
+                    if (resGeneral.statusCode == 200) {
+                      showAlert(
+                        title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+                        message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
+                        onConfirm: () {
+                          box.write('generalName',
+                              jsonDecode(resGeneral.body)['username']);
+                          box.write('generalImage',
+                              jsonDecode(resGeneral.body)['image']);
+                          log('Name ${box.read('generalName')}');
+                          Get.to(() => GeneralmainPage());
+                        },
+                      );
+                    } else {
+                      showAlert(
+                        title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+                        onConfirm: () {
+                          Get.to(() => RegisterusergooglePage());
+                        },
+                      );
+                    }
+                  },
+                ),
+                ListTile(
                   leading: Icon(Icons.logout, color: Colors.redAccent),
                   title: Text('ออกจากระบบ'),
                   onTap: () {
                     showAlert(
-                      context: context,
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
                       onConfirm: () {
                         box.erase();
-                        Get.to(() => IndexPage());
+                        Get.offAll(() => IndexPage());
                       },
                     );
                   },
@@ -290,32 +361,143 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
   }
 
   void showAlert({
-    required BuildContext context,
     required String title,
     required String message,
-    required VoidCallback onConfirm,
+    VoidCallback? onConfirm,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('ยกเลิก'),
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon with subtle animation potential
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD7CCC8),
+              shape: BoxShape.circle,
             ),
-            TextButton(
-              onPressed: () {
-                onConfirm();
-                Navigator.of(context).pop();
-              },
-              child: const Text('ยืนยัน'),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 24,
+              color: const Color(0xFFA1887F),
             ),
-          ],
-        );
-      },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Title with better typography
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Color(0xFF8D6E63),
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Message with improved readability
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFFA1887F),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 20),
+
+          // Enhanced button row
+          Row(
+            children: [
+              // Cancel button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  child: TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF8D6E63),
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: const Color(0xFFD7CCC8),
+                          width: 1,
+                        ),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ยกเลิก',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              // Confirm button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color(0xFF795548),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFA1887F).withOpacity(0.3),
+                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ตกลง',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 }

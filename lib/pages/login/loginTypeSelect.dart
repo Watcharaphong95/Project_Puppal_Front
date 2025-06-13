@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:http/http.dart' as http;
 
 class LogintypeselectPage extends StatefulWidget {
   const LogintypeselectPage({super.key});
@@ -14,12 +20,23 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
   late double screenWidth;
   late double screenHeight;
 
+  String url = '';
+  final box = GetStorage();
+
+  @override
+  void initState() {
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: Scaffold(
         body: SizedBox(
           width: screenWidth,
@@ -84,11 +101,22 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
     );
   }
 
-  void clinicType() {
+  Future<void> clinicType() async {
+    var resClinic =
+        await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+    log(resClinic.body);
+    box.write('clinicName', jsonDecode(resClinic.body)['name']);
+    box.write('clinicImage', jsonDecode(resClinic.body)['image']);
+    log('Name ${box.read('clinicName')}');
     Get.to(() => ClinicmainPage());
   }
 
-  void userType() {
+  Future<void> userType() async {
+    var resGeneral =
+        await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
+    box.write('generalName', jsonDecode(resGeneral.body)['username']);
+    box.write('generalImage', jsonDecode(resGeneral.body)['image']);
+    log('Name ${box.read('generalName')}');
     Get.to(() => GeneralmainPage());
   }
 }
