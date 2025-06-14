@@ -7,6 +7,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 
 import 'package:puppal_application/pages/login/index.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Cliniclistdoctors extends StatefulWidget {
   const Cliniclistdoctors({super.key});
@@ -16,10 +17,14 @@ class Cliniclistdoctors extends StatefulWidget {
 }
 
 class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
+  late double screenWidth;
+  late double screenHeight;
   final List<String> doctors = List.generate(6, (index) => "B3");
   final box = GetStorage();
   @override
   Widget build(BuildContext context) {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
@@ -77,10 +82,29 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.person, size: 50, color: Colors.white),
+                      ClipOval(
+                        child: Image.network(
+                          box.read('clinicImage'),
+                          width: screenWidth * 0.2,
+                          height: screenWidth * 0.2,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: screenWidth * 0.2,
+                                height: screenWidth * 0.2,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                       SizedBox(height: 10),
                       Text(
-                        box.read('email') ?? "ผู้ใช้งาน",
+                        box.read('clinicName') ?? "ผู้ใช้งาน",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,

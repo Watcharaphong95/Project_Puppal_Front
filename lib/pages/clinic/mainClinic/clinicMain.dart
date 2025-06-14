@@ -33,6 +33,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    box.write('type', 'clinic');
   }
 
   @override
@@ -118,6 +119,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       color: Color(0xFF916b44)),
                   title: Text('คำขอฉีดยา'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => ClinicConfirmRequest());
                   },
                 ),
@@ -131,6 +133,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => Cliniclistdoctors());
                   },
                 ),
@@ -161,7 +164,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                           box.write('generalImage',
                               jsonDecode(resGeneral.body)['image']);
                           log('Name ${box.read('generalName')}');
-                          Get.to(() => GeneralmainPage());
+                          Get.offAll(() => GeneralmainPage());
                         },
                       );
                     } else {
@@ -169,6 +172,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                         title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
                         message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
                         onConfirm: () {
+                          Get.back();
                           Get.to(() => RegisterusergooglePage());
                         },
                       );

@@ -213,14 +213,14 @@ class _IndexPageState extends State<IndexPage> {
             box.write('generalName', jsonDecode(resGeneral.body)['username']);
             box.write('generalImage', jsonDecode(resGeneral.body)['image']);
             log('Name ${box.read('generalName')}');
-            Get.to(() => GeneralmainPage());
+            Get.offAll(() => GeneralmainPage());
           } else if (user.clinic == 1) {
             var resClinic = await http
                 .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
             box.write('clinicName', jsonDecode(resClinic.body)['name']);
             box.write('clinicImage', jsonDecode(resClinic.body)['image']);
             log('Name ${box.read('clinicName')}');
-            Get.to(() => ClinicmainPage());
+            Get.offAll(() => ClinicmainPage());
           }
         } else {
           Get.to(() => RegistertypePage());
@@ -248,14 +248,14 @@ class _IndexPageState extends State<IndexPage> {
           box.write('generalName', jsonDecode(resGeneral.body)['username']);
           box.write('generalImage', jsonDecode(resGeneral.body)['image']);
           log('Name ${box.read('generalName')}');
-          Get.to(() => GeneralmainPage());
+          Get.offAll(() => GeneralmainPage());
         } else if (user.clinic == 1) {
           var resClinic = await http
               .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
           box.write('clinicName', jsonDecode(resClinic.body)['name']);
           box.write('clinicImage', jsonDecode(resClinic.body)['image']);
           log('Name ${box.read('clinicName')}');
-          Get.to(() => ClinicmainPage());
+          Get.offAll(() => ClinicmainPage());
         }
       }
     }

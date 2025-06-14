@@ -13,6 +13,7 @@ import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
+import 'package:puppal_application/pages/general/profile/editProfile.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
@@ -32,7 +33,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
   String url = '';
   String name = '';
   String avatarImage = '';
-  bool _LoadingData = true;
+  bool _loadingData = true;
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
         await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
     name = jsonDecode(resGeneral.body)['username'];
     avatarImage = jsonDecode(resGeneral.body)['image'];
-    _LoadingData = false;
+    _loadingData = false;
     setState(() {});
   }
 
@@ -134,6 +135,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                       Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralmainPage());
                   },
                 ),
@@ -142,6 +144,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                       color: Color(0xFF916b44)),
                   title: Text('การแจ้งเตือน'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralnotificationPage());
                   },
                 ),
@@ -149,6 +152,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
                   title: Text('สุนัข'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneraldogPage());
                   },
                 ),
@@ -157,6 +161,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                       Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
                   title: Text('ประวัติการฉีดยา'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralrecordsearchPage());
                   },
                 ),
@@ -175,6 +180,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                   leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
                   title: Text('คู่มือ'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralguidePage());
                   },
                 ),
@@ -200,7 +206,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                           box.write('clinicImage',
                               jsonDecode(resClinic.body)['image']);
                           log('Name ${box.read('clinicName')}');
-                          Get.to(() => ClinicmainPage());
+                          Get.offAll(() => ClinicmainPage());
                         },
                       );
                     } else {
@@ -208,6 +214,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                         title: 'คุณยังไม่มีบัญชีคลินิก!',
                         message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
                         onConfirm: () {
+                          Get.back();
                           Get.to(() => RegisterclinicgooglePage());
                         },
                       );
@@ -234,75 +241,65 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
           ),
         ),
       ),
-      body: PopScope(
-          canPop: false,
-          child: _LoadingData
-              ? SizedBox(
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                  child: SizedBox(
-                    width: screenWidth * 0.9,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ClipOval(
-                          child: Image.network(
-                            avatarImage,
-                            width: screenWidth * 0.35,
-                            height: screenWidth * 0.35,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) {
-                                return child;
-                              }
-                              return SizedBox(
-                                width: screenWidth * 0.2,
-                                height: screenHeight * 0.1,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            (loadingProgress
-                                                    .expectedTotalBytes ??
-                                                1)
-                                        : null,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
+      body: _loadingData
+          ? SizedBox(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              child: SizedBox(
+                width: screenWidth * 0.9,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ClipOval(
+                      child: Image.network(
+                        avatarImage,
+                        width: screenWidth * 0.35,
+                        height: screenWidth * 0.35,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: screenWidth * 0.35,
+                              height: screenWidth * 0.35,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    SizedBox(
+                      width: screenWidth * 0.6,
+                      child: Center(
+                        child: Text(
                           name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: SizedBox(
+                            height: screenHeight * 0.075,
+                            width: screenWidth * 0.8,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Get.to(() => EditprofilePage());
+                              },
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -317,7 +314,8 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                       const SizedBox(width: 8),
                                       const Text(
                                         'แก้ไขโปรไฟล์',
-                                        style: TextStyle(fontSize: 20),
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.black),
                                       ),
                                     ],
                                   ),
@@ -329,21 +327,15 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: SizedBox(
+                            height: screenHeight * 0.075,
+                            width: screenWidth * 0.8,
+                            child: ElevatedButton(
+                              onPressed: () {},
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -358,7 +350,8 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                       const SizedBox(width: 8),
                                       const Text(
                                         'เปลี่ยนรหัสผ่าน',
-                                        style: TextStyle(fontSize: 20),
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.black),
                                       ),
                                     ],
                                   ),
@@ -370,21 +363,15 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: SizedBox(
+                            height: screenHeight * 0.075,
+                            width: screenWidth * 0.8,
+                            child: ElevatedButton(
+                              onPressed: () {},
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -399,7 +386,8 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                       const SizedBox(width: 8),
                                       const Text(
                                         'เกี่ยวกับ',
-                                        style: TextStyle(fontSize: 20),
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.black),
                                       ),
                                     ],
                                   ),
@@ -411,21 +399,15 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: SizedBox(
+                            height: screenHeight * 0.075,
+                            width: screenWidth * 0.8,
+                            child: ElevatedButton(
+                              onPressed: () {},
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -440,7 +422,8 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                       const SizedBox(width: 8),
                                       const Text(
                                         'ลบโปรไฟล์',
-                                        style: TextStyle(fontSize: 20),
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.red),
                                       ),
                                     ],
                                   ),
@@ -452,12 +435,14 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ],
                               ),
                             ),
-                          ],
+                          ),
                         )
                       ],
-                    ),
-                  ),
-                )),
+                    )
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
