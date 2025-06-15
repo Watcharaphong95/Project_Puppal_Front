@@ -118,6 +118,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                       Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralmainPage());
                   },
                 ),
@@ -126,6 +127,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                       color: Color(0xFF916b44)),
                   title: Text('การแจ้งเตือน'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralnotificationPage());
                   },
                 ),
@@ -133,6 +135,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
                   title: Text('สุนัข'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneraldogPage());
                   },
                 ),
@@ -141,6 +144,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                       Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
                   title: Text('ประวัติการฉีดยา'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralrecordsearchPage());
                   },
                 ),
@@ -149,6 +153,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                       color: Color(0xFF916b44)),
                   title: Text('โปรไฟล์'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralprofilePage());
                   },
                 ),
@@ -184,7 +189,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                           box.write('clinicImage',
                               jsonDecode(resClinic.body)['image']);
                           log('Name ${box.read('clinicName')}');
-                          Get.to(() => ClinicmainPage());
+                          Get.offAll(() => ClinicmainPage());
                         },
                       );
                     } else {
@@ -192,6 +197,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                         title: 'คุณยังไม่มีบัญชีคลินิก!',
                         message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
                         onConfirm: () {
+                          Get.back();
                           Get.to(() => RegisterclinicgooglePage());
                         },
                       );
@@ -218,7 +224,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
           ),
         ),
       ),
-      body: PopScope(canPop: false, child: Container()),
+      body: Container(),
     );
   }
 

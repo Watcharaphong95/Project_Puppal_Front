@@ -108,7 +108,7 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
     box.write('clinicName', jsonDecode(resClinic.body)['name']);
     box.write('clinicImage', jsonDecode(resClinic.body)['image']);
     log('Name ${box.read('clinicName')}');
-    Get.to(() => ClinicmainPage());
+    Get.offAll(() => ClinicmainPage());
   }
 
   Future<void> userType() async {
@@ -117,6 +117,6 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
     box.write('generalName', jsonDecode(resGeneral.body)['username']);
     box.write('generalImage', jsonDecode(resGeneral.body)['image']);
     log('Name ${box.read('generalName')}');
-    Get.to(() => GeneralmainPage());
+    Get.offAll(() => GeneralmainPage());
   }
 }

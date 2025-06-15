@@ -221,6 +221,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                       Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralmainPage());
                   },
                 ),
@@ -229,6 +230,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                       color: Color(0xFF916b44)),
                   title: Text('การแจ้งเตือน'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralnotificationPage());
                   },
                 ),
@@ -236,6 +238,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
                   title: Text('สุนัข'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneraldogPage());
                   },
                 ),
@@ -255,6 +258,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                       color: Color(0xFF916b44)),
                   title: Text('โปรไฟล์'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralprofilePage());
                   },
                 ),
@@ -262,6 +266,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                   leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
                   title: Text('คู่มือ'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => GeneralguidePage());
                   },
                 ),
@@ -287,7 +292,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                           box.write('clinicImage',
                               jsonDecode(resClinic.body)['image']);
                           log('Name ${box.read('clinicName')}');
-                          Get.to(() => ClinicmainPage());
+                          Get.offAll(() => ClinicmainPage());
                         },
                       );
                     } else {
@@ -295,6 +300,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                         title: 'คุณยังไม่มีบัญชีคลินิก!',
                         message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
                         onConfirm: () {
+                          Get.back();
                           Get.to(() => RegisterclinicgooglePage());
                         },
                       );
@@ -321,137 +327,211 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
           ),
         ),
       ),
-      body: PopScope(
-        canPop: true,
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: screenHeight * 0.16,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: dogs.length,
-                        itemBuilder: (context, index) {
-                          final dog = dogs[index];
-                          final isSelected = selectedIndex == index;
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: screenHeight * 0.16,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: dogs.length,
+                      itemBuilder: (context, index) {
+                        final dog = dogs[index];
+                        final isSelected = selectedIndex == index;
 
-                          return GestureDetector(
-                            onTap: () async {
-                              setState(() {
-                                isLoadingRecord = true;
-                                selectedIndex = index;
-                                dogData = dog;
-                                dogId = dog.dogId;
-                                dogBirthDay = dog.birthday;
-                              });
-                              await getDogRecordData();
-                              setState(() {
-                                isLoadingRecord = false;
-                              });
-                            },
-                            child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 8),
-                              child: Column(
-                                children: [
-                                  Stack(alignment: Alignment.center, children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(150),
-                                      child: Image.network(
-                                        dog.image,
-                                        width: screenWidth * 0.25,
-                                        height: screenHeight * 0.125,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, progress) {
-                                          if (progress == null) return child;
-                                          return Center(
-                                              child:
-                                                  CircularProgressIndicator());
-                                        },
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Center(
-                                          child: Icon(Icons.error),
-                                        ),
+                        return GestureDetector(
+                          onTap: () async {
+                            setState(() {
+                              isLoadingRecord = true;
+                              selectedIndex = index;
+                              dogData = dog;
+                              dogId = dog.dogId;
+                              dogBirthDay = dog.birthday;
+                            });
+                            await getDogRecordData();
+                            setState(() {
+                              isLoadingRecord = false;
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              children: [
+                                Stack(alignment: Alignment.center, children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(150),
+                                    child: Image.network(
+                                      dog.image,
+                                      width: screenWidth * 0.25,
+                                      height: screenHeight * 0.125,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, progress) {
+                                        if (progress == null) return child;
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Center(
+                                        child: Icon(Icons.error),
                                       ),
                                     ),
-                                    if (isSelected) ...[
-                                      Container(
-                                        width: screenWidth * 0.25,
-                                        height: screenHeight * 0.125,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withAlpha(102),
-                                          shape: BoxShape.circle,
-                                        ),
+                                  ),
+                                  if (isSelected) ...[
+                                    Container(
+                                      width: screenWidth * 0.25,
+                                      height: screenHeight * 0.125,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withAlpha(102),
+                                        shape: BoxShape.circle,
                                       ),
-                                      Icon(FontAwesomeIcons.check,
-                                          color: Colors.black54, size: 32),
-                                    ]
-                                  ]),
-                                  Text(
-                                    dog.name,
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                        overflow: TextOverflow.ellipsis,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
+                                    ),
+                                    Icon(FontAwesomeIcons.check,
+                                        color: Colors.black54, size: 32),
+                                  ]
+                                ]),
+                                Text(
+                                  dog.name,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                )
+                              ],
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                    Column(
+                  ),
+                  Column(
+                    children: [
+                      SizedBox(
+                          child: vaccineNext.isEmpty
+                              ? Column(
+                                  children: [
+                                    Divider(),
+                                    Card(
+                                      color: Color(0xFFF1F1F1),
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      elevation: 4,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ListTile(
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 12),
+                                        leading: FaIcon(
+                                          FontAwesomeIcons.syringe,
+                                        ),
+                                        title: Text(
+                                          "อายุ: ${getDogAge(dogBirthDay)}",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.redAccent),
+                                        ),
+                                        subtitle: Text(
+                                          'ไม่มีวัคซีนต้องได้รับในขณะนี้',
+                                          style: TextStyle(
+                                              overflow: TextOverflow.ellipsis),
+                                        ),
+                                        trailing: Icon(Icons.chevron_right),
+                                        onTap: () {
+                                          // Add your tap logic here
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    Divider(),
+                                    Card(
+                                      color: Color(0xFFF1F1F1),
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      elevation: 4,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ListTile(
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 12),
+                                        leading: FaIcon(
+                                          FontAwesomeIcons.syringe,
+                                        ),
+                                        title: Text(
+                                          "อายุ: ${getDogAge(dogBirthDay)}",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.redAccent),
+                                        ),
+                                        subtitle: Text(
+                                          'ต้องได้รับ ${vaccineNext.join(', ')}',
+                                          style: TextStyle(
+                                              overflow: TextOverflow.ellipsis),
+                                        ),
+                                        trailing: Icon(Icons.chevron_right),
+                                        onTap: () {
+                                          // Add your tap logic here
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                    ],
+                  ),
+                  Divider(),
+                  SingleChildScrollView(
+                    child: Column(
                       children: [
-                        SizedBox(
-                            child: vaccineNext.isEmpty
-                                ? Column(
-                                    children: [
-                                      Divider(),
-                                      Card(
-                                        color: Color(0xFFF1F1F1),
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        elevation: 4,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                        if (isLoadingRecord)
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: screenHeight * 0.2),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else
+                          SizedBox(
+                            height: screenHeight * 0.5,
+                            child: dogRecord.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        FaIcon(
+                                          FontAwesomeIcons.dog,
+                                          size: 50,
+                                          color: Colors.grey.shade500,
                                         ),
-                                        child: ListTile(
-                                          contentPadding: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 12),
-                                          leading: FaIcon(
-                                            FontAwesomeIcons.syringe,
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'ไม่พบประวัติการฉีดวัคซีน',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.grey.shade700,
                                           ),
-                                          title: Text(
-                                            "อายุ: ${getDogAge(dogBirthDay)}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.redAccent),
-                                          ),
-                                          subtitle: Text(
-                                            'ไม่มีวัคซีนต้องได้รับในขณะนี้',
-                                            style: TextStyle(
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                          trailing: Icon(Icons.chevron_right),
-                                          onTap: () {
-                                            // Add your tap logic here
-                                          },
+                                          textAlign: TextAlign.center,
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   )
-                                : Column(
-                                    children: [
-                                      Divider(),
-                                      Card(
+                                : ListView.builder(
+                                    itemCount: dogRecord.length,
+                                    itemBuilder: (context, index) {
+                                      final record = dogRecord[index];
+                                      String vaccineName =
+                                          vaccineNameMap[record.vaccineType] ??
+                                              'ข้อมูลวัคซีนไม่พบ';
+                                      return Card(
                                         color: Color(0xFFF1F1F1),
                                         margin: EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 8),
@@ -464,131 +544,46 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                           contentPadding: EdgeInsets.symmetric(
                                               horizontal: 16, vertical: 12),
                                           leading: FaIcon(
-                                            FontAwesomeIcons.syringe,
+                                            vaccineIcons[record.vaccineType] ??
+                                                FontAwesomeIcons.syringe,
                                           ),
                                           title: Text(
-                                            "อายุ: ${getDogAge(dogBirthDay)}",
+                                            record.clinicName.isNotEmpty
+                                                ? record.clinicName
+                                                : 'ไม่มีคลินิก',
                                             style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.redAccent),
+                                                fontWeight: FontWeight.bold),
                                           ),
-                                          subtitle: Text(
-                                            'ต้องได้รับ ${vaccineNext.join(', ')}',
-                                            style: TextStyle(
-                                                overflow:
-                                                    TextOverflow.ellipsis),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                vaccineName,
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
+                                              ),
+                                            ],
                                           ),
                                           trailing: Icon(Icons.chevron_right),
                                           onTap: () {
                                             // Add your tap logic here
                                           },
                                         ),
-                                      ),
-                                    ],
-                                  )),
+                                      );
+                                    },
+                                  ),
+                          ),
                       ],
                     ),
-                    Divider(),
-                    SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          if (isLoadingRecord)
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: screenHeight * 0.2),
-                              child: Center(child: CircularProgressIndicator()),
-                            )
-                          else
-                            SizedBox(
-                              height: screenHeight * 0.5,
-                              child: dogRecord.isEmpty
-                                  ? Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          FaIcon(
-                                            FontAwesomeIcons.dog,
-                                            size: 50,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                          SizedBox(height: 16),
-                                          Text(
-                                            'ไม่พบประวัติการฉีดวัคซีน',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade700,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      itemCount: dogRecord.length,
-                                      itemBuilder: (context, index) {
-                                        final record = dogRecord[index];
-                                        String vaccineName = vaccineNameMap[
-                                                record.vaccineType] ??
-                                            'ข้อมูลวัคซีนไม่พบ';
-                                        return Card(
-                                          color: Color(0xFFF1F1F1),
-                                          margin: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          elevation: 4,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: ListTile(
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 12),
-                                            leading: FaIcon(
-                                              vaccineIcons[
-                                                      record.vaccineType] ??
-                                                  FontAwesomeIcons.syringe,
-                                            ),
-                                            title: Text(
-                                              record.clinicName.isNotEmpty
-                                                  ? record.clinicName
-                                                  : 'ไม่มีคลินิก',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            subtitle: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  vaccineName,
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                                Text(
-                                                  "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
-                                                ),
-                                              ],
-                                            ),
-                                            trailing: Icon(Icons.chevron_right),
-                                            onTap: () {
-                                              // Add your tap logic here
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    ),
-                            ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
-      ),
+            ),
     );
   }
 
