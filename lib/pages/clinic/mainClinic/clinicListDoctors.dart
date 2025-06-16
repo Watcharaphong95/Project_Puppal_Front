@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -20,7 +24,21 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
   late double screenWidth;
   late double screenHeight;
   final List<String> doctors = List.generate(6, (index) => "B3");
+  // List<SpecialPost> special = [];
+  List<DoctorPost> doctorsList = [];
+  String url = "";
+  bool isLoading = true;
   final box = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+      getdoctor();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
@@ -186,26 +204,113 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
               ),
             ),
             const SizedBox(height: 12),
-
-            /// 👇 ห่อ GridView ด้วย Expanded แก้ปัญหา overflow
             Expanded(
-              child: GridView.builder(
-                itemCount: doctors.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemBuilder: (context, index) {
-                  return DoctorCard(name: doctors[index]);
-                },
-              ),
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : doctorsList.isEmpty
+                      ? Center(child: Text("ไม่พบข้อมูลคุณหมอ"))
+                      : GridView.count(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.65,
+                          children: doctorsList.map((doctor) {
+                            return Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 8),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ClipOval(
+                                      child: doctor.image != null &&
+                                              doctor.image!.isNotEmpty
+                                          ? Image.network(
+                                              doctor.image!,
+                                              height: 70,
+                                              width: 70,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return Shimmer.fromColors(
+                                                  baseColor: Colors.grey[300]!,
+                                                  highlightColor:
+                                                      Colors.grey[100]!,
+                                                  child: Container(
+                                                    width: 70,
+                                                    height: 70,
+                                                    color: Colors.white,
+                                                  ),
+                                                );
+                                              },
+                                              errorBuilder: (context, error,
+                                                      stackTrace) =>
+                                                  Icon(Icons.error),
+                                            )
+                                          : Image.asset(
+                                              'assets/images/indexBg.png',
+                                              height: 70,
+                                              width: 70,
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      doctor.name ?? 'ไม่ทราบชื่อ',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orange[200],
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        // เพิ่ม action
+                                      },
+                                      child: const Text('ดูประวัติ'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
+      json.decode(str).map((x) => DoctorPost.fromJson(x)));
+
+  Future<void> getdoctor() async {
+    var res = await http
+        .get(Uri.parse("$url/doctor/searchemail/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      var data = doctorPostFromJson(res.body);
+      setState(() {
+        doctorsList = data;
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void showAlert({
@@ -252,50 +357,6 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class DoctorCard extends StatelessWidget {
-  final String name;
-
-  const DoctorCard({super.key, required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/indexBg.png',
-                    height: 70,
-                    width: 70,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[200],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                onPressed: () {},
-                child: Text('ดูประวัติ'),
-              )
-            ],
-          )),
     );
   }
 }
