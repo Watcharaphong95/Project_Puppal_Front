@@ -10,6 +10,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddD
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/clinic/mainClinic/clinicProfile.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -23,9 +24,10 @@ class Cliniclistdoctors extends StatefulWidget {
 class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
   late double screenWidth;
   late double screenHeight;
-  final List<String> doctors = List.generate(6, (index) => "B3");
+  TextEditingController names = TextEditingController();
   // List<SpecialPost> special = [];
   List<DoctorPost> doctorsList = [];
+
   String url = "";
   bool isLoading = true;
   final box = GetStorage();
@@ -35,7 +37,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getdoctor();
+      getDoctor();
     });
   }
 
@@ -47,7 +49,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
       appBar: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu),
+            icon: Icon(Icons.menu, size: 30),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -57,7 +59,11 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.add_circle, color: Colors.white),
+            icon: Icon(
+              Icons.add_circle,
+              color: Color(0xFF916b44),
+              size: 45,
+            ),
             onPressed: () {
               Get.to(() => Clinicadddoctor());
             },
@@ -195,6 +201,14 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
         child: Column(
           children: [
             TextField(
+              onChanged: (text) {
+                if (text.trim().isEmpty) {
+                  getDoctor();
+                } else {
+                  searcheDoctor(names);
+                }
+              },
+              controller: names,
               decoration: InputDecoration(
                 hintText: 'ค้นหา',
                 prefixIcon: Icon(Icons.search),
@@ -208,7 +222,11 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
               child: isLoading
                   ? Center(child: CircularProgressIndicator())
                   : doctorsList.isEmpty
-                      ? Center(child: Text("ไม่พบข้อมูลคุณหมอ"))
+                      ? Center(
+                          child: Text(
+                          "ไม่พบข้อมูลคุณหมอ",
+                          style: TextStyle(fontSize: 20),
+                        ))
                       : GridView.count(
                           crossAxisCount: 3,
                           crossAxisSpacing: 10,
@@ -227,17 +245,17 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     ClipOval(
-                                      child: doctor.image != null &&
-                                              doctor.image!.isNotEmpty
+                                      child: doctor.image.isNotEmpty
                                           ? Image.network(
-                                              doctor.image!,
+                                              doctor.image,
                                               height: 70,
                                               width: 70,
                                               fit: BoxFit.cover,
                                               loadingBuilder: (context, child,
                                                   loadingProgress) {
-                                                if (loadingProgress == null)
+                                                if (loadingProgress == null) {
                                                   return child;
+                                                }
                                                 return Shimmer.fromColors(
                                                   baseColor: Colors.grey[300]!,
                                                   highlightColor:
@@ -262,7 +280,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      doctor.name ?? 'ไม่ทราบชื่อ',
+                                      doctor.name,
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.center,
@@ -277,7 +295,8 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        // เพิ่ม action
+                                        Get.to(() =>
+                                            Clinicprofile(name: doctor.name));
                                       },
                                       child: const Text('ดูประวัติ'),
                                     ),
@@ -297,7 +316,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
   List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
       json.decode(str).map((x) => DoctorPost.fromJson(x)));
 
-  Future<void> getdoctor() async {
+  Future<void> getDoctor() async {
     var res = await http
         .get(Uri.parse("$url/doctor/searchemail/${box.read('email')}"));
     if (res.statusCode == 200) {
@@ -307,6 +326,31 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
         isLoading = false;
       });
     } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> searcheDoctor(TextEditingController nams) async {
+    final keyword = nams.text.trim();
+    if (keyword.isEmpty) return;
+
+    try {
+      final res = await http
+          .get(Uri.parse("$url/doctor/searche/${box.read('email')}/$keyword"));
+      if (res.statusCode == 200) {
+        final data = doctorPostFromJson(res.body);
+        setState(() {
+          doctorsList = data;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
         isLoading = false;
       });
