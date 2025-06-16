@@ -202,7 +202,7 @@ class _UseravatarPageState extends State<UseravatarPage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Get.to(() => IndexPage());
+                Get.offAll(() => IndexPage());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF795548),
