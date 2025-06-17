@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/model/putDoctorDataPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
@@ -26,8 +29,10 @@ class Cliniceditprofile extends StatefulWidget {
 class _CliniceditprofileState extends State<Cliniceditprofile> {
   TextEditingController nameCtl = TextEditingController();
   TextEditingController surnameCtl = TextEditingController();
-
   TextEditingController searchController = TextEditingController();
+
+  final doctorListController = Get.find<doctorDataList>();
+  final doctor = Get.find<registerDoctorCtl>();
 
   late double screenWidth;
   late double screenHeight;
@@ -259,6 +264,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                             child: TextField(
                               controller: nameCtl,
                               decoration: InputDecoration(
+                                label: Text(doctor.name),
                                 filled: true,
                                 fillColor: Colors.white,
                                 border: OutlineInputBorder(
@@ -282,6 +288,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                             child: TextField(
                               controller: surnameCtl,
                               decoration: InputDecoration(
+                                label: Text(doctor.surname),
                                 filled: true,
                                 fillColor: Colors.white,
                                 border: OutlineInputBorder(
@@ -348,7 +355,9 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                   ),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      updatedataDoctor(doctor.careerNo);
+                    },
                     child: Text(
                       "บันทึกข้อมูล",
                       style: TextStyle(fontSize: 18),
@@ -381,11 +390,12 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
         for (var doctor in data) {
           // log("ชื่อหมอ: ${doctor.name}");
           // log(doctor.careerNo);
+          updatedataDoctor(doctor.careerNo);
           getSearchSpecial(doctor.careerNo);
-          if (data.isNotEmpty) {
-            nameCtl.text = data[0].name;
-            surnameCtl.text = data[0].surname;
-          }
+          // if (data.isNotEmpty) {
+          //   nameCtl.text = data[0].name;
+          //   surnameCtl.text = data[0].surname;
+          // }
         }
         setState(() {
           doctorsList = data;
@@ -401,6 +411,94 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
         isLoading = false;
       });
     }
+  }
+
+  void registerClinicAndAddDoctor() {
+    // doctorListController.doctorList.clear();
+  }
+
+  Future<void> updatedataDoctor(String careerNo) async {
+    // log(careerNo);
+    if (nameCtl.text.isEmpty || surnameCtl.text.isEmpty) {
+      if (doctorsList.isNotEmpty) {
+        nameCtl.text = doctorsList[0].name;
+        surnameCtl.text = doctorsList[0].surname;
+      } else {
+        log("doctorsList is empty — cannot assign name/surname");
+        return;
+      }
+      // log(careerNo);
+      PutDoctorDataPost req = PutDoctorDataPost(
+        name: nameCtl.text,
+        surname: surnameCtl.text,
+        image: box.read('clinicImage') ?? '',
+      );
+      var res = await http.put(
+        Uri.parse("$url/doctor/editprofile/$careerNo"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(req.toJson()),
+      );
+
+      for (var item in selectedSpecialty) {
+        final matchedSpecial = special.firstWhere(
+          (s) => s.name == item,
+          orElse: () => SpecialPost(name: '', specialId: 0),
+        );
+
+        if (matchedSpecial.specialId != 0) {
+          // เรียก API ไปเช็คก่อนว่ามีหรือยัง
+          final checkRes = await http.get(
+            Uri.parse(
+                "$url/docspecial/check/${careerNo}/${matchedSpecial.specialId}"),
+          );
+
+          if (checkRes.statusCode == 200) {
+            final jsonData = json.decode(checkRes.body);
+            final exists = jsonData['exists'] == true;
+
+            if (exists) {
+              log("ข้าม '${item}' เพราะมีอยู่แล้วในระบบ");
+              continue;
+            } else {
+              await docspecialAdd(
+                doctorId: careerNo,
+                specialId: matchedSpecial.specialId!,
+              );
+            }
+          } else {
+            log("เช็คไม่สำเร็จสำหรับ ${item} => status: ${checkRes.statusCode}");
+          }
+        } else {
+          log("ไม่พบ specialId สำหรับ '${item}'");
+        }
+      }
+    }
+  }
+
+  Future<void> deletedocspecial(String docspecialID) async {
+    var res = await http.delete(Uri.parse("$url/docspecial/$docspecialID"));
+    if (res.statusCode == 200) {
+      var data = jsonDecode(res.body);
+    }
+  }
+
+  Future<void> docspecialAdd({
+    required String doctorId,
+    required int specialId,
+  }) async {
+    final req = DocSpecialPost(
+      doctorId: doctorId,
+      specialId: specialId,
+    );
+
+    log("Sending doctorId: $doctorId, specialId: $specialId");
+    final res = await http.post(
+      Uri.parse("$url/docspecial"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: jsonEncode(req),
+    );
+
+    log("ส่ง doctorId: $doctorId, specialId: $specialId => status: ${res.statusCode}");
   }
 
   void _showSelectSpecialty() {
@@ -592,7 +690,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
   Future<void> getSearchSpecial(String careerNo) async {
     // log(careerNo);
     var res =
-        await http.get(Uri.parse("$url/special/search_doctorID/$careerNo"));
+        await http.get(Uri.parse("$url/docspecial/search_doctorID/$careerNo"));
     if (res.statusCode == 200) {
       var jsonData = getSpecialDataPostFromJson(res.body);
       for (var data in jsonData) {

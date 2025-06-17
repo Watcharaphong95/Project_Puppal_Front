@@ -191,9 +191,9 @@ class _ClinicprofileState extends State<Clinicprofile> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: ClipOval(
-                        child: doctor.image != null && doctor.image!.isNotEmpty
+                        child: doctor.image.isNotEmpty
                             ? Image.network(
-                                doctor.image!,
+                                doctor.image,
                                 height: 70,
                                 width: 70,
                                 fit: BoxFit.cover,
@@ -365,21 +365,20 @@ class _ClinicprofileState extends State<Clinicprofile> {
 
   Future<void> searcheDoctor(name) async {
     final keyword = name.trim();
-    // log("Keyword: $keyword");
+    log("Keyword: $keyword");
     if (keyword.isEmpty) return;
 
     try {
       final res = await http
           .get(Uri.parse("$url/doctor/searche/${box.read('email')}/$keyword"));
-      var resBody = res.body;
       if (res.statusCode == 200) {
         final data =
             doctorPostFromJson(res.body); // แปลง JSON → List<DoctorPost>
 
         for (var doctor in data) {
           // log("ชื่อหมอ: ${doctor.name}");
-          // log(doctor.careerNo);
-          getSearchSpecial(doctor.careerNo);
+          log(doctor.careerNo);
+          // getSearchSpecial(doctor.careerNo);
         }
         setState(() {
           doctorsList = data;
@@ -586,7 +585,7 @@ class _ClinicprofileState extends State<Clinicprofile> {
   Future<void> getSearchSpecial(String careerNo) async {
     // log(careerNo);
     var res =
-        await http.get(Uri.parse("$url/special/search_doctorID/$careerNo"));
+        await http.get(Uri.parse("$url/docspecial/search_doctorID/$careerNo"));
     if (res.statusCode == 200) {
       var jsonData = getSpecialDataPostFromJson(res.body);
       for (var data in jsonData) {
