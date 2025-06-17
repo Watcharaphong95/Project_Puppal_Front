@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -57,7 +56,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    emailCtl.text = box.read('email');
+    emailCtl.text = box.read('emailGoogleRegister');
   }
 
   @override
@@ -69,242 +68,253 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
         centerTitle: true,
         title: Text(
           'สมัครคลินิก',
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Color(0xFF916B44),
       ),
       body: SingleChildScrollView(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                spacing: 16,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ชื่อคลินิก',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            controller: nameCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'อีเมล',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            readOnly: true,
-                            controller: emailCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'เบอร์โทรศัพท์',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            controller: phoneCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'เวลาเปิดคลินิก',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            controller: openCtl,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              suffixIcon: Icon(Icons.arrow_drop_down),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                              hintText: "เลือกเวลาเปิดคลินิก",
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
-                            onTap: _showOpenSelectTime,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'เวลาปิดคลินิก',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            readOnly: true,
-                            controller: closeCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                              hintText: "เลือกเวลาปิดคลินิก",
-                              hintStyle: TextStyle(color: Colors.grey),
-                              suffixIcon: Icon(Icons.arrow_drop_down),
-                            ),
-                            onTap: _showCloseSelectTime,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'จำนวนคำขอต่อช่วงเวลา',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            readOnly: true,
-                            controller: numPerTimeCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                              hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
-                              hintStyle: TextStyle(color: Colors.grey),
-                              suffixIcon: Icon(Icons.arrow_drop_down),
-                            ),
-                            onTap: _showSelectNum,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ที่อยู่คลินิก',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Material(
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          height: screenHeight * 0.055,
-                          child: TextField(
-                            controller: addressCtl,
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
-                    child: SizedBox(
-                      width: screenWidth * 0.5,
-                      child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              backgroundColor: Color(0xFF916b44)),
-                          onPressed: userRegisterNextButton,
-                          child: Text(
-                            'ถัดไป',
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          )),
+          child: Container(
+        // height: screenHeight * 0.9,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/images/indexBg.png'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+        ),
+        child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              spacing: 16,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ชื่อคลินิก',
+                      style: TextStyle(fontSize: 20),
                     ),
-                  )
-                ],
-              ))),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: nameCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'อีเมล',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          readOnly: true,
+                          controller: emailCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'เบอร์โทรศัพท์',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: phoneCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'เวลาเปิดคลินิก',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: openCtl,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            hintText: "เลือกเวลาเปิดคลินิก",
+                            hintStyle: TextStyle(color: Colors.grey),
+                          ),
+                          onTap: _showOpenSelectTime,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'เวลาปิดคลินิก',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          readOnly: true,
+                          controller: closeCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            hintText: "เลือกเวลาปิดคลินิก",
+                            hintStyle: TextStyle(color: Colors.grey),
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          ),
+                          onTap: _showCloseSelectTime,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'จำนวนคำขอต่อช่วงเวลา',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          readOnly: true,
+                          controller: numPerTimeCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
+                            hintStyle: TextStyle(color: Colors.grey),
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          ),
+                          onTap: _showSelectNum,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ที่อยู่คลินิก',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: addressCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
+                  child: SizedBox(
+                    width: screenWidth * 0.5,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            backgroundColor: Color(0xFF916b44)),
+                        onPressed: userRegisterNextButton,
+                        child: Text(
+                          'ถัดไป',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        )),
+                  ),
+                )
+              ],
+            )),
+      )),
     );
   }
 

@@ -131,7 +131,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('หน้าหลัก'),
+        title: const Text(
+          'หน้าหลัก',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF916B44),
       ),
       drawer: Drawer(
         child: Container(
@@ -317,140 +321,158 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       body: _loadingData
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFFFEF7FF),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: screenWidth * 0.9,
-                        child: TableCalendar(
-                          locale: 'th_TH',
-                          firstDay: DateTime(2020, 1, 1),
-                          lastDay: DateTime(DateTime.now().year + 10),
-                          focusedDay: _focusedDay,
-                          headerStyle: HeaderStyle(
-                            formatButtonVisible: false,
-                            titleCentered: true,
-                          ),
-                          calendarStyle: CalendarStyle(
-                            todayDecoration: BoxDecoration(
-                                color: Color(0xFFE6C29C),
-                                shape: BoxShape.circle),
-                            selectedDecoration: BoxDecoration(
-                                color: Color(0xFFDBA871),
-                                shape: BoxShape.circle),
-                          ),
-                          selectedDayPredicate: (day) {
-                            return isSameDay(_selectedDay, day);
-                          },
-                          onDaySelected: (selectedDay, focusedDay) {
-                            setState(() {
+              child: Container(
+                // height: screenHeight * 0.9,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage('assets/images/indexBg.png'),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                          Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: screenHeight * 0.01,
+                    ),
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFFFEF7FF),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: SizedBox(
+                          width: screenWidth * 0.9,
+                          child: TableCalendar(
+                            locale: 'th_TH',
+                            firstDay: DateTime(2020, 1, 1),
+                            lastDay: DateTime(DateTime.now().year + 10),
+                            focusedDay: _focusedDay,
+                            headerStyle: HeaderStyle(
+                              formatButtonVisible: false,
+                              titleCentered: true,
+                            ),
+                            calendarStyle: CalendarStyle(
+                              todayDecoration: BoxDecoration(
+                                  color: Color(0xFFE6C29C),
+                                  shape: BoxShape.circle),
+                              selectedDecoration: BoxDecoration(
+                                  color: Color(0xFFDBA871),
+                                  shape: BoxShape.circle),
+                            ),
+                            selectedDayPredicate: (day) {
+                              return isSameDay(_selectedDay, day);
+                            },
+                            onDaySelected: (selectedDay, focusedDay) {
+                              setState(() {
+                                _focusedDay = focusedDay;
+                                _selectedDay = selectedDay;
+                                box.write('focusedDay', focusedDay);
+                                events = getEventsForDay(_selectedDay);
+                              });
+                            },
+                            onPageChanged: (focusedDay) {
                               _focusedDay = focusedDay;
-                              _selectedDay = selectedDay;
-                              box.write('focusedDay', focusedDay);
-                              events = getEventsForDay(_selectedDay);
-                            });
-                          },
-                          onPageChanged: (focusedDay) {
-                            _focusedDay = focusedDay;
-                          },
-                          eventLoader: getEventsForDay,
+                            },
+                            eventLoader: getEventsForDay,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Divider(),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.1,
-                        vertical: screenHeight * 0.005),
-                    child: Row(
-                      children: [
-                        Text(
-                          DateFormat('d MMMM y', 'th').format(_selectedDay),
-                          style: TextStyle(
-                              fontSize: 24, fontStyle: FontStyle.italic),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (events.isNotEmpty)
-                    SizedBox(
-                      width: screenWidth,
-                      height: screenHeight * 0.425,
-                      child: Column(
+                    Divider(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.1,
+                          vertical: screenHeight * 0.005),
+                      child: Row(
                         children: [
-                          Expanded(
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: events.length,
-                              itemBuilder: (context, index) {
-                                return InkWell(
-                                  onTap: () {
-                                    Get.to(() => ClinicsearchPage(
-                                        dogId: int.parse(events[index]
-                                            .toString()
-                                            .split(', Vaccines:')
-                                            .first
-                                            .replaceAll(
-                                                RegExp(r'[^0-9]'), ''))));
-                                  },
-                                  child: Card(
-                                    elevation: 2,
-                                    margin: EdgeInsets.symmetric(
-                                        horizontal: screenWidth * 0.05,
-                                        vertical: screenHeight * 0.005),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: SizedBox(
-                                      height: screenHeight * 0.125,
-                                      child: ListTile(
-                                        title: SizedBox(
-                                            height: screenHeight * 0.11,
-                                            child:
-                                                insideCardShowDogData(index)),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      width: screenWidth,
-                      height: screenHeight * 0.5,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                0, 0, 0, screenHeight * 0.1),
-                            child: Text(
-                              'ไม่มีข้อมูลในวันนี้',
-                              style:
-                                  TextStyle(fontSize: 32, color: Colors.grey),
-                            ),
+                          Text(
+                            DateFormat('d MMMM y', 'th').format(_selectedDay),
+                            style: TextStyle(
+                                fontSize: 24, fontStyle: FontStyle.italic),
                           ),
                         ],
                       ),
-                    )
-                ],
+                    ),
+                    if (events.isNotEmpty)
+                      SizedBox(
+                        width: screenWidth,
+                        height: screenHeight * 0.425,
+                        child: Padding(
+                          padding:
+                              EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.03),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: events.length,
+                                  itemBuilder: (context, index) {
+                                    return InkWell(
+                                      onTap: () {
+                                        Get.to(() => ClinicsearchPage(
+                                            dogId: int.parse(events[index]
+                                                .toString()
+                                                .split(', Vaccines:')
+                                                .first
+                                                .replaceAll(
+                                                    RegExp(r'[^0-9]'), ''))));
+                                      },
+                                      child: Card(
+                                        elevation: 2,
+                                        margin: EdgeInsets.symmetric(
+                                            horizontal: screenWidth * 0.05,
+                                            vertical: screenHeight * 0.005),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: SizedBox(
+                                          height: screenHeight * 0.125,
+                                          child: ListTile(
+                                            title: SizedBox(
+                                                height: screenHeight * 0.11,
+                                                child: insideCardShowDogData(
+                                                    index)),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        width: screenWidth,
+                        height: screenHeight * 0.5,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                  0, 0, 0, screenHeight * 0.1),
+                              child: Text(
+                                'ไม่มีข้อมูลในวันนี้',
+                                style:
+                                    TextStyle(fontSize: 32, color: Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                  ],
+                ),
               ),
             ),
     );

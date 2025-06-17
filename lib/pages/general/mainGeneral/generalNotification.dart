@@ -45,7 +45,14 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          'การแจ้งเตือน',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF916B44),
+      ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -225,7 +232,16 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
           ),
         ),
       ),
-      body: Container(),
+      body: Container(
+        height: screenHeight * 0.9,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/images/indexBg.png'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+        ),
+      ),
     );
   }
 

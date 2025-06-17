@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -50,127 +51,153 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
 
     return Scaffold(
       appBar: AppBar(
-          title: Text('เลือกปักหมุดที่อยู่'),
+          title: Text(
+            'เลือกปักหมุดที่อยู่',
+            style: TextStyle(color: Colors.white),
+          ),
+          centerTitle: true,
           backgroundColor: Color(0xFF916B44)),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 10),
-              Material(
-                elevation: 5,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  height: screenHeight * 0.55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: selectedLatLng == null
-                      ? Center(child: CircularProgressIndicator())
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: GoogleMap(
-                            onMapCreated: (controller) {
-                              mapController = controller;
-                            },
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: true,
-                            initialCameraPosition: CameraPosition(
-                              target: selectedLatLng!,
-                              zoom: 15,
-                            ),
-                            onTap: (latLng) {
-                              setState(() {
-                                selectedLatLng = latLng;
-                              });
-                            },
-                            markers: selectedLatLng != null
-                                ? {
-                                    Marker(
-                                      markerId: MarkerId("selected"),
-                                      position: selectedLatLng!,
-                                    )
-                                  }
-                                : {},
+        child: Container(
+          height: screenHeight * 0.89,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 10),
+                Material(
+                  elevation: 5,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    height: screenHeight * 0.55,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: selectedLatLng == null
+                        ? Center(child: CircularProgressIndicator())
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Stack(children: [
+                              GoogleMap(
+                                onMapCreated: (controller) {
+                                  mapController = controller;
+                                },
+                                myLocationEnabled: true,
+                                myLocationButtonEnabled: true,
+                                initialCameraPosition: CameraPosition(
+                                  target: selectedLatLng!,
+                                  zoom: 15,
+                                ),
+                                onCameraMove: (position) {
+                                  selectedLatLng = position.target;
+                                },
+                                onCameraIdle: () {
+                                  setState(() {});
+                                },
+                              ),
+                              Center(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 0, 0, 35),
+                                  child: Icon(
+                                    Icons.location_pin,
+                                    size: 40,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              )
+                            ]),
                           ),
-                        ),
-                ),
-              ),
-              // THIS IS THE LAT LNG FOR ONLY DEBUGGING PURPOSES
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
-                child: SizedBox(
-                  width: screenWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: screenWidth * 0.5,
-                        child: Card(
-                          color: Color(0xFF916B44),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  selectedLatLng != null
-                                      ? 'Lat: ${selectedLatLng!.latitude.toStringAsFixed(4)}'
-                                      : 'กรุณาเลือกตำแหน่ง',
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.white),
-                                ),
-                                Text(
-                                  selectedLatLng != null
-                                      ? 'Lng: ${selectedLatLng!.longitude.toStringAsFixed(4)}'
-                                      : 'กรุณาเลือกตำแหน่ง',
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, screenHeight * 0.075, 0, 0),
-                child: SizedBox(
-                  width: screenWidth,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: screenHeight * 0.06,
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                backgroundColor: Color(0xFF916b44)),
-                            onPressed: () {
-                              showAlert(
-                                  context: context,
-                                  title: 'ยืนยันการเลือกตำแหน่ง',
-                                  message: 'คุณต้องการยืนยันตำแหน่งนี้หรือไม่?',
-                                  onConfirm: onConfirmLocation);
-                            },
-                            child: Text(
-                              'ยืนยันหมุดที่อยู่',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            )),
-                      ),
-                    ],
+                // THIS IS THE LAT LNG FOR ONLY DEBUGGING PURPOSES
+                // Padding(
+                //   padding: EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
+                //   child: SizedBox(
+                //     width: screenWidth,
+                //     child: Column(
+                //       crossAxisAlignment: CrossAxisAlignment.center,
+                //       children: [
+                //         SizedBox(
+                //           width: screenWidth * 0.5,
+                //           child: Card(
+                //             color: Color(0xFF916B44),
+                //             child: Padding(
+                //               padding: const EdgeInsets.all(20.0),
+                //               child: Column(
+                //                 children: [
+                //                   Text(
+                //                     selectedLatLng != null
+                //                         ? 'Lat: ${selectedLatLng!.latitude.toStringAsFixed(4)}'
+                //                         : 'กรุณาเลือกตำแหน่ง',
+                //                     style: TextStyle(
+                //                         fontSize: 16, color: Colors.white),
+                //                   ),
+                //                   Text(
+                //                     selectedLatLng != null
+                //                         ? 'Lng: ${selectedLatLng!.longitude.toStringAsFixed(4)}'
+                //                         : 'กรุณาเลือกตำแหน่ง',
+                //                     style: TextStyle(
+                //                         fontSize: 16, color: Colors.white),
+                //                   ),
+                //                 ],
+                //               ),
+                //             ),
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, screenHeight * 0.075, 0, 0),
+                  child: SizedBox(
+                    width: screenWidth,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: screenHeight * 0.06,
+                          child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  backgroundColor: Color(0xFF916b44)),
+                              onPressed: () {
+                                if (selectedLatLng != null) {
+                                  showAlert(
+                                      title: 'ยืนยันการเลือกตำแหน่ง',
+                                      message:
+                                          'คุณต้องการยืนยันตำแหน่งนี้หรือไม่?',
+                                      onConfirm: onConfirmLocation);
+                                } else {
+                                  showAlertNoClose(
+                                      title: 'ผิดพลาด',
+                                      message: 'กรุณาใส่ตำแหน่งที่อยู่ของคุณ');
+                                }
+                              },
+                              child: Text(
+                                'ยืนยันหมุดที่อยู่',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              )),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -210,56 +237,234 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
 
   // Function to show alert dialog //
 
+  void showAlertNoClose({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm, // Optional action
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
+  }
+
   void showAlert({
-    required BuildContext context,
     required String title,
     required String message,
     VoidCallback? onConfirm,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFFFF3F3), // light pink-ish background
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548), // brown color
-          ),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(
-            color: Colors.black87,
-          ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: Color(0xFF795548),
-            ),
-            child: Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF795548), // brown
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFA1887F),
               ),
             ),
-            child: Text('ตกลง'),
-          ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 }
