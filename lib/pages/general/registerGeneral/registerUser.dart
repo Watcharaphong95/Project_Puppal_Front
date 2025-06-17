@@ -51,277 +51,288 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
         centerTitle: true,
         title: Text(
           'สมัครสมาชิกผู้ใช้ทั่วไป',
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Color(0xFF916B44),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            spacing: 16,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ชื่อผู้ใช้',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: usernameCtl,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
+        child: Container(
+          // height: screenHeight * 0.9,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              spacing: 16,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ชื่อผู้ใช้',
+                      style: TextStyle(fontSize: 20),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ชื่อ',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: nameCtl,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'นามสกุล',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: surnameCtl,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'อีเมล',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: emailCtl,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'เบอร์โทรศัพท์',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: phoneCtl,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'รหัสผ่าน',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: passwordCtl,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: usernameCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
                             ),
-                            onPressed: () {
-                              setState(
-                                  () => _obscurePassword = !_obscurePassword);
-                            },
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ยืนยันรหัสผ่าน',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: confirmPasswordCtl,
-                        obscureText: _obscureConfirmPassword,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() => _obscureConfirmPassword =
-                                  !_obscureConfirmPassword);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ที่อยู่',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Material(
-                    elevation: 5,
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      height: screenHeight * 0.055,
-                      child: TextField(
-                        controller: addressCtl,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
-                child: SizedBox(
-                  width: screenWidth * 0.5,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          backgroundColor: Color(0xFF916b44)),
-                      onPressed: userRegisterNextButton,
-                      child: Text(
-                        'ถัดไป',
-                        style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold),
-                      )),
+                  ],
                 ),
-              )
-            ],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ชื่อ',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: nameCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'นามสกุล',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: surnameCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'อีเมล',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: emailCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'เบอร์โทรศัพท์',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: phoneCtl,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'รหัสผ่าน',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: passwordCtl,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(
+                                    () => _obscurePassword = !_obscurePassword);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ยืนยันรหัสผ่าน',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: confirmPasswordCtl,
+                          obscureText: _obscureConfirmPassword,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() => _obscureConfirmPassword =
+                                    !_obscureConfirmPassword);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ที่อยู่',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Material(
+                      elevation: 5,
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        height: screenHeight * 0.055,
+                        child: TextField(
+                          controller: addressCtl,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
+                  child: SizedBox(
+                    width: screenWidth * 0.5,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            backgroundColor: Color(0xFF916b44)),
+                        onPressed: userRegisterNextButton,
+                        child: Text(
+                          'ถัดไป',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        )),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -329,6 +340,7 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
   }
 
   Future<void> userRegisterNextButton() async {
+    showLoadingDialog();
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -415,6 +427,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
 
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
 
+    Get.back();
+
     if (res.statusCode == 200) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -433,5 +447,55 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       Get.to(() => UserlocationselectPage());
     }
     log(res.body);
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 }

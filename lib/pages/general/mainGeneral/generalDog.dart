@@ -66,7 +66,11 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('สุนัขของฉัน'),
+        title: const Text(
+          'สุนัขของฉัน',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF916B44),
         actions: [
           IconButton(
               onPressed: () {
@@ -261,182 +265,197 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: SizedBox(
-          width: screenWidth,
-          child: Column(
-            children: [
-              SizedBox(
-                width: screenWidth * 0.9,
-                child: TextField(
-                  controller: searchDogCtl,
-                  onChanged: (value) {
-                    if (value.isEmpty) {
-                      filterDogs = dogs;
-                    }
-                    filterDogs = dogs.where((dog) {
-                      return dog.name
-                          .toLowerCase()
-                          .contains(value.toLowerCase());
-                    }).toList();
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหาสุนัข',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
-                    suffixIcon: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Colors.grey,
-                            width: 1,
+        child: Container(
+          height: screenHeight * 0.89,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          ),
+          child: SizedBox(
+            width: screenWidth,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: screenHeight * 0.01,
+                ),
+                SizedBox(
+                  width: screenWidth * 0.9,
+                  child: TextField(
+                    controller: searchDogCtl,
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        filterDogs = dogs;
+                      }
+                      filterDogs = dogs.where((dog) {
+                        return dog.name
+                            .toLowerCase()
+                            .contains(value.toLowerCase());
+                      }).toList();
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'ค้นหาสุนัข',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
+                      suffixIcon: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
                           ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.clear,
-                            color: Colors.redAccent,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.redAccent,
+                            ),
+                            onPressed: () {
+                              searchDogCtl.clear();
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                filterDogs = List<DogsGetEmail>.from(dogs);
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            searchDogCtl.clear();
-                            FocusScope.of(context).unfocus();
-                            setState(() {
-                              filterDogs = List<DogsGetEmail>.from(dogs);
-                            });
-                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (isLoading)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (filterDogs.isEmpty)
-                SizedBox(
-                  width: screenWidth,
-                  height: screenHeight * 0.5,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'คุณยังไม่มีสุนัขที่ลงทะเบียน',
-                        style: TextStyle(fontSize: 32, color: Colors.grey),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'กดปุ่ม ',
-                            style: TextStyle(fontSize: 24, color: Colors.grey),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Color(0xFFEFD2B1),
-                            child: Icon(
-                              FontAwesomeIcons.plus,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            ' ขวาบนเพื่อเพิ่มสุนัข',
-                            style: TextStyle(fontSize: 24, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ...filterDogs.map((dog) {
-                  return SizedBox(
-                    width: screenWidth * 0.9,
-                    height: screenHeight * 0.15,
-                    child: Card(
-                      color: Color(0xFFF1F1F1),
-                      margin: EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      elevation: 2,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Row(
+                if (isLoading)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (filterDogs.isEmpty)
+                  SizedBox(
+                    width: screenWidth,
+                    height: screenHeight * 0.5,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'คุณยังไม่มีสุนัขที่ลงทะเบียน',
+                          style: TextStyle(fontSize: 32, color: Colors.grey),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                dog.image,
-                                width: screenWidth * 0.2,
-                                height: screenHeight * 0.1,
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Shimmer.fromColors(
-                                      baseColor: Colors.grey.shade300,
-                                      highlightColor: Colors.grey.shade100,
-                                      child: Container(
-                                        width: screenWidth * 0.2,
-                                        height: screenHeight * 0.1,
-                                        color: Colors.white,
-                                      ));
-                                },
+                            Text(
+                              'กดปุ่ม ',
+                              style:
+                                  TextStyle(fontSize: 24, color: Colors.grey),
+                            ),
+                            CircleAvatar(
+                              backgroundColor: Color(0xFFEFD2B1),
+                              child: Icon(
+                                FontAwesomeIcons.plus,
+                                color: Colors.white,
                               ),
                             ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    dog.name,
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'อายุ ${getDogAge(dog.birthday)}',
-                                    style: TextStyle(color: Colors.grey[700]),
-                                  ),
-                                  Text(
-                                    'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday).toLocal())}...',
-                                    style: TextStyle(color: Colors.grey[700]),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              height: 35,
-                              width: 45,
-                              decoration: BoxDecoration(
-                                color: Color(0xFFDBA871),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.arrow_forward,
-                                    color: Colors.white, size: 25),
-                                onPressed: () {
-                                  // Get.to(() => GeneralrecordPage());
-                                },
-                                padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(),
-                              ),
+                            Text(
+                              ' ขวาบนเพื่อเพิ่มสุนัข',
+                              style:
+                                  TextStyle(fontSize: 24, color: Colors.grey),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  );
-                }).toList(),
-            ],
+                  )
+                else
+                  ...filterDogs.map((dog) {
+                    return SizedBox(
+                      width: screenWidth * 0.9,
+                      height: screenHeight * 0.15,
+                      child: Card(
+                        color: Color(0xFFF1F1F1),
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  dog.image,
+                                  width: screenWidth * 0.2,
+                                  height: screenHeight * 0.1,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300,
+                                        highlightColor: Colors.grey.shade100,
+                                        child: Container(
+                                          width: screenWidth * 0.2,
+                                          height: screenHeight * 0.1,
+                                          color: Colors.white,
+                                        ));
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      dog.name,
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'อายุ ${getDogAge(dog.birthday)}',
+                                      style: TextStyle(color: Colors.grey[700]),
+                                    ),
+                                    Text(
+                                      'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday).toLocal())}...',
+                                      style: TextStyle(color: Colors.grey[700]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                height: 35,
+                                width: 45,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFDBA871),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_forward,
+                                      color: Colors.white, size: 25),
+                                  onPressed: () {
+                                    // Get.to(() => GeneralrecordPage());
+                                  },
+                                  padding: EdgeInsets.zero,
+                                  constraints: BoxConstraints(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+              ],
+            ),
           ),
         ),
       ),

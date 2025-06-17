@@ -60,8 +60,12 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('โปรไฟล์'),
+        title: Text(
+          'โปรไฟล์',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
+        backgroundColor: Color(0xFF916B44),
       ),
       drawer: Drawer(
         child: Container(

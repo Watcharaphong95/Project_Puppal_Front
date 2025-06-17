@@ -19,6 +19,7 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
 
   @override
   void initState() {
+    // box.erase();
     checkLogin();
     super.initState();
   }

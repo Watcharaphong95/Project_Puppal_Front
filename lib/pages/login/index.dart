@@ -37,6 +37,10 @@ class _IndexPageState extends State<IndexPage> {
   @override
   void initState() {
     super.initState();
+    if (box.read('emailGoogleRegister') != null) {
+      log(box.read('emailGoogleRegister'));
+      box.remove('emailGoogleRegister');
+    }
     init();
   }
 
@@ -200,30 +204,46 @@ class _IndexPageState extends State<IndexPage> {
     try {
       final GoogleSignInAccount? account = await _google.signIn();
       if (account != null) {
-        box.write('email', account.email);
-
-        var res = await http.get(Uri.parse("$url/user/${box.read('email')}"));
+        showLoadingDialog();
+        var res =
+            await http.get(Uri.parse("$url/user/google/${account.email}"));
+        Get.back();
         if (res.statusCode == 200) {
           final user = userPostFromJson(res.body);
+          box.write('email', user.email);
           if (user.general == 1 && user.clinic == 1) {
             Get.to(() => LogintypeselectPage());
           } else if (user.general == 1) {
+            showLoadingDialog();
             var resGeneral = await http
                 .get(Uri.parse("$url/general/name/${box.read('email')}"));
             box.write('generalName', jsonDecode(resGeneral.body)['username']);
             box.write('generalImage', jsonDecode(resGeneral.body)['image']);
             log('Name ${box.read('generalName')}');
+            Get.back();
             Get.offAll(() => GeneralmainPage());
           } else if (user.clinic == 1) {
+            showLoadingDialog();
             var resClinic = await http
                 .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
             box.write('clinicName', jsonDecode(resClinic.body)['name']);
             box.write('clinicImage', jsonDecode(resClinic.body)['image']);
             log('Name ${box.read('clinicName')}');
+            Get.back();
             Get.offAll(() => ClinicmainPage());
           }
         } else {
-          Get.to(() => RegistertypePage());
+          showLoadingDialog();
+          var res = await http.get(Uri.parse("$url/user/${account.email}"));
+          Get.back();
+          if (res.statusCode == 200) {
+            showAlertNoClose(
+                title: 'อีเมลนี้ถูกใช้แล้ว!',
+                message: 'กรุณาล็อคอินให้ถูกวิธี');
+          } else {
+            box.write('emailGoogleRegister', account.email);
+            Get.to(() => RegistertypePage());
+          }
         }
       }
     } catch (error) {
@@ -233,6 +253,143 @@ class _IndexPageState extends State<IndexPage> {
 
   void loginButton() {
     Get.to(() => LoginPage());
+  }
+
+  void showAlertNoClose({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm, // Optional action
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   Future<void> checkLogout() async {

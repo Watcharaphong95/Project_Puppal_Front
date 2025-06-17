@@ -62,9 +62,13 @@ class _EditprofilePageState extends State<EditprofilePage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('แก้ไขโปรไฟล์'),
+        title: Text(
+          'แก้ไขโปรไฟล์',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
+        backgroundColor: Color(0xFF916B44),
       ),
       body: _loadingData
           ? Center(

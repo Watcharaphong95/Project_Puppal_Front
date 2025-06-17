@@ -36,12 +36,16 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('เปลี่ยนรหัสผ่าน'),
+        title: Text(
+          'เปลี่ยนรหัสผ่าน',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
+        backgroundColor: Color(0xFF916B44),
       ),
       body: SingleChildScrollView(
         child: Container(
-          height: screenHeight,
+          height: screenHeight * 0.89,
           decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage('assets/images/indexBg.png'),
@@ -95,8 +99,10 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
                             RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                         if (emailRegExp.hasMatch(emailCtl.text.trim()) &&
                             emailCtl.text.isNotEmpty) {
+                          showLoadingDialog();
                           var resGeneral = await http.get(Uri.parse(
                               "$url/user/checkpass/${emailCtl.text}"));
+                          Get.back();
                           log(resGeneral.body.toString());
                           if (resGeneral.statusCode == 200) {
                             await sendOTP();
@@ -136,7 +142,7 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
   }
 
   Future<void> sendOTP() async {
-    showLoadingDialog(context, message: 'กำลังส่งรหัส OTP...');
+    showLoadingDialog(message: 'กำลังส่งรหัส OTP...');
     var otpRes =
         await http.get(Uri.parse("$url/user/sendotp/${emailCtl.text}"));
     if (otpRes.statusCode == 200) {
@@ -148,80 +154,83 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
   void showAlertNoClose({
     required String title,
     required String message,
+    VoidCallback? onConfirm, // Optional action
   }) {
     Get.defaultDialog(
       title: '',
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.all(16),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7CCC8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 24,
-              color: const Color(0xFFA1887F),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Color(0xFF8D6E63),
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            message,
-            style: const TextStyle(
-              color: Color(0xFFA1887F),
-              fontSize: 14,
-              height: 1.4,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Single confirm button
-          SizedBox(
-            width: double.infinity,
-            height: 40,
-            child: ElevatedButton(
-              onPressed: () => Get.back(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 2,
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
               ),
-              child: const Text(
-                'ตกลง',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
@@ -229,29 +238,53 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
     );
   }
 
-  void showLoadingDialog(BuildContext context, {String? message}) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
-                Text(message ?? "Loading...",
-                    style: const TextStyle(fontSize: 16)),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

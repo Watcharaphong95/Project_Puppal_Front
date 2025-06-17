@@ -63,8 +63,12 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('ประวัติการฉีดยา'),
+        title: Text(
+          'ประวัติการฉีดยา',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
+        backgroundColor: Color(0xFF916B44),
       ),
       drawer: Drawer(
         child: Container(
@@ -246,151 +250,164 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: SizedBox(
-          width: screenWidth,
-          child: Column(
-            children: [
-              SizedBox(
-                width: screenWidth * 0.9,
-                child: TextField(
-                  controller: searchDogCtl,
-                  onChanged: (value) {
-                    if (value.isEmpty) {
-                      filterDogs = dogs;
-                    }
-                    filterDogs = dogs.where((dog) {
-                      return dog.name
-                          .toLowerCase()
-                          .contains(value.toLowerCase());
-                    }).toList();
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหาสุนัข',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
-                    suffixIcon: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Colors.grey,
-                            width: 1,
+        child: Container(
+          height: screenHeight * 0.89,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          ),
+          child: SizedBox(
+            width: screenWidth,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: screenHeight * 0.01,
+                ),
+                SizedBox(
+                  width: screenWidth * 0.9,
+                  child: TextField(
+                    controller: searchDogCtl,
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        filterDogs = dogs;
+                      }
+                      filterDogs = dogs.where((dog) {
+                        return dog.name
+                            .toLowerCase()
+                            .contains(value.toLowerCase());
+                      }).toList();
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'ค้นหาสุนัข',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
+                      suffixIcon: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
                           ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.clear,
-                            color: Colors.redAccent,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.redAccent,
+                            ),
+                            onPressed: () {
+                              searchDogCtl.clear();
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                filterDogs = List<DogsGetEmail>.from(dogs);
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            searchDogCtl.clear();
-                            FocusScope.of(context).unfocus();
-                            setState(() {
-                              filterDogs = List<DogsGetEmail>.from(dogs);
-                            });
-                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (isLoading)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (filterDogs.isEmpty)
-                SizedBox(
-                  width: screenWidth,
-                  height: screenHeight * 0.5,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'คุณยังไม่มีสุนัขที่ลงทะเบียน',
-                        style: TextStyle(fontSize: 32, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                GridView.count(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 4,
-                  childAspectRatio:
-                      (screenWidth * 0.9 / 3) / (screenHeight * 0.275),
-                  shrinkWrap: true,
-                  physics:
-                      NeverScrollableScrollPhysics(), // Let parent scroll handle it
-                  padding: EdgeInsets.all(12),
-                  children: filterDogs.map((dog) {
-                    return Card(
-                      color: Color(0xFFF1F1F1),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      elevation: 2,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                dog.image,
-                                width: double.infinity,
-                                height: screenHeight * 0.12,
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Shimmer.fromColors(
-                                      baseColor: Colors.grey.shade300,
-                                      highlightColor: Colors.grey.shade100,
-                                      child: Container(
-                                        width: double.infinity,
-                                        height: screenHeight * 0.12,
-                                        color: Colors.white,
-                                      ));
-                                },
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              dog.name,
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 8),
-                            ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFDBA871)),
-                                onPressed: () {
-                                  Get.to(() => GeneralrecordPage(
-                                        index: dog.dogId,
-                                      ));
-                                },
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'ดูประวัติ',
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.white),
-                                    ),
-                                  ],
-                                ))
-                          ],
+                if (isLoading)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (filterDogs.isEmpty)
+                  SizedBox(
+                    width: screenWidth,
+                    height: screenHeight * 0.5,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'คุณยังไม่มีสุนัขที่ลงทะเบียน',
+                          style: TextStyle(fontSize: 32, color: Colors.grey),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                )
-            ],
+                      ],
+                    ),
+                  )
+                else
+                  GridView.count(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 4,
+                    childAspectRatio:
+                        (screenWidth * 0.9 / 3) / (screenHeight * 0.275),
+                    shrinkWrap: true,
+                    physics:
+                        NeverScrollableScrollPhysics(), // Let parent scroll handle it
+                    padding: EdgeInsets.all(12),
+                    children: filterDogs.map((dog) {
+                      return Card(
+                        color: Color(0xFFF1F1F1),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  dog.image,
+                                  width: double.infinity,
+                                  height: screenHeight * 0.12,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300,
+                                        highlightColor: Colors.grey.shade100,
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: screenHeight * 0.12,
+                                          color: Colors.white,
+                                        ));
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                dog.name,
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 8),
+                              ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFFDBA871)),
+                                  onPressed: () {
+                                    Get.to(() => GeneralrecordPage(
+                                          index: dog.dogId,
+                                        ));
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'ดูประวัติ',
+                                        style: TextStyle(
+                                            fontSize: 14, color: Colors.white),
+                                      ),
+                                    ],
+                                  ))
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  )
+              ],
+            ),
           ),
         ),
       ),
