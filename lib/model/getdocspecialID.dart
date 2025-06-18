@@ -12,26 +12,26 @@ String getDocSpecialIdPostToJson(List<GetDocSpecialIdPost> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class GetDocSpecialIdPost {
+  String name;
   int docspecialId;
   String doctorId;
-  int specialId;
 
   GetDocSpecialIdPost({
+    required this.name,
     required this.docspecialId,
     required this.doctorId,
-    required this.specialId,
   });
 
   factory GetDocSpecialIdPost.fromJson(Map<String, dynamic> json) =>
       GetDocSpecialIdPost(
-        docspecialId: json["docspecialID"],
-        doctorId: json["doctorID"],
-        specialId: json["specialID"],
+        name: json["name"],
+        docspecialId: json["docspecialId"],
+        doctorId: json["doctorId"],
       );
 
   Map<String, dynamic> toJson() => {
-        "docspecialID": docspecialId,
-        "doctorID": doctorId,
-        "specialID": specialId,
+        "name": name,
+        "docspecialId": docspecialId,
+        "doctorId": doctorId,
       };
 }

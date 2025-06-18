@@ -8,6 +8,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/model/getdocspecialID.dart';
 import 'package:puppal_application/model/putDoctorDataPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
@@ -42,6 +43,8 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
   bool isLoading = true;
   List<String> selectedSpecialty = [];
   List<SpecialPost> special = [];
+  List<GetDocSpecialIdPost> docSpecialList = [];
+  List<String> unselectedSpecialties = [];
 
   @override
   void initState() {
@@ -384,9 +387,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
       final res = await http
           .get(Uri.parse("$url/doctor/searche/${box.read('email')}/$keyword"));
       if (res.statusCode == 200) {
-        final data =
-            doctorPostFromJson(res.body); // แปลง JSON → List<DoctorPost>
-
+        final data = doctorPostFromJson(res.body);
         for (var doctor in data) {
           // log("ชื่อหมอ: ${doctor.name}");
           // log(doctor.careerNo);
@@ -413,72 +414,105 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
     }
   }
 
-  void registerClinicAndAddDoctor() {
-    // doctorListController.doctorList.clear();
+  Future<void> searchnamedocspecial(String name) async {
+    log("Unselected and searching: $name");
+    docSpecialList = [];
+    if (name.isEmpty) {
+      log("Name is empty, skipping search");
+      return;
+    }
+    var res = await http.get(Uri.parse("$url/docspecial/getnamespecial/$name"));
+    if (res.statusCode == 200) {
+      docSpecialList = (json.decode(res.body) as List)
+          .map((e) => GetDocSpecialIdPost.fromJson(e))
+          .toList();
+    } else {
+      log("Failed to load specialties: ${res.statusCode}");
+    }
   }
 
   Future<void> updatedataDoctor(String careerNo) async {
-    // log(careerNo);
     if (nameCtl.text.isEmpty || surnameCtl.text.isEmpty) {
       if (doctorsList.isNotEmpty) {
-        nameCtl.text = doctorsList[0].name;
-        surnameCtl.text = doctorsList[0].surname;
+        if (nameCtl.text.isEmpty) nameCtl.text = doctorsList[0].name;
+        if (surnameCtl.text.isEmpty) surnameCtl.text = doctorsList[0].surname;
       } else {
         log("doctorsList is empty — cannot assign name/surname");
         return;
       }
-      // log(careerNo);
-      PutDoctorDataPost req = PutDoctorDataPost(
-        name: nameCtl.text,
-        surname: surnameCtl.text,
-        image: box.read('clinicImage') ?? '',
-      );
-      var res = await http.put(
-        Uri.parse("$url/doctor/editprofile/$careerNo"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(req.toJson()),
-      );
+    }
 
-      for (var item in selectedSpecialty) {
-        final matchedSpecial = special.firstWhere(
-          (s) => s.name == item,
-          orElse: () => SpecialPost(name: '', specialId: 0),
-        );
+    PutDoctorDataPost req = PutDoctorDataPost(
+      name: nameCtl.text,
+      surname: surnameCtl.text,
+      image: box.read('clinicImage') ?? '',
+    );
 
-        if (matchedSpecial.specialId != 0) {
-          // เรียก API ไปเช็คก่อนว่ามีหรือยัง
-          final checkRes = await http.get(
-            Uri.parse(
-                "$url/docspecial/check/${careerNo}/${matchedSpecial.specialId}"),
-          );
+    var res = await http.put(
+      Uri.parse("$url/doctor/editprofile/$careerNo"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(req.toJson()),
+    );
 
-          if (checkRes.statusCode == 200) {
-            final jsonData = json.decode(checkRes.body);
-            final exists = jsonData['exists'] == true;
+    if (res.statusCode == 200) {
+      log("Update doctor name and surname success");
+    } else {
+      log("Failed to update doctor info: ${res.statusCode}");
+    }
 
-            if (exists) {
-              log("ข้าม '${item}' เพราะมีอยู่แล้วในระบบ");
-              continue;
-            } else {
-              await docspecialAdd(
-                doctorId: careerNo,
-                specialId: matchedSpecial.specialId!,
-              );
-            }
-          } else {
-            log("เช็คไม่สำเร็จสำหรับ ${item} => status: ${checkRes.statusCode}");
-          }
-        } else {
-          log("ไม่พบ specialId สำหรับ '${item}'");
-        }
+    for (var name in unselectedSpecialties) {
+      await searchnamedocspecial(name);
+      if (docSpecialList.isEmpty) {
+        log("ไม่มีข้อมูล docspecial สำหรับชื่อ $name");
+      }
+      for (var item in docSpecialList) {
+        log("กำลังลบ docspecialId: ${item.docspecialId}");
+        await deletedocspecial(item.docspecialId.toString());
       }
     }
+
+    for (var item in selectedSpecialty) {
+      final matchedSpecial = special.firstWhere(
+        (s) => s.name == item,
+        orElse: () => SpecialPost(name: '', specialId: 0),
+      );
+
+      if (matchedSpecial.specialId != 0) {
+        final checkRes = await http.get(
+          Uri.parse(
+              "$url/docspecial/check/${careerNo}/${matchedSpecial.specialId}"),
+        );
+
+        if (checkRes.statusCode == 200) {
+          final jsonData = json.decode(checkRes.body);
+          final exists = jsonData['exists'] == true;
+
+          if (exists) {
+            log("ข้าม '${item}' เพราะมีอยู่แล้วในระบบ");
+            continue;
+          } else {
+            await docspecialAdd(
+              doctorId: careerNo,
+              specialId: matchedSpecial.specialId!,
+            );
+          }
+        } else {
+          log("เช็คไม่สำเร็จสำหรับ ${item} => status: ${checkRes.statusCode}");
+        }
+      } else {
+        log("ไม่พบ specialId สำหรับ '${item}'");
+      }
+    }
+    unselectedSpecialties.clear();
   }
 
   Future<void> deletedocspecial(String docspecialID) async {
     var res = await http.delete(Uri.parse("$url/docspecial/$docspecialID"));
     if (res.statusCode == 200) {
       var data = jsonDecode(res.body);
+      log("Deleted docspecial: $docspecialID, Response: $data");
+    } else {
+      log("Failed to delete docspecial: $docspecialID, Status: ${res.statusCode}");
     }
   }
 
@@ -607,9 +641,20 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                                                       if (selected == true) {
                                                         selectedSpecialty
                                                             .add(item);
+                                                        unselectedSpecialties
+                                                            .remove(item);
+                                                        log(unselectedSpecialties
+                                                            .toString());
                                                       } else {
                                                         selectedSpecialty
                                                             .remove(item);
+                                                        if (!unselectedSpecialties
+                                                            .contains(item)) {
+                                                          unselectedSpecialties
+                                                              .add(item);
+                                                          log(unselectedSpecialties
+                                                              .toString());
+                                                        }
                                                       }
                                                     });
                                                   },
