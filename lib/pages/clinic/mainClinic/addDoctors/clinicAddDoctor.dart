@@ -12,6 +12,7 @@ import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddAvatar.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -135,6 +136,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                   leading:
                       Icon(Icons.medical_services, color: Color(0xFF916b44)),
                   title: Text('เวลาปิด-เปิด'),
+                  onTap: () => Get.to(() => Clinicopeninghours()),
                 ),
                 ListTile(
                   leading: Icon(Icons.settings, color: Color(0xFF916b44)),

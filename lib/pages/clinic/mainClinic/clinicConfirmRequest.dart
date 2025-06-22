@@ -8,6 +8,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -39,7 +40,7 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
   Widget _buildRequestCard(String status, String name, String time) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(12),
+      // padding: const EdgeInsets.fromLTRB(12, 0, 0, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -47,49 +48,58 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
           BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  status,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text.rich(
-                  TextSpan(
-                    text: 'คุณ ',
-                    children: [
-                      TextSpan(
-                        text: name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+      child: IntrinsicHeight(
+        // ✅ ใช้ IntrinsicHeight เพื่อแก้ infinite height
+        child: Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.stretch, // ✅ ขยายลูกแนวตั้งได้ถูกต้อง
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(9.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      const TextSpan(text: ' ได้จองเวลากับคลินิกของคุณ'),
-                    ],
-                  ),
+                    ),
+                    Text.rich(
+                      TextSpan(
+                        text: 'คุณ ',
+                        children: [
+                          TextSpan(
+                            text: name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const TextSpan(text: ' ได้จองเวลากับคลินิกของคุณ'),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      time,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Text(
-                  time,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            height: 50,
-            width: 50,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFB703),
-              borderRadius: BorderRadius.horizontal(right: Radius.circular(12)),
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.horizontal(right: Radius.circular(12)),
+              child: Container(
+                color: const Color(0xFFFFB703),
+                width: 60,
+                alignment: Alignment.center,
+                child: const Icon(Icons.arrow_forward, color: Colors.white),
+              ),
             ),
-            child: const Icon(Icons.arrow_forward, color: Colors.white),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -200,6 +210,9 @@ class _ClinicConfirmRequestState extends State<ClinicConfirmRequest> {
                   leading:
                       Icon(Icons.medical_services, color: Color(0xFF916b44)),
                   title: Text('เวลาปิด-เปิด'),
+                  onTap: () {
+                    Get.to(() => Clinicopeninghours());
+                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.settings, color: Color(0xFF916b44)),
