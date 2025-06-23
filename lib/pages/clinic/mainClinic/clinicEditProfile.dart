@@ -19,6 +19,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicProfile.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
@@ -491,7 +492,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           child: InkWell(
-                                            // onTap: _showSelectSpecialty,
+                                            onTap: _showSelectSpecialty,
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                             child: Container(
@@ -759,6 +760,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
         return;
       }
     }
+    showLoadingDialog(context, message: "กำลังโหลด...");
     if (_imageFile != null) {
       await uploadImage();
     }
@@ -824,6 +826,11 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
       }
     }
     unselectedSpecialties.clear();
+    Get.back();
+    showAlertNoClose(
+      title: 'อัพเดทเสร็จสิ้น',
+      message: 'อัพเดทข้อมูลหมอเรียบร้อยแล้ว',
+    );
   }
 
   Future<void> deletedocspecial(String docspecialID) async {
@@ -834,6 +841,93 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
     } else {
       log("Failed to delete docspecial: $docspecialID, Status: ${res.statusCode}");
     }
+  }
+
+  void showAlertNoClose({
+    required String title,
+    required String message,
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD7CCC8),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 24,
+              color: const Color(0xFFA1887F),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Color(0xFF8D6E63),
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFFA1887F),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 20),
+
+          // Single confirm button
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: () {
+                Get.back();
+                Get.back();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF795548),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 2,
+              ),
+              child: const Text(
+                'ตกลง',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
   }
 
   Future<void> docspecialAdd({
@@ -853,6 +947,32 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
     );
 
     log("ส่ง doctorId: $doctorId, specialId: $specialId => status: ${res.statusCode}");
+  }
+
+  void showLoadingDialog(BuildContext context, {String? message}) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 20),
+                Text(message ?? "Loading...",
+                    style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showSelectSpecialty() {
