@@ -13,7 +13,7 @@ import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/generalProfilePost.dart';
 import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

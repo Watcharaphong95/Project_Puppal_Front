@@ -15,7 +15,7 @@ import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoo
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -418,12 +418,15 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                     return InkWell(
                                       onTap: () {
                                         Get.to(() => ClinicsearchPage(
-                                            dogId: int.parse(events[index]
-                                                .toString()
-                                                .split(', Vaccines:')
-                                                .first
-                                                .replaceAll(
-                                                    RegExp(r'[^0-9]'), ''))));
+                                              dogId: int.parse(events[index]
+                                                  .toString()
+                                                  .split(', Vaccines:')
+                                                  .first
+                                                  .replaceAll(
+                                                      RegExp(r'[^0-9]'), '')),
+                                              vaccineName:
+                                                  vaccineNameShow(index),
+                                            ));
                                       },
                                       child: Card(
                                         elevation: 2,
@@ -537,11 +540,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                       SizedBox(
                         width: screenWidth * 0.45,
                         child: Text(
-                          splitVaccineId(events[index])
-                              .map((id) =>
-                                  vaccineNameMap[id.trim()] ??
-                                  'วัคซีนไม่ทราบชื่อ')
-                              .join(', '),
+                          vaccineNameShow(index),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -552,6 +551,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
             ),
       ],
     );
+  }
+
+  String vaccineNameShow(int index) {
+    return splitVaccineId(events[index])
+        .map((id) => vaccineNameMap[id.trim()] ?? 'วัคซีนไม่ทราบชื่อ')
+        .join(', ');
   }
 
   List<String> getEventsForDay(DateTime day) {

@@ -61,7 +61,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'โปรไฟล์',
+          'ตั้งค่า',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,

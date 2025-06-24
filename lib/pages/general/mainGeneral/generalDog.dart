@@ -12,10 +12,11 @@ import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dar
 import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
+import 'package:puppal_application/pages/general/mainGeneral/dogInfo/dogProfile.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecord.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDog.dart';
@@ -442,7 +443,8 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                                   icon: Icon(Icons.arrow_forward,
                                       color: Colors.white, size: 25),
                                   onPressed: () {
-                                    // Get.to(() => GeneralrecordPage());
+                                    Get.to(
+                                        () => DogprofilePage(dogId: dog.dogId));
                                   },
                                   padding: EdgeInsets.zero,
                                   constraints: BoxConstraints(),
