@@ -19,7 +19,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicProfile.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
