@@ -10,9 +10,9 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddAvatar.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -116,7 +116,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                       color: Color(0xFF916b44)),
                   title: Text('คำขอฉีดยา'),
                   onTap: () {
-                    Get.to(() => ClinicConfirmRequest());
+                    Get.to(() => VaccineRequestsPage());
                   },
                 ),
                 ListTile(

@@ -15,25 +15,26 @@ import 'package:puppal_application/model/getdocspecialID.dart';
 import 'package:puppal_application/model/putDoctorDataPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class Cliniceditprofile extends StatefulWidget {
+class Clinicdoctoreditprofile extends StatefulWidget {
   final String? name;
-  const Cliniceditprofile({super.key, this.name});
+  const Clinicdoctoreditprofile({super.key, this.name});
 
   @override
-  State<Cliniceditprofile> createState() => _CliniceditprofileState();
+  State<Clinicdoctoreditprofile> createState() =>
+      _ClinicdoctoreditprofileState();
 }
 
-class _CliniceditprofileState extends State<Cliniceditprofile> {
+class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
   TextEditingController nameCtl = TextEditingController();
   TextEditingController surnameCtl = TextEditingController();
   TextEditingController searchController = TextEditingController();
@@ -151,7 +152,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
                         color: Color(0xFF916b44)),
                     title: Text('คำขอฉีดยา'),
                     onTap: () {
-                      Get.to(() => ClinicConfirmRequest());
+                      Get.to(() => VaccineRequestsPage());
                     },
                   ),
                   ListTile(
@@ -1235,11 +1236,11 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
       var imagePathAll = imageCtl.text.split('/');
       var imagePath = imagePathAll.last;
 
-      await supabase.storage.from('general-image').remove([imagePath]);
+      await supabase.storage.from('doctor-image').remove([imagePath]);
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('general-image') // Use your actual bucket name here
+          .from('doctor-image') // Use your actual bucket name here
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -1250,7 +1251,7 @@ class _CliniceditprofileState extends State<Cliniceditprofile> {
 
       // Get the public URL
       final publicUrl = Supabase.instance.client.storage
-          .from('general-image')
+          .from('doctor-image')
           .getPublicUrl(fileName);
 
       log("Confirmed with file: ${_imageFile!.path}");

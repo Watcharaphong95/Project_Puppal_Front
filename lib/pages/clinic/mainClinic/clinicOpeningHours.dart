@@ -7,8 +7,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
+
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -141,7 +142,7 @@ class _ClinicopeninghoursState extends State<Clinicopeninghours> {
                   title: Text('คำขอฉีดยา'),
                   onTap: () {
                     Get.back();
-                    Get.to(() => ClinicConfirmRequest());
+                    Get.to(() => VaccineRequestsPage());
                   },
                 ),
                 ListTile(
