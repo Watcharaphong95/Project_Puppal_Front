@@ -3,25 +3,27 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/model/clinicUpdateTypePost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
-import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/acceptRequest.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:http/http.dart' as http;
 
-class BookingdetailPage extends StatefulWidget {
-  final int reserveID;
-  const BookingdetailPage({super.key, required this.reserveID});
+class Calendarbookingdetailpage extends StatefulWidget {
+  final int reserveId;
+
+  const Calendarbookingdetailpage({super.key, required this.reserveId});
 
   @override
-  State<BookingdetailPage> createState() => _BookingdetailPageState();
+  State<Calendarbookingdetailpage> createState() =>
+      _CalendarbookingdetailpageState();
 }
 
-class _BookingdetailPageState extends State<BookingdetailPage> {
+class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
   String url = '';
   late double screenWidth;
   late double screenHeight;
@@ -37,7 +39,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve(widget.reserveID.toString());
+      getReserve(widget.reserveId.toString());
     });
   }
 
@@ -328,13 +330,12 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  acceptrequest(
-                                      reserve.reserveId, 0); // ปฏิเสธ = 3
+                                  updatestatus(reserve.reserveId, 0);
                                 },
                                 icon: const Icon(Icons.cancel,
                                     color: Colors.white),
                                 label: const Text(
-                                  "ปฏิเสธคำขอ",
+                                  "ยกเลิกการจอง",
                                   style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
@@ -357,13 +358,14 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  acceptrequest(
-                                      reserve.reserveId, 2); // ยืนยัน = 2
+                                  Get.to(() => AddVaccinationRecordPage(
+                                        reserveId: reserve.reserveId,
+                                      ));
                                 },
                                 icon: const Icon(Icons.check_circle,
                                     color: Colors.white),
                                 label: const Text(
-                                  "ยืนยันการจอง",
+                                  "บันทึกประวัติ",
                                   style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
@@ -572,8 +574,8 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     }
   }
 
-  Future<void> acceptrequest(int reserveID, int status) async {
-    if (status == 2 || status == 0) {
+  Future<void> updatestatus(int reserveID, int status) async {
+    if (status == 4) {
       _showAcceptDialog();
       ReserveUpdateStatusPost req =
           ReserveUpdateStatusPost(reserveId: reserveID, status: status);
@@ -583,27 +585,10 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
         body: json.encode(req.toJson()),
       );
       if (res.statusCode == 200) {
-        updateType(reserveID, 2);
-
         log("Update data clinic success");
       } else {
         log("Failed to update doctor info: ${res.statusCode}");
       }
-    }
-  }
-
-  Future<void> updateType(int reserveID, int status) async {
-    ClinicUpdateTypePost req =
-        ClinicUpdateTypePost(reserveId: reserveID, type: status);
-    var res = await http.put(
-      Uri.parse("$url/reserve/type/$reserveID"),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(req.toJson()),
-    );
-    if (res.statusCode == 200) {
-      log("Update data clinic success");
-    } else {
-      log("Failed to update doctor info: ${res.statusCode}");
     }
   }
 

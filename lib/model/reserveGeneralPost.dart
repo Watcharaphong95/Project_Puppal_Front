@@ -18,7 +18,7 @@ class ReserveGeneralPost {
   int dogDogId;
   String date;
   int? status;
-  String typeVaccine;
+  String vaccine;
   int? type;
 
   ReserveGeneralPost({
@@ -28,7 +28,7 @@ class ReserveGeneralPost {
     required this.dogDogId,
     required this.date,
     this.status,
-    required this.typeVaccine,
+    required this.vaccine,
     this.type,
   });
 
@@ -40,7 +40,7 @@ class ReserveGeneralPost {
         dogDogId: json["dog_dogId"],
         date: json["date"],
         status: json["status"],
-        typeVaccine: json["typeVaccine"],
+        vaccine: json["vaccine"],
         type: json["type"],
       );
 
@@ -51,7 +51,7 @@ class ReserveGeneralPost {
         "dog_dogId": dogDogId,
         "date": date,
         "status": status,
-        "typeVaccine": typeVaccine,
+        "vaccine": vaccine,
         "type": type,
       };
 }

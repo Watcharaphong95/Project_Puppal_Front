@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/clinicUpdateTypePost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveGeneralPost.dart';
+import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
@@ -321,7 +324,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           ),
           Column(
             children: [
-              if (todayList.any((data) => data.status != 2 && data.status != 3))
+              if (todayList.any((data) =>
+                  data.status != 2 &&
+                  data.status != 3 &&
+                  data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 8),
                   child: Align(
@@ -332,11 +338,18 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   ),
                 ),
               ...todayList
-                  .where((data) => data.status != 2 && data.status != 3)
+                  .where((data) =>
+                      data.status != 0 &&
+                      data.status != 2 &&
+                      data.status != 3 &&
+                      data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
-              if (yesterdayList
-                  .any((data) => data.status != 2 && data.status != 3))
+              if (yesterdayList.any((data) =>
+                  data.status != 0 &&
+                  data.status != 2 &&
+                  data.status != 3 &&
+                  data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 12),
                   child: Align(
@@ -347,11 +360,18 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   ),
                 ),
               ...yesterdayList
-                  .where((data) => data.status != 2 && data.status != 3)
+                  .where((data) =>
+                      data.status != 0 &&
+                      data.status != 2 &&
+                      data.status != 3 &&
+                      data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
-              if (earlierList
-                  .any((data) => data.status != 2 && data.status != 3))
+              if (earlierList.any((data) =>
+                  data.status != 0 &&
+                  data.status != 2 &&
+                  data.status != 3 &&
+                  data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 12),
                   child: Align(
@@ -362,11 +382,15 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   ),
                 ),
               ...earlierList
-                  .where((data) => data.status != 2 && data.status != 3)
+                  .where((data) =>
+                      data.status != 0 &&
+                      data.status != 2 &&
+                      data.status != 3 &&
+                      data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
             ],
-          )
+          ),
         ]));
   }
 
@@ -664,11 +688,12 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       // Details
                       _buildPopupDetailRow('ผู้ใช้', reservation.username),
                       _buildPopupDetailRow('เบอร์โทร', reservation.phone),
-                      _buildPopupDetailRow('วัคซีน', reservation.typeVaccine),
                       _buildPopupDetailRow(
-                          'วันที่จอง', formatThaiDateTime(reservation.date)),
+                          'วัคซีน', reservation.appointmentAid.toString()),
                       _buildPopupDetailRow(
-                          'เวลาที่จอง', _formatDate(reservation.date)),
+                          'วันที่จอง', formatThaiDateTime(reservation.date!)),
+                      _buildPopupDetailRow(
+                          'เวลาที่จอง', _formatDate(reservation.date!)),
 
                       const SizedBox(height: 32),
 
@@ -677,9 +702,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         children: [
                           Expanded(
                             child: _buildPopupActionButton(
-                              label: 'Decline',
+                              label: 'ปฏิเสธการจอง',
                               onPressed: () {
                                 Navigator.pop(context);
+                                acceptrequest(reservation.reserveId, 0);
                                 _showRejectDialog();
                               },
                               isPrimary: false,
@@ -688,8 +714,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildPopupActionButton(
-                              label: 'Accept',
+                              label: 'ยืนยันการจอง',
                               onPressed: () {
+                                acceptrequest(reservation.reserveId, 2);
                                 Navigator.pop(context);
                                 _showAcceptDialog();
                               },
@@ -782,6 +809,40 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return '$hour:$minute ';
   }
 
+  Future<void> acceptrequest(int reserveID, int status) async {
+    if (status == 2 || status == 0) {
+      _showAcceptDialog();
+      ReserveUpdateStatusPost req =
+          ReserveUpdateStatusPost(reserveId: reserveID, status: status);
+      var res = await http.put(
+        Uri.parse("$url/reserve/$reserveID"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(req.toJson()),
+      );
+      if (res.statusCode == 200) {
+        log("Update data clinic success");
+      } else {
+        log("Failed to update doctor info: ${res.statusCode}");
+      }
+    }
+  }
+
+  Future<void> updateType(int reserveID, int status) async {
+    ClinicUpdateTypePost req =
+        ClinicUpdateTypePost(reserveId: reserveID, type: status);
+    var res = await http.put(
+      Uri.parse("$url/reserve/type/$reserveID"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(req.toJson()),
+    );
+    if (res.statusCode == 200) {
+      updateType(reserveID, 2);
+      log("Update data clinic success");
+    } else {
+      log("Failed to update doctor info: ${res.statusCode}");
+    }
+  }
+
   void _showAcceptDialog() {
     showDialog(
       context: context,
@@ -797,18 +858,18 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: primaryBrown.withOpacity(0.1),
+                color: Color(0xFF916B44).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(32),
               ),
               child: Icon(
                 Icons.check,
-                color: primaryBrown,
+                color: Color(0xFF916B44),
                 size: 32,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'Accept Appointment?',
+              'คุณต้องการยืนยันการนัดหมายนี้หรือไม่?',
               style: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 18,
@@ -817,7 +878,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'This appointment will be confirmed',
+              'เมื่อตกลง การนัดหมายนี้จะถือว่ายืนยันแล้ว',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -830,23 +891,47 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Cancel',
+                      'ยกเลิก',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ),
                 ),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      // ปิด Alert ก่อน
                       Navigator.pop(context);
+
+                      // เปิด loading
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF916B44)),
+                          );
+                        },
+                      );
+
+                      await Future.delayed(const Duration(seconds: 3));
+
+                      // ปิด loading dialog
+                      Navigator.of(context, rootNavigator: true).pop();
+
+                      // กลับหน้าก่อนหน้า (พร้อมส่งค่ากลับ true)
+                      Navigator.pop(context, true);
+
+                      // ทำงานต่อ
                       _acceptReservation();
+                      _init();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryBrown,
+                      backgroundColor: const Color(0xFF916B44),
                       foregroundColor: Colors.white,
                       elevation: 0,
                     ),
-                    child: const Text('Accept'),
+                    child: const Text('ตกลง'),
                   ),
                 ),
               ],
@@ -883,7 +968,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Decline Appointment?',
+              'คุณต้องการปฏิเสธการนัดหมายนี้หรือไม่?',
               style: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 18,
@@ -892,7 +977,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'This action cannot be undone',
+              'โปรดทราบว่าการดำเนินการนี้ไม่สามารถย้อนกลับได้',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -905,7 +990,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Cancel',
+                      'ยกเลิก',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ),
@@ -914,14 +999,16 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
+                      Navigator.pop(context, true);
                       _rejectReservation();
+                      _init();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       elevation: 0,
                     ),
-                    child: const Text('Decline'),
+                    child: const Text('ตกลง'),
                   ),
                 ),
               ],
@@ -933,26 +1020,27 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   }
 
   void _acceptReservation() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Appointment accepted successfully'),
-        backgroundColor: primaryBrown,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
+    Flushbar(
+      message: 'ยืนยันการนัดหมายเรียบร้อยแล้ว',
+      duration: const Duration(seconds: 4), // นานขึ้น
+      backgroundColor: Color(0xFF916B44),
+      flushbarPosition: FlushbarPosition.TOP, // แสดงด้านบน
+      borderRadius: BorderRadius.circular(8),
+      margin: const EdgeInsets.all(16),
+      animationDuration: const Duration(milliseconds: 500), // แสดงขึ้นช้ากว่า
+    ).show(context);
   }
 
   void _rejectReservation() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Appointment declined'),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    Flushbar(
+      message: 'ปฏิเสธการนัดหมายแล้ว',
+      duration: const Duration(seconds: 4),
+      backgroundColor: Colors.red,
+      flushbarPosition: FlushbarPosition.TOP,
+      borderRadius: BorderRadius.circular(8),
+      margin: const EdgeInsets.all(16),
+      animationDuration: const Duration(milliseconds: 500),
+    ).show(context);
   }
 
   bool isToday(DateTime date) {

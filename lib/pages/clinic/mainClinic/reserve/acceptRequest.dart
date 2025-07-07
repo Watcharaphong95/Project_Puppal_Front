@@ -308,8 +308,8 @@ class _AcceptrequestState extends State<Acceptrequest> {
                           'Owner', reservation.username ?? 'Not specified'),
                       _buildPopupDetailRow(
                           'Phone', reservation.phone ?? 'Not specified'),
-                      _buildPopupDetailRow('Vaccine',
-                          reservation.typeVaccine ?? 'Not specified'),
+                      _buildPopupDetailRow(
+                          'Vaccine', reservation.appointmentAid.toString()),
                       _buildPopupDetailRow(
                           'Date', _formatDate(reservation.date)),
                       _buildPopupDetailRow('Time',

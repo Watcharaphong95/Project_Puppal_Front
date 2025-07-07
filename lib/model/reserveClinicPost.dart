@@ -18,7 +18,7 @@ class ReserveClinicPost {
   int dogDogId;
   DateTime date;
   int status;
-  String typeVaccine;
+  int? appointment_aid;
   int type;
   dynamic message;
   String username;
@@ -31,7 +31,7 @@ class ReserveClinicPost {
     required this.dogDogId,
     required this.date,
     required this.status,
-    required this.typeVaccine,
+    required this.appointment_aid,
     required this.type,
     required this.message,
     required this.username,
@@ -46,7 +46,7 @@ class ReserveClinicPost {
         dogDogId: json["dog_dogId"],
         date: DateTime.parse(json["date"]),
         status: json["status"],
-        typeVaccine: json["typeVaccine"],
+        appointment_aid: json["appointment_aid"],
         type: json["type"],
         message: json["message"],
         username: json["username"],
@@ -60,7 +60,7 @@ class ReserveClinicPost {
         "dog_dogId": dogDogId,
         "date": date.toIso8601String(),
         "status": status,
-        "typeVaccine": typeVaccine,
+        "appointment_aid": appointment_aid,
         "type": type,
         "message": message,
         "username": username,

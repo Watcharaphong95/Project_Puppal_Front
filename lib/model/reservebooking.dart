@@ -16,11 +16,10 @@ class Reservebooking {
   String generalEmail;
   String clinicEmail;
   int dogDogId;
+  int? appointmentAid;
   DateTime date;
   int status;
-  String typeVaccine;
   int type;
-  dynamic message;
   String username;
   String phone;
   String name;
@@ -33,17 +32,18 @@ class Reservebooking {
   int sterilization;
   String hair;
   String image;
+  int? aid;
+  String? appointmentName;
 
   Reservebooking({
     required this.reserveId,
     required this.generalEmail,
     required this.clinicEmail,
     required this.dogDogId,
+    required this.appointmentAid,
     required this.date,
     required this.status,
-    required this.typeVaccine,
     required this.type,
-    required this.message,
     required this.username,
     required this.phone,
     required this.name,
@@ -56,6 +56,8 @@ class Reservebooking {
     required this.sterilization,
     required this.hair,
     required this.image,
+    required this.aid,
+    required this.appointmentName,
   });
 
   factory Reservebooking.fromJson(Map<String, dynamic> json) => Reservebooking(
@@ -63,11 +65,10 @@ class Reservebooking {
         generalEmail: json["general_email"],
         clinicEmail: json["clinic_email"],
         dogDogId: json["dog_dogId"],
+        appointmentAid: json["appointment_aid"],
         date: DateTime.parse(json["date"]),
         status: json["status"],
-        typeVaccine: json["typeVaccine"],
         type: json["type"],
-        message: json["message"],
         username: json["username"],
         phone: json["phone"],
         name: json["name"],
@@ -80,6 +81,8 @@ class Reservebooking {
         sterilization: json["sterilization"],
         hair: json["Hair"],
         image: json["image"],
+        aid: json["aid"],
+        appointmentName: json["appointment_name"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -87,11 +90,10 @@ class Reservebooking {
         "general_email": generalEmail,
         "clinic_email": clinicEmail,
         "dog_dogId": dogDogId,
+        "appointment_aid": appointmentAid,
         "date": date.toIso8601String(),
         "status": status,
-        "typeVaccine": typeVaccine,
         "type": type,
-        "message": message,
         "username": username,
         "phone": phone,
         "name": name,
@@ -104,5 +106,7 @@ class Reservebooking {
         "sterilization": sterilization,
         "Hair": hair,
         "image": image,
+        "aid": aid,
+        "appointment_name": appointmentName,
       };
 }
