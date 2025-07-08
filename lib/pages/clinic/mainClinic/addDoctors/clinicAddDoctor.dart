@@ -10,9 +10,9 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddAvatar.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -116,7 +116,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                       color: Color(0xFF916b44)),
                   title: Text('คำขอฉีดยา'),
                   onTap: () {
-                    Get.to(() => ClinicConfirmRequest());
+                    Get.to(() => VaccineRequestsPage());
                   },
                 ),
                 ListTile(
@@ -411,19 +411,195 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
   }
 
   Future<void> specialAdd(String selectedSpecialty) async {
-    SpecialPost req = SpecialPost(
-      name: selectedSpecialty,
-      specialId: 0,
+    bool confirmed = await confirmDialog(context);
+    if (!confirmed) return;
+
+    // ✅ แสดงโหลดหมุน
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF916B44)),
+      ),
     );
 
-    final res = await http.post(
-      Uri.parse("$url/special"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: specialPostToJson([req]),
-    );
+    try {
+      SpecialPost req = SpecialPost(
+        name: selectedSpecialty,
+        specialId: 0,
+      );
 
-    // log("STATUS: ${res.statusCode}");
-    // log("BODY: ${res.body}");
+      final res = await http.post(
+        Uri.parse("$url/special"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: specialPostToJson([req]),
+      );
+
+      Navigator.of(context, rootNavigator: true).pop(); // ✅ ปิดโหลด
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("บันทึกสำเร็จ"),
+            backgroundColor: Color(0xFF916B44),
+          ),
+        );
+
+        _init(); // หรือ setState(() {...}) เพื่อรีโหลดข้อมูล
+      } else {
+        log("📥 Status Code: ${res.statusCode}");
+        log("📥 Response Body: ${res.body}");
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("เกิดข้อผิดพลาด (${res.statusCode})"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      Navigator.of(context, rootNavigator: true).pop(); // ปิดโหลดถ้า error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("เกิดข้อผิดพลาด"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _init() {
+    // โหลดข้อมูลหรือรีเฟรชหน้าตรงนี้
+    getSpecialData(); // ยกตัวอย่างเมธอดดึงข้อมูล
+    setState(() {});
+  }
+
+  Future<bool> confirmDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการบันทึก",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการบันทึกข้อมูลความเชี่ยวชาญหรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF916B44),
+                      Color(0xFFDBA871),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _showSelectSpecialty() {
@@ -574,7 +750,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
 
                                 Navigator.pop(context);
                               },
-                              child: Text("ยืนยัน"),
+                              child: Text("บันทึก"),
                             ),
                           ],
                         ],

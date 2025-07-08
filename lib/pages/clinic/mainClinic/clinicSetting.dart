@@ -8,10 +8,12 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
+
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
@@ -138,7 +140,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                   title: Text('คำขอฉีดยา'),
                   onTap: () {
                     Get.back();
-                    Get.to(() => ClinicConfirmRequest());
+                    Get.to(() => VaccineRequestsPage());
                   },
                 ),
                 ListTile(
@@ -293,7 +295,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                                 width: screenWidth * 0.8,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    // Get.to(() => EditprofilePage());
+                                    Get.to(() => Clinicprofile());
                                   },
                                   child: Row(
                                     mainAxisAlignment:
