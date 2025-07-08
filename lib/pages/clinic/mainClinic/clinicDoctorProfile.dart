@@ -18,15 +18,15 @@ import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 
-class Clinicprofile extends StatefulWidget {
+class Clinicdoctorprofile extends StatefulWidget {
   final String? name;
-  const Clinicprofile({super.key, this.name});
+  const Clinicdoctorprofile({super.key, this.name});
 
   @override
-  State<Clinicprofile> createState() => _ClinicprofileState();
+  State<Clinicdoctorprofile> createState() => _ClinicdoctorprofileState();
 }
 
-class _ClinicprofileState extends State<Clinicprofile> {
+class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();

@@ -15,12 +15,14 @@ class InjectionRecordPost {
   String clinicName;
   String vaccineType;
   String date;
+  int status;
 
   InjectionRecordPost({
     required this.dogId,
     required this.clinicName,
     required this.vaccineType,
     required this.date,
+    required this.status,
   });
 
   factory InjectionRecordPost.fromJson(Map<String, dynamic> json) =>
@@ -29,6 +31,7 @@ class InjectionRecordPost {
         clinicName: json["clinicName"],
         vaccineType: json["vaccineType"],
         date: json["date"],
+        status: json["status"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -36,5 +39,6 @@ class InjectionRecordPost {
         "clinicName": clinicName,
         "vaccineType": vaccineType,
         "date": date,
+        "status": status,
       };
 }

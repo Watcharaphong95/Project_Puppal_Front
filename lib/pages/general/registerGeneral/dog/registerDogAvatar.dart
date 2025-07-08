@@ -324,7 +324,8 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
           dogId: dogID,
           clinicName: re.clinicName,
           vaccineType: re.vaccineType,
-          date: re.date);
+          date: re.date,
+          status: re.status);
       log(injectionRecordPostToJson(req));
       var res = await http.post(
         Uri.parse("$url/injectionRecord"),

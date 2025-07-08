@@ -15,8 +15,10 @@ class DogsRecordIdGet {
   int rid;
   int dogId;
   String clinicName;
-  String vaccineType;
+  int vaccineType;
   String date;
+  int status;
+  String name;
 
   DogsRecordIdGet({
     required this.rid,
@@ -24,6 +26,8 @@ class DogsRecordIdGet {
     required this.clinicName,
     required this.vaccineType,
     required this.date,
+    required this.status,
+    required this.name,
   });
 
   factory DogsRecordIdGet.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +37,8 @@ class DogsRecordIdGet {
         clinicName: json["clinicName"],
         vaccineType: json["vaccineType"],
         date: json["date"],
+        status: json["status"],
+        name: json["name"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,5 +47,7 @@ class DogsRecordIdGet {
         "clinicName": clinicName,
         "vaccineType": vaccineType,
         "date": date,
+        "status": status,
+        "name": name,
       };
 }

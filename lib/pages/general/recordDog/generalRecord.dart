@@ -48,66 +48,6 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
   late int dogId;
   String dogBirthDay = '';
 
-  Map<String, String> vaccineNameMap = {
-    '1': 'วัคซีนรวม 5 โรค (DHPPiL)',
-    '2': 'วัคซีนพิษสุนัขบ้า',
-    '3': 'วัคซีนป้องกันโรคไข้ฉี่หนู',
-    '4': 'วัคซีนป้องกันเชื้อ Bordetella bronchiseptica',
-    '5': 'วัคซีนป้องกันโรคลายม์',
-    '6': 'วัคซีนป้องกันเชื้อโคโรนาไวรัส',
-    '7': 'วัคซีนถ่ายพยาธิ',
-  };
-
-  final Map<String, IconData> vaccineIcons = {
-    '1': FontAwesomeIcons.shieldHeart,
-    '2': FontAwesomeIcons.shieldDog,
-    '3': FontAwesomeIcons.shieldDog,
-    '4': FontAwesomeIcons.wind,
-    '5': FontAwesomeIcons.bug,
-    '6': FontAwesomeIcons.virus,
-    '7': FontAwesomeIcons.worm,
-  };
-
-  Map<String, Map<String, List<int>>> vaccineScheduleWeeks = {
-    '1': {
-      'baby': [8, 12, 16], // age if dog no need to + birthday if dog not mature
-      'mature': [0, 3], //need birthday + week for next vacination
-      'boost': [52] // 52 every year, 26 6 month
-    },
-    '2': {
-      'baby': [12],
-      'mature': [0],
-      'boost': [52]
-    },
-    '3': {
-      'baby': [8, 11],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '4': {
-      'baby': [8, 12, 16],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '5': {
-      'baby': [12, 15],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '6': {
-      'baby': [6, 9, 12],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '7': {
-      'baby': [8, 11],
-      'mature': [0, 3],
-      'boost': [26]
-    },
-  };
-
-  List<String> vaccineNext = [];
-
   @override
   void initState() {
     super.initState();
@@ -426,83 +366,42 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                     Column(
                       children: [
                         SizedBox(
-                            child: vaccineNext.isEmpty
-                                ? Column(
-                                    children: [
-                                      Divider(),
-                                      Card(
-                                        color: Color(0xFFF1F1F1),
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        elevation: 4,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: ListTile(
-                                          contentPadding: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 12),
-                                          leading: FaIcon(
-                                            FontAwesomeIcons.syringe,
-                                          ),
-                                          title: Text(
-                                            "อายุ: ${getDogAge(dogBirthDay)}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.redAccent),
-                                          ),
-                                          subtitle: Text(
-                                            'ไม่มีวัคซีนต้องได้รับในขณะนี้',
-                                            style: TextStyle(
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                          trailing: Icon(Icons.chevron_right),
-                                          onTap: () {
-                                            // Add your tap logic here
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    children: [
-                                      Divider(),
-                                      Card(
-                                        color: Color(0xFFF1F1F1),
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        elevation: 4,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: ListTile(
-                                          contentPadding: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 12),
-                                          leading: FaIcon(
-                                            FontAwesomeIcons.syringe,
-                                          ),
-                                          title: Text(
-                                            "อายุ: ${getDogAge(dogBirthDay)}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.redAccent),
-                                          ),
-                                          subtitle: Text(
-                                            'ต้องได้รับ ${vaccineNext.join(', ')}',
-                                            style: TextStyle(
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                          trailing: Icon(Icons.chevron_right),
-                                          onTap: () {
-                                            // Add your tap logic here
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  )),
+                            child: Column(
+                          children: [
+                            Divider(),
+                            Card(
+                              color: Color(0xFFF1F1F1),
+                              margin: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                leading: FaIcon(
+                                  FontAwesomeIcons.syringe,
+                                ),
+                                title: Text(
+                                  "อายุ: ${getDogAge(dogBirthDay)}",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.redAccent),
+                                ),
+                                subtitle: Text(
+                                  'ไม่มีวัคซีนต้องได้รับในขณะนี้',
+                                  style: TextStyle(
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                                trailing: Icon(Icons.chevron_right),
+                                onTap: () {
+                                  // Add your tap logic here
+                                },
+                              ),
+                            ),
+                          ],
+                        )),
                       ],
                     ),
                     Divider(),
@@ -517,88 +416,79 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                             )
                           else
                             SizedBox(
-                              height: screenHeight * 0.5,
-                              child: dogRecord.isEmpty
-                                  ? Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          FaIcon(
-                                            FontAwesomeIcons.dog,
-                                            size: 50,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                          SizedBox(height: 16),
-                                          Text(
-                                            'ไม่พบประวัติการฉีดวัคซีน',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade700,
+                                height: screenHeight * 0.5,
+                                child: Center(
+                                  child: dogRecord.isEmpty
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            FaIcon(
+                                              FontAwesomeIcons.dog,
+                                              size: 50,
+                                              color: Colors.grey.shade500,
                                             ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      itemCount: dogRecord.length,
-                                      itemBuilder: (context, index) {
-                                        final record = dogRecord[index];
-                                        String vaccineName = vaccineNameMap[
-                                                record.vaccineType] ??
-                                            'ข้อมูลวัคซีนไม่พบ';
-                                        return Card(
-                                          color: Color(0xFFF1F1F1),
-                                          margin: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          elevation: 4,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: ListTile(
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 12),
-                                            leading: FaIcon(
-                                              vaccineIcons[
-                                                      record.vaccineType] ??
-                                                  FontAwesomeIcons.syringe,
-                                            ),
-                                            title: Text(
-                                              record.clinicName.isNotEmpty
-                                                  ? record.clinicName
-                                                  : 'ไม่มีคลินิก',
+                                            SizedBox(height: 16),
+                                            Text(
+                                              'ไม่พบประวัติการฉีดวัคซีน',
                                               style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.grey.shade700,
+                                              ),
+                                              textAlign: TextAlign.center,
                                             ),
-                                            subtitle: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  vaccineName,
+                                          ],
+                                        )
+                                      : ListView(
+                                          children: dogRecord.map((record) {
+                                            return Card(
+                                              color: Color(0xFFF1F1F1),
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 8),
+                                              elevation: 4,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: ListTile(
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 12),
+                                                title: Text(
+                                                  record.clinicName.isNotEmpty
+                                                      ? 'คลินิก: ${record.clinicName}'
+                                                      : 'ไม่มีคลินิก',
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold),
                                                 ),
-                                                Text(
-                                                  "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
+                                                subtitle: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      record.name,
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                    Text(
+                                                      "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.date).toLocal())}",
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                            trailing: Icon(Icons.chevron_right),
-                                            onTap: () {
-                                              // Add your tap logic here
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    ),
-                            ),
+                                                trailing:
+                                                    Icon(Icons.chevron_right),
+                                                onTap: () {
+                                                  // Add your tap logic here
+                                                },
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                )),
                         ],
                       ),
                     )
@@ -626,263 +516,179 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       dogRecord = jsonData
           .map<DogsRecordIdGet>((e) => DogsRecordIdGet.fromJson(e))
           .toList();
-      // log(res.body);
-
-      List<String> givenVacId = [];
-      Map<String, DateTime> givenVacDate = {};
-      for (var record in dogRecord) {
-        givenVacId.add(record.vaccineType);
-        givenVacDate[record.vaccineType] = (DateTime.parse(record.date));
-      }
-
-      vaccineNext = nextVaccineForDog(dogBirthDay, givenVacId);
+      log(res.body);
     }
   }
+}
 
-  List<String> nextVaccineForDog(String birthday, List<String> givenVaccineId) {
-    List<String> nextVaccine = [];
-    int dogAge = dogAgeInWeeks(birthday);
-    Map<int, int> countsVaccinePerType = {};
-    Map<int, int> countsGiven = {};
-    for (var num in givenVaccineId) {
-      countsGiven[int.parse(num)] = (countsGiven[int.parse(num)] ?? 0) + 1;
-    }
-    // log(givenVaccineId.toString());
+String getDogAge(String birthday) {
+  DateTime birthDate = DateTime.parse(birthday).toLocal();
+  DateTime today = DateTime.now();
 
-    if (dogAge < 16) {
-      vaccineScheduleWeeks.forEach((vaccineId, schedule) {
-        List<int>? babySchedule = schedule['baby'];
-        if (babySchedule != null) {
-          for (var week in babySchedule) {
-            countsVaccinePerType[int.parse(vaccineId)] =
-                (countsVaccinePerType[int.parse(vaccineId)] ?? 0) + 1;
-            if (dogAge > week) {
-              if (!nextVaccine.contains(vaccineId)) {
-                nextVaccine.add(vaccineId);
-              }
-            }
-          }
+  int ageInDays = today.difference(birthDate).inDays;
+  int ageInWeeks = ageInDays ~/ 7;
 
-          for (var id in nextVaccine.toList()) {
-            final totalCount = countsVaccinePerType[int.parse(id)];
-            final givenCount = countsGiven[int.parse(id)];
-
-            if (totalCount != null && givenCount != null) {
-              if (givenCount >= totalCount) {
-                nextVaccine.remove(id); // ลบออกถ้าให้ครบแล้ว
-              }
-            }
-          }
-        }
-      });
-    } else {
-      vaccineScheduleWeeks.forEach((vaccineId, schedule) {
-        List<int>? matureSchedule = schedule['mature'];
-        if (matureSchedule != null) {
-          for (var week in matureSchedule) {
-            countsVaccinePerType[int.parse(vaccineId)] =
-                (countsVaccinePerType[int.parse(vaccineId)] ?? 0) + 1;
-            if (dogAge > week) {
-              if (!nextVaccine.contains(vaccineId)) {
-                nextVaccine.add(vaccineId);
-              }
-            }
-          }
-
-          for (var id in nextVaccine.toList()) {
-            final totalCount = countsVaccinePerType[int.parse(id)];
-            final givenCount = countsGiven[int.parse(id)];
-
-            if (totalCount != null && givenCount != null) {
-              if (givenCount >= totalCount) {
-                nextVaccine.remove(id); // ลบออกถ้าให้ครบแล้ว
-              }
-            }
-          }
-        }
-      });
-    }
-    List<String> matchedNames = nextVaccine
-        .map((id) => vaccineNameMap[id] ?? 'ไม่พบชื่อวัคซีน')
-        .toList();
-    return matchedNames;
+  if (ageInWeeks < 12) {
+    return '$ageInWeeks สัปดาห์';
   }
 
-  String getDogAge(String birthday) {
-    DateTime birthDate = DateTime.parse(birthday).toLocal();
-    DateTime today = DateTime.now();
+  int years = today.year - birthDate.year;
+  int months = today.month - birthDate.month;
 
-    int ageInDays = today.difference(birthDate).inDays;
-    int ageInWeeks = ageInDays ~/ 7;
-
-    if (ageInWeeks < 12) {
-      return '$ageInWeeks สัปดาห์';
-    }
-
-    int years = today.year - birthDate.year;
-    int months = today.month - birthDate.month;
-
-    if (today.day < birthDate.day) {
-      months -= 1;
-    }
-    if (months < 0) {
-      years -= 1;
-      months += 12;
-    }
-
-    if (years > 0 && months > 0) {
-      return '$years ปี $months เดือน';
-    } else if (years > 0) {
-      return '$years ปี';
-    } else {
-      return '$months เดือน';
-    }
+  if (today.day < birthDate.day) {
+    months -= 1;
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
   }
 
-  int dogAgeInWeeks(String birthDate) {
-    final now = DateTime.now();
-    final duration = now.difference(DateTime.parse(birthDate));
-    return duration.inDays ~/ 7;
+  if (years > 0 && months > 0) {
+    return '$years ปี $months เดือน';
+  } else if (years > 0) {
+    return '$years ปี';
+  } else {
+    return '$months เดือน';
   }
+}
 
-  void showAlert({
-    required String title,
-    required String message,
-    VoidCallback? onConfirm,
-  }) {
-    Get.defaultDialog(
-      title: '',
-      titlePadding: EdgeInsets.zero,
-      contentPadding: const EdgeInsets.all(16),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Icon with subtle animation potential
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7CCC8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 24,
-              color: const Color(0xFFA1887F),
-            ),
+void showAlert({
+  required String title,
+  required String message,
+  VoidCallback? onConfirm,
+}) {
+  Get.defaultDialog(
+    title: '',
+    titlePadding: EdgeInsets.zero,
+    contentPadding: const EdgeInsets.all(16),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Icon with subtle animation potential
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD7CCC8),
+            shape: BoxShape.circle,
           ),
-
-          const SizedBox(height: 16),
-
-          // Title with better typography
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Color(0xFF8D6E63),
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
+          child: Icon(
+            Icons.info_outline_rounded,
+            size: 24,
+            color: const Color(0xFFA1887F),
           ),
+        ),
 
-          const SizedBox(height: 8),
+        const SizedBox(height: 16),
 
-          // Message with improved readability
-          Text(
-            message,
-            style: const TextStyle(
-              color: Color(0xFFA1887F),
-              fontSize: 14,
-              height: 1.4,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
+        // Title with better typography
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Color(0xFF8D6E63),
+            letterSpacing: -0.5,
           ),
+          textAlign: TextAlign.center,
+        ),
 
-          const SizedBox(height: 20),
+        const SizedBox(height: 8),
 
-          // Enhanced button row
-          Row(
-            children: [
-              // Cancel button
-              Expanded(
-                child: Container(
-                  height: 40,
-                  child: TextButton(
-                    onPressed: () => Get.back(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF8D6E63),
-                      backgroundColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: const Color(0xFFD7CCC8),
-                          width: 1,
-                        ),
+        // Message with improved readability
+        Text(
+          message,
+          style: const TextStyle(
+            color: Color(0xFFA1887F),
+            fontSize: 14,
+            height: 1.4,
+            fontWeight: FontWeight.w400,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 20),
+
+        // Enhanced button row
+        Row(
+          children: [
+            // Cancel button
+            Expanded(
+              child: Container(
+                height: 40,
+                child: TextButton(
+                  onPressed: () => Get.back(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF8D6E63),
+                    backgroundColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(
+                        color: const Color(0xFFD7CCC8),
+                        width: 1,
                       ),
-                      elevation: 0,
                     ),
-                    child: const Text(
-                      'ยกเลิก',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'ยกเลิก',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-              // Confirm button
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Color(0xFF795548),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFA1887F).withOpacity(0.3),
-                        offset: const Offset(0, 2),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.back();
-                      if (onConfirm != null) onConfirm();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 0,
+            // Confirm button
+            Expanded(
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Color(0xFF795548),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFA1887F).withOpacity(0.3),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                      spreadRadius: 0,
                     ),
-                    child: const Text(
-                      'ตกลง',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    if (onConfirm != null) onConfirm();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'ตกลง',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-      backgroundColor: const Color(0xFFF5F0E8),
-      barrierDismissible: false,
-      radius: 16,
-    );
-  }
+            ),
+          ],
+        ),
+      ],
+    ),
+    backgroundColor: const Color(0xFFF5F0E8),
+    barrierDismissible: false,
+    radius: 16,
+  );
 }

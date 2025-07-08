@@ -5,6 +5,7 @@ class RegisterDogInjectionCtl extends GetxController {
   var clinicName = ''.obs;
   var vaccineType = ''.obs;
   var date = ''.obs;
+  var status = ''.obs;
 
   void setClinicName(String value) {
     clinicName.value = value;
@@ -16,6 +17,10 @@ class RegisterDogInjectionCtl extends GetxController {
 
   void setDate(String value) {
     date.value = value;
+  }
+
+  void setStatus(String value) {
+    status.value = value;
   }
 }
 

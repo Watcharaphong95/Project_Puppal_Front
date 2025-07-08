@@ -8,8 +8,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentGetEmail.dart';
+import 'package:puppal_application/model/dogAppointmentEmailGet.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
-import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -18,10 +19,13 @@ import 'package:puppal_application/pages/general/mainGeneral/generalNotification
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
+import 'package:puppal_application/pages/general/reservePage/dogSelect.dart';
+import 'package:puppal_application/pages/general/reservePage/reserveInfo.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class GeneralmainPage extends StatefulWidget {
   const GeneralmainPage({super.key});
@@ -43,63 +47,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   var _focusedDay = DateTime.now();
   var events = [];
 
-  Map<String, String> vaccineNameMap = {
-    '1': 'วัคซีนรวม 5 โรค (DHPPiL)',
-    '2': 'วัคซีนพิษสุนัขบ้า',
-    '3': 'วัคซีนป้องกันโรคไข้ฉี่หนู',
-    '4': 'วัคซีนป้องกันเชื้อ Bordetella bronchiseptica',
-    '5': 'วัคซีนป้องกันโรคลายม์',
-    '6': 'วัคซีนป้องกันเชื้อโคโรนาไวรัส',
-    '7': 'วัคซีนถ่ายพยาธิ',
-  };
-
-  Map<String, Map<String, List<int>>> vaccineScheduleWeeks = {
-    '1': {
-      'baby': [8, 12, 16], // age if dog no need to + birthday if dog not mature
-      'mature': [0, 3], //need birthday + week for next vacination
-      'boost': [52] // 52 every year, 26 6 month
-    },
-    '2': {
-      'baby': [12],
-      'mature': [0],
-      'boost': [52]
-    },
-    '3': {
-      'baby': [8, 11],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '4': {
-      'baby': [8, 12, 16],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '5': {
-      'baby': [12, 15],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '6': {
-      'baby': [6, 9, 12],
-      'mature': [0, 3],
-      'boost': [52]
-    },
-    '7': {
-      'baby': [8, 11],
-      'mature': [0, 3],
-      'boost': [26]
-    },
-  };
-
-  List<DogsGetEmail> dogs = [];
-  late DogsGetEmail dogData;
-
-  List<DogsRecordIdGet> dogRecord = [];
-
-  List<DogDataForCalcualtionAppointment> dogDataForCal = [];
-
-  Map<DateTime, List<String>> eventMap = {};
-  Map<int, int> dogAgesInWeeks = {};
+  List<AppointmentGetEmail> appointment = [];
+  Map<DateTime, List<Dog>> eventMap = {};
 
   @override
   void initState() {
@@ -108,6 +57,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       _selectedDay = box.read('focusedDay');
     }
     box.write('type', 'general');
+    log('focusDay ${box.read('focusedDay')}');
     log(box.read('generalImage'));
     init();
     super.initState();
@@ -117,8 +67,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    await calculateForAppointmentDay();
-    events = getEventsForDay(DateTime.now());
+    await getAppointmentEmail();
+    events = getEventsForDay(_selectedDay);
     setState(() {
       _loadingData = false;
     });
@@ -322,7 +272,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Container(
-                // height: screenHeight * 0.9,
+                height: screenHeight * 0.9,
                 decoration: BoxDecoration(
                   image: DecorationImage(
                       image: AssetImage('assets/images/indexBg.png'),
@@ -382,6 +332,47 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                               _focusedDay = focusedDay;
                             },
                             eventLoader: getEventsForDay,
+                            calendarBuilders: CalendarBuilders(
+                              markerBuilder: (context, date, events) {
+                                if (events.isEmpty) return SizedBox.shrink();
+
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: events.map((event) {
+                                    Color dotColor;
+
+                                    // Example logic based on event.status
+                                    switch ((event as Dog).status) {
+                                      case 0:
+                                        dotColor = Colors.red;
+                                        break;
+                                      case 1:
+                                        dotColor = Colors.yellow.shade600;
+                                        break;
+                                      case 2:
+                                        dotColor = Colors.lightBlueAccent;
+                                        break;
+                                      case 3:
+                                        dotColor = Colors.lightGreenAccent;
+                                        break;
+                                      default:
+                                        dotColor = Colors.grey;
+                                    }
+
+                                    return Container(
+                                      width: 6,
+                                      height: 6,
+                                      margin:
+                                          EdgeInsets.symmetric(horizontal: 0.5),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: dotColor,
+                                      ),
+                                    );
+                                  }).toList(),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -401,79 +392,99 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                         ],
                       ),
                     ),
-                    if (events.isNotEmpty)
-                      SizedBox(
-                        width: screenWidth,
-                        height: screenHeight * 0.425,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.025),
                         child: Padding(
                           padding:
-                              EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.03),
+                              EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
                           child: Column(
                             children: [
-                              Expanded(
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: events.length,
-                                  itemBuilder: (context, index) {
-                                    return InkWell(
-                                      onTap: () {
-                                        Get.to(() => ClinicsearchPage(
-                                              dogId: int.parse(events[index]
-                                                  .toString()
-                                                  .split(', Vaccines:')
-                                                  .first
-                                                  .replaceAll(
-                                                      RegExp(r'[^0-9]'), '')),
-                                              vaccineName:
-                                                  vaccineNameShow(index),
-                                            ));
-                                      },
-                                      child: Card(
-                                        elevation: 2,
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: screenWidth * 0.05,
-                                            vertical: screenHeight * 0.005),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: SizedBox(
-                                          height: screenHeight * 0.125,
-                                          child: ListTile(
-                                            title: SizedBox(
-                                                height: screenHeight * 0.11,
-                                                child: insideCardShowDogData(
-                                                    index)),
+                              events.isNotEmpty
+                                  ? Column(
+                                      children: events.map((e) {
+                                        return Card(
+                                          elevation: 2,
+                                          child: InkWell(
+                                            onTap: () {
+                                              e.status != 0
+                                                  ? showReserveInfoAlert(
+                                                      context, e)
+                                                  : Get.to(
+                                                      () => ClinicsearchPage(
+                                                            dogId: e.dogId,
+                                                            vaccineName: e
+                                                                .vaccines
+                                                                .join(', '),
+                                                            date: _selectedDay,
+                                                            aid: e.aid,
+                                                          ));
+                                              // log(e.dogId.toString());
+                                            },
+                                            child: ListTile(
+                                              title: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  dogInfoCard(e),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Container(
+                                          width: screenWidth * 0.015,
+                                          height: screenHeight * 0.03,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            borderRadius:
+                                                BorderRadius.circular(50),
                                           ),
                                         ),
-                                      ),
-                                    );
+                                        Text(
+                                          '  ไม่มีนัดวันนี้',
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              color: Color(0xFF916B44)),
+                                        ),
+                                      ],
+                                    ),
+                              Card(
+                                elevation: 2,
+                                child: InkWell(
+                                  onTap: () {
+                                    Get.to(() => DogselectPage(
+                                          date: _selectedDay,
+                                        ));
                                   },
+                                  child: ListTile(
+                                    title: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          FontAwesomeIcons.plus,
+                                          color: Colors.grey,
+                                        ),
+                                        Text(
+                                          'จองคลินิก',
+                                          style: TextStyle(color: Colors.grey),
+                                        )
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
-                      )
-                    else
-                      SizedBox(
-                        width: screenWidth,
-                        height: screenHeight * 0.5,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                  0, 0, 0, screenHeight * 0.1),
-                              child: Text(
-                                'ไม่มีข้อมูลในวันนี้',
-                                style:
-                                    TextStyle(fontSize: 32, color: Colors.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -481,320 +492,606 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Row insideCardShowDogData(int index) {
+  Row dogInfoCard(e) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      spacing: 10,
-      children: <Widget>[
-        Container(
-          width: screenWidth * 0.02,
-          height: screenHeight * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(50),
+      children: [
+        if (e.status == 0)
+          Container(
+            width: screenWidth * 0.02,
+            height: screenHeight * 0.1,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(50),
+            ),
+          )
+        else if (e.status == 1)
+          Container(
+            width: screenWidth * 0.02,
+            height: screenHeight * 0.1,
+            decoration: BoxDecoration(
+              color: Colors.yellow,
+              borderRadius: BorderRadius.circular(50),
+            ),
+          )
+        else if (e.status == 2)
+          Container(
+            width: screenWidth * 0.02,
+            height: screenHeight * 0.1,
+            decoration: BoxDecoration(
+              color: Colors.lightBlueAccent,
+              borderRadius: BorderRadius.circular(50),
+            ),
+          )
+        else if (e.status == 3)
+          Container(
+            width: screenWidth * 0.02,
+            height: screenHeight * 0.1,
+            decoration: BoxDecoration(
+              color: Colors.lightGreenAccent,
+              borderRadius: BorderRadius.circular(50),
+            ),
+          )
+        else
+          SizedBox.shrink(),
+        SizedBox(
+          width: 10,
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            e.image,
+            width: screenWidth * 0.2,
+            height: screenHeight * 0.1,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) {
+                return child;
+              }
+              return Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  width: screenWidth * 0.2,
+                  height: screenHeight * 0.1,
+                  color: Colors.white,
+                ),
+              );
+            },
           ),
         ),
-        for (var item in dogs)
-          if (events[index]
-                  .toString()
-                  .split(', Vaccines:')
-                  .first
-                  .replaceAll(RegExp(r'[^0-9]'), '') ==
-              item.dogId.toString())
-            Row(
+        SizedBox(
+          width: 10,
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: screenWidth * 0.55,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    e.status != 0
+                        ? 'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}'
+                        : '',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    item.image,
-                    width: screenWidth * 0.2,
-                    height: screenHeight * 0.1,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-                      return Shimmer.fromColors(
-                        baseColor: Colors.grey.shade300,
-                        highlightColor: Colors.grey.shade100,
-                        child: Container(
-                          width: screenWidth * 0.2,
-                          height: screenHeight * 0.1,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
-                  ),
+                Text(
+                  e.name,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      Text('อายุ ${getDogAge(item.birthday)}'),
-                      SizedBox(
-                        width: screenWidth * 0.45,
-                        child: Text(
-                          vaccineNameShow(index),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
+                Text(
+                  'อายุ ${getDogAge(e.birthday)}',
+                  style: TextStyle(color: Colors.grey, fontSize: 15),
+                ),
               ],
             ),
+            SizedBox(
+              height: 5,
+            ),
+            SizedBox(
+              width: screenWidth * 0.5,
+              child: Text(
+                e.vaccines.length != 0
+                    ? 'วัคซีน: ${e.vaccines.join(', ')}'
+                    : '',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            SizedBox(
+              width: screenWidth * 0.55,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    width: screenWidth * 0.225,
+                    child: Text(
+                      e.status != 0 ? 'คลินิก: ${e.clinicName}' : '',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 
-  String vaccineNameShow(int index) {
-    return splitVaccineId(events[index])
-        .map((id) => vaccineNameMap[id.trim()] ?? 'วัคซีนไม่ทราบชื่อ')
-        .join(', ');
+  void showReserveInfoAlert(BuildContext context, dynamic e) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 8,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with close button
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDBA871).withOpacity(0.2),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ข้อมูลการจอง',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF916B44),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close,
+                          color: Color(0xFF916B44).withOpacity(0.7)),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Dog Info Card
+                      _buildInfoCard(
+                        icon: Icons.pets,
+                        iconColor: Color(0xFF916B44),
+                        title: 'ข้อมูลสัตว์เลี้ยง',
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                e.image,
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                  width: 70,
+                                  height: 70,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFDBA871).withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.pets,
+                                      color: Color(0xFF916B44)),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    e.name ?? 'ไม่พบชื่อ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF916B44),
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'อายุ ${getDogAge(e.birthday)}',
+                                    style: TextStyle(
+                                      color: Color(0xFF916B44).withOpacity(0.7),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Clinic Info Card
+                      _buildInfoCard(
+                        icon: Icons.local_hospital,
+                        iconColor: Color(0xFFDBA871),
+                        title: 'ข้อมูลคลินิก',
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    e.clinicImage,
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFFDBA871).withOpacity(0.3),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(Icons.local_hospital,
+                                          color: Color(0xFF916B44)),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        e.clinicName ?? 'ไม่พบชื่อคลินิก',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF916B44),
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.phone,
+                                              size: 16,
+                                              color: Color(0xFF916B44)
+                                                  .withOpacity(0.7)),
+                                          SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              e.clinicPhone ?? 'ไม่พบเบอร์โทร',
+                                              style: TextStyle(
+                                                color: Color(0xFF916B44)
+                                                    .withOpacity(0.7),
+                                                fontSize: 14,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            // Map Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  openMap(double.parse(e.clinicLat),
+                                      double.parse(e.clinicLng));
+                                },
+                                icon: Icon(Icons.map, size: 20),
+                                label: Text('ดูแผนที่คลินิก'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Color(0xFFDBA871).withOpacity(0.2),
+                                  foregroundColor: Color(0xFF916B44),
+                                  elevation: 0,
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Time Info Card
+                      if (e.time != null)
+                        _buildInfoCard(
+                          icon: Icons.schedule,
+                          iconColor: Color(0xFF916B44),
+                          title: 'เวลานัดหมาย',
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFDBA871).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    color: Color(0xFF916B44), size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  '${e.time} - ${addMinutesToTime(e.time, 30)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF916B44),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      SizedBox(height: 16),
+
+                      // Vaccines Info Card
+                      if (e.vaccines != null && e.vaccines.isNotEmpty)
+                        _buildInfoCard(
+                          icon: Icons.medical_services,
+                          iconColor: Color(0xFFDBA871),
+                          title: 'วัคซีนที่จอง',
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: e.vaccines
+                                .map<Widget>(
+                                  (vaccine) => Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFDBA871).withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                          color: Color(0xFFDBA871)
+                                              .withOpacity(0.5)),
+                                    ),
+                                    child: Text(
+                                      vaccine,
+                                      style: TextStyle(
+                                        color: Color(0xFF916B44),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Action Buttons
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDBA871).withOpacity(0.1),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // Show confirmation dialog for cancellation
+                          showAlertRed(
+                            title: 'ยืนยันยกเลิกการจอง?',
+                            message: 'คุณต้องการยกเลิกการจองนี้หรือไม่',
+                            onConfirm: () {
+                              cancleReserve(e.reserveId);
+                            },
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red.shade600,
+                          side: BorderSide(color: Colors.red.shade400),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'ยกเลิกการจอง',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF916B44),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'ปิด',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  List<String> getEventsForDay(DateTime day) {
-    final events = eventMap.entries
-        .where((entry) =>
-            entry.key.year == day.year &&
-            entry.key.month == day.month &&
-            entry.key.day == day.day)
-        .expand((entry) => entry.value)
-        .toList();
-    return events;
+  Widget _buildInfoCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFDBA871).withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFDBA871).withOpacity(0.1),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF916B44),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
   }
 
-  Future<void> calculateForAppointmentDay() async {
-    await getAllDogData();
-    await getAllDogInjectionRecord();
-    await getAllDogDataForCalculate();
-
-    // for (var dogData in dogDataForCal) {
-    //   log('ID: ${dogData.id}, Vaccine: ${dogData.vaccineId}, Date: ${dogData.date}, Age: ${dogData.age}');
-    // }
-
-    List<Map<String, dynamic>> vaccineHistory = dogDataForCal
-        .map((dogData) => {
-              'ID': dogData.id,
-              'Vaccine': dogData.vaccineId.toString(),
-              'Date': dogData.date.toString() ?? '',
-              'Age': dogData.age,
-            })
-        .toList();
-
-    eventMap = calculateNextAppointmentsForDog(
-        vaccineHistory: vaccineHistory,
-        vaccineScheduleWeeks: vaccineScheduleWeeks,
-        dogAgesInWeeks: dogAgesInWeeks);
+  Future<void> cancleReserve(int reserveId) async {
+    var res = await http.put(
+      Uri.parse("$url/reserve/cancleReserve/$reserveId"),
+    );
+    log(res.statusCode.toString());
   }
 
-  Future<void> getAllDogDataForCalculate() async {
-    for (var dog in dogs) {
-      Duration difference =
-          DateTime.now().difference(DateTime.parse(dog.birthday));
-      int ageInWeeks = (difference.inDays / 7).floor();
+  Future<void> openMap(double lat, double lng) async {
+    final googleMapsUrl = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
 
-      dogAgesInWeeks[dog.dogId] = () {
-        try {
-          DateTime birthday = DateTime.parse(dog.birthday);
-          birthday = DateTime(birthday.year, birthday.month, birthday.day);
-          DateTime now = DateTime.now();
-          DateTime todayOnly = DateTime(now.year, now.month, now.day);
-          return todayOnly.difference(birthday).inDays ~/ 7;
-        } catch (e) {
-          log('Error parsing birthday for dog ${dog.dogId}: $e');
-          return 0;
-        }
-      }();
-      // log(dogAgesInWeeks.toString());
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not open the map.';
+    }
+  }
 
-      // dogDataForCal.add(DogDataForCalcualtionAppointment(
-      //     ageInWeeks.toString(), '', dog.dogId.toString(), ''));
+  Future<void> getAppointmentEmail() async {
+    appointment.clear();
+    List<AppointmentGetEmail> appointmentGetList = [];
+    List<AppointmentGetEmail> reserveList = [];
 
-      for (var record in dogRecord) {
-        if (dog.dogId == record.dogId) {
-          dogDataForCal.add(DogDataForCalcualtionAppointment(
-              ageInWeeks.toString(),
-              record.date,
-              dog.dogId.toString(),
-              record.vaccineType));
-        }
+    var res2 =
+        await http.get(Uri.parse("$url/reserve/general/${box.read('email')}"));
+    if (res2.statusCode == 200) {
+      var jsonData2 = json.decode(res2.body);
+      reserveList.addAll(jsonData2
+          .map<AppointmentGetEmail>((e) => AppointmentGetEmail.fromJson(e)));
+
+      appointment.addAll([...reserveList]);
+      buildEventMap(appointment);
+    }
+  }
+
+  List<Dog> getEventsForDay(DateTime day) {
+    final dateOnly = DateTime(day.year, day.month, day.day);
+    return eventMap[dateOnly] ?? [];
+  }
+
+  void buildEventMap(List<AppointmentGetEmail> appointments) {
+    eventMap.clear();
+
+    for (var appointment in appointments) {
+      // Normalize date to date-only (strip time)
+      final dateOnly = DateTime(
+        appointment.date.year,
+        appointment.date.month,
+        appointment.date.day,
+      );
+
+      // If this date already exists, add to the existing list
+      if (eventMap.containsKey(dateOnly)) {
+        eventMap[dateOnly]!.addAll(appointment.dogs);
+      } else {
+        // First appointment for this date, create new list
+        eventMap[dateOnly] = List.from(appointment.dogs);
       }
     }
-  }
-
-  Future<void> getAllDogData() async {
-    var res = await http.get(Uri.parse("$url/dog/${box.read('email')}"));
-    if (res.statusCode == 200) {
-      var jsonData = json.decode(res.body);
-      dogs =
-          jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
-      // log(res.body);
-    }
-  }
-
-  Future<void> getAllDogInjectionRecord() async {
-    var res = await http
-        .get(Uri.parse("$url/injectionRecord/all/${box.read('email')}"));
-    if (res.statusCode == 200) {
-      var jsonData = json.decode(res.body);
-      dogRecord = jsonData
-          .map<DogsRecordIdGet>((e) => DogsRecordIdGet.fromJson(e))
-          .toList();
-      // log(res.body);
-    }
-  }
-
-  Map<DateTime, List<String>> calculateNextAppointmentsForDog({
-    required List<Map<String, dynamic>> vaccineHistory,
-    required Map<String, Map<String, List<int>>> vaccineScheduleWeeks,
-    required Map<int, int> dogAgesInWeeks, // dogId -> current age in weeks
-  }) {
-    Map<DateTime, Map<int, List<String>>> tempMap = {};
-    DateTime today = DateTime.now();
-    DateTime todayOnly = DateTime(today.year, today.month, today.day);
-
-    // Store vaccine history for each dog
-    Map<int, Map<String, List<DateTime>>> dogVaccineHistory = {};
-
-    // Process vaccine history
-    for (var record in vaccineHistory) {
-      final idRaw = record['ID'];
-      final vaccineRaw = record['Vaccine'];
-      final dateRaw = record['Date'];
-
-      if (vaccineRaw == null || vaccineRaw.toString().isEmpty) continue;
-      if (dateRaw == null || dateRaw.toString().isEmpty) continue;
-
-      final id = int.parse(idRaw.toString());
-      final vaccine = vaccineRaw.toString();
-      final date = DateTime.parse(dateRaw.toString());
-      final dateOnly = DateTime(date.year, date.month, date.day);
-
-      dogVaccineHistory.putIfAbsent(id, () => {});
-      dogVaccineHistory[id]!.putIfAbsent(vaccine, () => []);
-      dogVaccineHistory[id]![vaccine]!.add(dateOnly);
-    }
-
-    // Sort vaccine dates for each dog and vaccine
-    dogVaccineHistory.forEach((dogId, vaccines) {
-      vaccines.forEach((vaccine, dates) {
-        dates.sort();
-      });
+    eventMap.forEach((date, dogs) {
+      dogs.sort((a, b) => a.status.compareTo(b.status));
     });
-
-    dogAgesInWeeks.forEach((dogId, ageInWeeks) {
-      bool isMature = ageInWeeks >= 16;
-
-      vaccineScheduleWeeks.forEach((vaccineId, schedules) {
-        List<int> babyWeeks = schedules['baby'] ?? [];
-        List<int> matureWeeks = schedules['mature'] ?? [];
-        List<int> boostWeeks = schedules['boost'] ?? [];
-
-        // Sort schedules
-        babyWeeks.sort();
-        matureWeeks.sort();
-        boostWeeks.sort();
-
-        List<DateTime> vaccineDates =
-            dogVaccineHistory[dogId]?[vaccineId] ?? [];
-        int doseCount = vaccineDates.length;
-
-        if (isMature) {
-          // Mature dog: use last injection date + mature/boost schedule
-          if (doseCount == 0) {
-            if (matureWeeks.isNotEmpty) {
-              DateTime nextDate = todayOnly;
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            }
-          } else {
-            DateTime lastVaccineDate = vaccineDates.last;
-
-            if (doseCount < matureWeeks.length) {
-              int intervalWeeks = doseCount == 0
-                  ? matureWeeks[0]
-                  : matureWeeks[doseCount] - matureWeeks[doseCount - 1];
-              DateTime nextDate =
-                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
-              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            } else {
-              if (boostWeeks.isNotEmpty) {
-                DateTime nextDate =
-                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
-                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-                tempMap.putIfAbsent(nextDate, () => {});
-                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-              }
-            }
-          }
-        } else {
-          // Puppy: use age-based scheduling for baby schedule
-          if (doseCount == 0) {
-            if (babyWeeks.isNotEmpty) {
-              DateTime nextDate;
-              int firstWeek = babyWeeks.first;
-
-              if (ageInWeeks >= firstWeek) {
-                nextDate = todayOnly;
-              } else {
-                int waitWeeks = firstWeek - ageInWeeks;
-                nextDate = todayOnly.add(Duration(days: waitWeeks * 7));
-              }
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            }
-          } else {
-            DateTime lastVaccineDate = vaccineDates.last;
-
-            if (doseCount < babyWeeks.length) {
-              // Calculate interval from previous dose
-              int intervalWeeks = doseCount == 0
-                  ? babyWeeks[0]
-                  : babyWeeks[doseCount] - babyWeeks[doseCount - 1];
-              DateTime nextDate =
-                  lastVaccineDate.add(Duration(days: intervalWeeks * 7));
-              if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-              tempMap.putIfAbsent(nextDate, () => {});
-              tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-            } else {
-              if (boostWeeks.isNotEmpty) {
-                DateTime nextDate =
-                    lastVaccineDate.add(Duration(days: boostWeeks.first * 7));
-                if (nextDate.isBefore(todayOnly)) nextDate = todayOnly;
-
-                tempMap.putIfAbsent(nextDate, () => {});
-                tempMap[nextDate]!.putIfAbsent(dogId, () => []).add(vaccineId);
-              }
-            }
-          }
-        }
-      });
-    });
-
-    // Aggregate results
-    Map<DateTime, List<String>> eventMap = {};
-    tempMap.forEach((date, dogMap) {
-      List<String> grouped = [];
-      dogMap.forEach((dogId, vaccines) {
-        grouped.add('Dog ID: $dogId, Vaccines: ${vaccines.join(', ')}');
-      });
-      eventMap[date] = grouped;
-    });
-
-    return eventMap;
   }
 
   String getDogAge(String birthday) {
@@ -829,8 +1126,18 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     }
   }
 
-  List<String> splitVaccineId(String str) {
-    return str.toString().split('Vaccines:').last.split(',');
+  String addMinutesToTime(String timeStr, int minutesToAdd) {
+    // Parse to DateTime using a dummy date
+    DateTime time = DateTime.parse("2000-01-01 $timeStr:00");
+
+    // Add the minutes
+    DateTime newTime = time.add(Duration(minutes: minutesToAdd));
+
+    // Format back to HH:mm
+    String formatted =
+        "${newTime.hour.toString().padLeft(2, '0')}:${newTime.minute.toString().padLeft(2, '0')}";
+
+    return formatted;
   }
 
   void showAlert({
@@ -842,152 +1149,282 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       title: '',
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.all(16),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Icon with subtle animation potential
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7CCC8),
-              shape: BoxShape.circle,
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFA1887F),
+              ),
             ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 24,
-              color: const Color(0xFFA1887F),
+
+            const SizedBox(height: 16),
+
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-          // Title with better typography
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Color(0xFF8D6E63),
-              letterSpacing: -0.5,
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 20),
 
-          // Message with improved readability
-          Text(
-            message,
-            style: const TextStyle(
-              color: Color(0xFFA1887F),
-              fontSize: 14,
-              height: 1.4,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Enhanced button row
-          Row(
-            children: [
-              // Cancel button
-              Expanded(
-                child: Container(
-                  height: 40,
-                  child: TextButton(
-                    onPressed: () => Get.back(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF8D6E63),
-                      backgroundColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: const Color(0xFFD7CCC8),
-                          width: 1,
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      elevation: 0,
                     ),
-                    child: const Text(
-                      'ยกเลิก',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // Confirm button
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Color(0xFF795548),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFA1887F).withOpacity(0.3),
-                        offset: const Offset(0, 2),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.back();
-                      if (onConfirm != null) onConfirm();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'ตกลง',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
       radius: 16,
     );
   }
-}
 
-class DogDataForCalcualtionAppointment {
-  final String id;
-  final String vaccineId;
-  final String date;
-  final String age;
+  void showAlertRed({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFE57373),
+              ),
+            ),
 
-  DogDataForCalcualtionAppointment(
-      this.age, this.date, this.id, this.vaccineId);
-}
+            const SizedBox(height: 16),
 
-class Dog {
-  final int dogId;
-  final String birthday;
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
 
-  Dog({required this.dogId, required this.birthday});
+            const SizedBox(height: 8),
+
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
+  }
 }

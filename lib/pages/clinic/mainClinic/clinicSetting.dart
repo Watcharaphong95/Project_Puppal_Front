@@ -2,53 +2,55 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicConfirmRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
-import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
-import 'package:table_calendar/table_calendar.dart';
 
-class ClinicmainPage extends StatefulWidget {
-  const ClinicmainPage({super.key});
+class Clinicsetting extends StatefulWidget {
+  const Clinicsetting({super.key});
 
   @override
-  State<ClinicmainPage> createState() => _ClinicmainPageState();
+  State<Clinicsetting> createState() => _ClinicsettingState();
 }
 
-class _ClinicmainPageState extends State<ClinicmainPage> {
+class _ClinicsettingState extends State<Clinicsetting> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
   String url = '';
-
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  List<dynamic> events = [];
-
-  List<dynamic> getEventsForDay(DateTime day) {
-    // ตัวอย่างเรียบง่าย
-    return [
-      'กิจกรรม A',
-      'กิจกรรม B',
-    ];
-  }
+  String name = '';
+  String avatarImage = '';
+  bool _loadingData = true;
 
   @override
   void initState() {
     super.initState();
-    Configuration.getConfig().then((config) {
+    init();
+  }
+
+  init() async {
+    await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    box.write('type', 'clinic');
+    log(box.read('email'));
+    var resGeneral =
+        await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+    name = jsonDecode(resGeneral.body)['name'];
+    avatarImage = jsonDecode(resGeneral.body)['image'];
+    _loadingData = false;
+    setState(() {});
   }
 
   @override
@@ -128,6 +130,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                 ListTile(
                   leading: Icon(Icons.home, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
+                  onTap: () => Get.to(() => ClinicmainPage()),
                 ),
                 ListTile(
                   leading: Icon(Icons.system_security_update,
@@ -156,7 +159,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
-                    Get.back();
                     Get.to(() => Cliniclistdoctors());
                   },
                 ),
@@ -169,7 +171,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                 ListTile(
                   leading: Icon(Icons.settings, color: Color(0xFF916b44)),
                   title: Text('ตั้งค่า'),
-                  onTap: () => Get.to(() => Clinicsetting()),
+                  onTap: () {},
                 ),
                 ListTile(
                   leading:
@@ -222,73 +224,228 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
           ),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: buildCalendar(
-            focusedDay: _focusedDay,
-            selectedDay: _selectedDay,
-            onDaySelected: (selected, focused) {
-              setState(() {
-                _focusedDay = focused;
-                _selectedDay = selected;
-                events = getEventsForDay(selected);
-              });
-            },
-            onPageChanged: (focused) {
-              _focusedDay = focused;
-            },
-            eventLoader: getEventsForDay,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildCalendar({
-    required DateTime focusedDay,
-    required DateTime? selectedDay,
-    required Function(DateTime selected, DateTime focused) onDaySelected,
-    required Function(DateTime focused) onPageChanged,
-    required List<dynamic> Function(DateTime day) eventLoader,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF7FF),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(12),
-      child: TableCalendar(
-        locale: 'th_TH',
-        firstDay: DateTime(2020, 1, 1),
-        lastDay: DateTime(DateTime.now().year + 10),
-        focusedDay: focusedDay,
-        selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-        onDaySelected: onDaySelected,
-        onPageChanged: onPageChanged,
-        eventLoader: eventLoader,
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-        ),
-        calendarStyle: const CalendarStyle(
-          todayDecoration: BoxDecoration(
-            color: Color(0xFFE6C29C),
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: BoxDecoration(
-            color: Color(0xFFDBA871),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
+      body: _loadingData
+          ? SizedBox(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Container(
+              height: screenHeight,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/indexBg.png'),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                        Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05,
+                      vertical: screenHeight * 0.05),
+                  child: SizedBox(
+                    width: screenWidth * 0.9,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipOval(
+                          child: Image.network(
+                            avatarImage,
+                            width: screenWidth * 0.35,
+                            height: screenWidth * 0.35,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: screenWidth * 0.35,
+                                  height: screenWidth * 0.35,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        SizedBox(
+                          width: screenWidth * 0.6,
+                          child: Center(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 24),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: SizedBox(
+                                height: screenHeight * 0.075,
+                                width: screenWidth * 0.8,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    // Get.to(() => EditprofilePage());
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.edit_note,
+                                            size: screenWidth * 0.10,
+                                            color: Color(0xFF916b44),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'แก้ไขโปรไฟล์',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.black),
+                                          ),
+                                        ],
+                                      ),
+                                      const Icon(
+                                        FontAwesomeIcons.chevronRight,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: SizedBox(
+                                height: screenHeight * 0.075,
+                                width: screenWidth * 0.8,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Get.to(() => RecoverypasswordPage());
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.lock,
+                                            size: screenWidth * 0.10,
+                                            color: Color(0xFF916b44),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'เปลี่ยนรหัสผ่าน',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.black),
+                                          ),
+                                        ],
+                                      ),
+                                      const Icon(
+                                        FontAwesomeIcons.chevronRight,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: SizedBox(
+                                height: screenHeight * 0.075,
+                                width: screenWidth * 0.8,
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            FontAwesomeIcons.question,
+                                            size: screenWidth * 0.10,
+                                            color: Color(0xFF916b44),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'เกี่ยวกับ',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.black),
+                                          ),
+                                        ],
+                                      ),
+                                      const Icon(
+                                        FontAwesomeIcons.chevronRight,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: SizedBox(
+                                height: screenHeight * 0.075,
+                                width: screenWidth * 0.8,
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            FontAwesomeIcons.trash,
+                                            size: screenWidth * 0.10,
+                                            color: Color(0xFFEF4444),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'ลบโปรไฟล์',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                      const Icon(
+                                        FontAwesomeIcons.chevronRight,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 

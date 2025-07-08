@@ -7,18 +7,23 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/main.dart';
+import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
+import 'package:puppal_application/pages/general/profile/editAdress.dart';
 import 'package:puppal_application/pages/general/profile/editProfile.dart';
 import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GeneralprofilePage extends StatefulWidget {
   const GeneralprofilePage({super.key});
@@ -31,25 +36,25 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
+
   String url = '';
-  String name = '';
-  String avatarImage = '';
   bool _loadingData = true;
+
+  late GeneralPost generalData;
+  List<DogsGetEmail> dogs = [];
 
   @override
   void initState() {
-    super.initState();
     init();
+    super.initState();
   }
 
   init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    var resGeneral =
-        await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
-    name = jsonDecode(resGeneral.body)['username'];
-    avatarImage = jsonDecode(resGeneral.body)['image'];
+    await getGeneralData();
+    log(generalData.image);
     _loadingData = false;
     setState(() {});
   }
@@ -271,7 +276,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                       children: [
                         ClipOval(
                           child: Image.network(
-                            avatarImage,
+                            generalData.image,
                             width: screenWidth * 0.35,
                             height: screenWidth * 0.35,
                             fit: BoxFit.cover,
@@ -296,7 +301,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                           width: screenWidth * 0.6,
                           child: Center(
                             child: Text(
-                              name,
+                              generalData.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(fontSize: 24),
@@ -392,7 +397,9 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 height: screenHeight * 0.075,
                                 width: screenWidth * 0.8,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.to(() => EditadressPage());
+                                  },
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -400,13 +407,13 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                       Row(
                                         children: [
                                           Icon(
-                                            FontAwesomeIcons.question,
+                                            Icons.pin_drop,
                                             size: screenWidth * 0.10,
                                             color: Color(0xFF916b44),
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
-                                            'เกี่ยวกับ',
+                                            'เปลี่ยนที่อยู่',
                                             style: TextStyle(
                                                 fontSize: 20,
                                                 color: Colors.black),
@@ -429,7 +436,15 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 height: screenHeight * 0.075,
                                 width: screenWidth * 0.8,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    showAlert(
+                                        title: 'คุณต้องการลบบัญชีผู้ใช้ทั่วไป?',
+                                        message:
+                                            'ข้อมูลทั้งหมดจะหายไปอย่างถาวร!',
+                                        onConfirm: () {
+                                          deleteProfile();
+                                        });
+                                  },
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -468,6 +483,225 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                 ),
               ),
             ),
+    );
+  }
+
+  Future<void> deleteProfile() async {
+    showLoadingDialog();
+    var res = await http.delete(Uri.parse("$url/general/${box.read('email')}"));
+    await deletePictureSupabase();
+    var resUpdateType = await http
+        .put(Uri.parse("$url/user/deleteGeneral/${box.read('email')}"));
+    Get.back();
+    if (res.statusCode == 200 && resUpdateType.statusCode == 200) {
+      showAlertNoClose(
+          title: 'บัญชีของคุณถูกลบแล้ว',
+          message: 'ขอบคุณที่ใช้บริการแอปของเรา',
+          onConfirm: () {
+            box.erase();
+            Get.offAll(() => IndexPage());
+          });
+    } else {
+      showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
+    }
+  }
+
+  Future<void> deletePictureSupabase() async {
+    await Supabase.instance.client.auth.signInWithPassword(
+      email: '65011212077@msu.ac.th',
+      password: '1234',
+    );
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      log("User not logged in. Cannot delete.");
+      return;
+    }
+    try {
+      var imagePathAll = generalData.image.split('/');
+      var imagePath = imagePathAll.lastWhere(
+          (e) => e.contains('.jpg') || e.contains('.png'),
+          orElse: () => '');
+
+      log('imagePath: $imagePath');
+
+      final deleteRes =
+          await supabase.storage.from('general-image').remove([imagePath]);
+
+      if (deleteRes.isEmpty) {
+        log('Delete user picture failed.');
+        return;
+      }
+
+      if (dogs.isNotEmpty) {
+        for (var dog in dogs) {
+          var dogImagePathAll = dog.image.split('/');
+          var dogimagePath = dogImagePathAll.lastWhere(
+              (e) => e.contains('.jpg') || e.contains('.png'),
+              orElse: () => '');
+          var deleteDogImageRes =
+              await supabase.storage.from('dog-image').remove([dogimagePath]);
+          if (deleteDogImageRes.isEmpty) {
+            log('Delete dog picture failed.');
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      log("Error during upload: $e");
+    }
+  }
+
+  Future<void> getGeneralData() async {
+    var resGeneral =
+        await http.get(Uri.parse("$url/general/${box.read('email')}"));
+    generalData = generalPostFromJson(resGeneral.body);
+  }
+
+  Future<void> getDogData() async {
+    var res = await http.get(Uri.parse("$url/dog/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      var jsonData = json.decode(res.body);
+      dogs =
+          jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
+      // log(res.body);
+    }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void showAlertNoClose({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm, // Optional action
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 

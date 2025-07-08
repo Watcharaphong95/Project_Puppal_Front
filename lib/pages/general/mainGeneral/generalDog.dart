@@ -265,79 +265,79 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          height: screenHeight * 0.89,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-          ),
-          child: SizedBox(
-            width: screenWidth,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: screenHeight * 0.01,
-                ),
-                SizedBox(
-                  width: screenWidth * 0.9,
-                  child: TextField(
-                    controller: searchDogCtl,
-                    onChanged: (value) {
-                      if (value.isEmpty) {
-                        filterDogs = dogs;
-                      }
-                      filterDogs = dogs.where((dog) {
-                        return dog.name
-                            .toLowerCase()
-                            .contains(value.toLowerCase());
-                      }).toList();
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'ค้นหาสุนัข',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
-                      suffixIcon: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: Colors.grey,
-                              width: 1,
-                            ),
+      body: Container(
+        // height: screenHeight * 0.9,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/images/indexBg.png'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+        ),
+        child: SizedBox(
+          width: screenWidth,
+          child: Column(
+            children: [
+              SizedBox(
+                height: screenHeight * 0.01,
+              ),
+              SizedBox(
+                width: screenWidth * 0.9,
+                child: TextField(
+                  controller: searchDogCtl,
+                  onChanged: (value) {
+                    if (value.isEmpty) {
+                      filterDogs = dogs;
+                    }
+                    filterDogs = dogs.where((dog) {
+                      return dog.name
+                          .toLowerCase()
+                          .contains(value.toLowerCase());
+                    }).toList();
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'ค้นหาสุนัข',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass),
+                    suffixIcon: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: Colors.grey,
+                            width: 1,
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: Colors.redAccent,
-                            ),
-                            onPressed: () {
-                              searchDogCtl.clear();
-                              FocusScope.of(context).unfocus();
-                              setState(() {
-                                filterDogs = List<DogsGetEmail>.from(dogs);
-                              });
-                            },
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            color: Colors.redAccent,
                           ),
+                          onPressed: () {
+                            searchDogCtl.clear();
+                            FocusScope.of(context).unfocus();
+                            setState(() {
+                              filterDogs = List<DogsGetEmail>.from(dogs);
+                            });
+                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (isLoading)
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (filterDogs.isEmpty)
-                  SizedBox(
+              ),
+              if (isLoading)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (filterDogs.isEmpty)
+                Expanded(
+                  child: SizedBox(
                     width: screenWidth,
                     height: screenHeight * 0.5,
                     child: Column(
@@ -371,11 +371,14 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                         ),
                       ],
                     ),
-                  )
-                else
-                  ...filterDogs.map((dog) {
+                  ),
+                )
+              else
+                Expanded(
+                    child: ListView(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                  children: filterDogs.map((dog) {
                     return SizedBox(
-                      width: screenWidth * 0.9,
                       height: screenHeight * 0.15,
                       child: Card(
                         color: Color(0xFFF1F1F1),
@@ -456,8 +459,8 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                       ),
                     );
                   }).toList(),
-              ],
-            ),
+                ))
+            ],
           ),
         ),
       ),
