@@ -13,41 +13,53 @@ String dogsRecordIdGetToJson(List<DogsRecordIdGet> data) =>
 
 class DogsRecordIdGet {
   int rid;
-  int dogId;
+  int reserveId;
+  int appointmentAid;
+  String injectionVaccine;
+  String vaccineLabel;
+  String dogName;
   String clinicName;
-  int vaccineType;
-  String date;
-  int status;
-  String name;
+  String appointmentVaccine;
+  String appointmentDate;
+  String injectionDate;
 
   DogsRecordIdGet({
     required this.rid,
-    required this.dogId,
+    required this.reserveId,
+    required this.appointmentAid,
+    required this.injectionVaccine,
+    required this.vaccineLabel,
+    required this.dogName,
     required this.clinicName,
-    required this.vaccineType,
-    required this.date,
-    required this.status,
-    required this.name,
+    required this.appointmentVaccine,
+    required this.appointmentDate,
+    required this.injectionDate,
   });
 
   factory DogsRecordIdGet.fromJson(Map<String, dynamic> json) =>
       DogsRecordIdGet(
         rid: json["rid"],
-        dogId: json["dog_Id"],
+        reserveId: json["reserveID"],
+        appointmentAid: json["appointment_aid"],
+        injectionVaccine: json["injectionVaccine"],
+        vaccineLabel: json["vaccine_label"],
+        dogName: json["dogName"],
         clinicName: json["clinicName"],
-        vaccineType: json["vaccineType"],
-        date: json["date"],
-        status: json["status"],
-        name: json["name"],
+        appointmentVaccine: json["appointmentVaccine"],
+        appointmentDate: json["appointmentDate"],
+        injectionDate: json["injectionDate"],
       );
 
   Map<String, dynamic> toJson() => {
         "rid": rid,
-        "dog_Id": dogId,
+        "reserveID": reserveId,
+        "appointment_aid": appointmentAid,
+        "injectionVaccine": injectionVaccine,
+        "vaccine_label": vaccineLabel,
+        "dogName": dogName,
         "clinicName": clinicName,
-        "vaccineType": vaccineType,
-        "date": date,
-        "status": status,
-        "name": name,
+        "appointmentVaccine": appointmentVaccine,
+        "appointmentDate": appointmentDate,
+        "injectionDate": injectionDate,
       };
 }

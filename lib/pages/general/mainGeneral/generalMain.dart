@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -22,6 +23,8 @@ import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:puppal_application/pages/general/reservePage/dogSelect.dart';
 import 'package:puppal_application/pages/general/reservePage/reserveInfo.dart';
 import 'package:puppal_application/pages/login/index.dart';
+import 'package:puppal_application/testFireStore.dart';
+import 'package:puppal_application/testNotification.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
@@ -214,7 +217,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                 ListTile(
                   leading: Icon(Icons.settings, color: Color(0xFF916b44)),
                   title: Text('ตั้งค่า'),
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => TestfirestorePage());
+                  },
                 ),
                 ListTile(
                   leading:
@@ -925,19 +930,22 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // Show confirmation dialog for cancellation
-                          showAlertRed(
-                            title: 'ยืนยันยกเลิกการจอง?',
-                            message: 'คุณต้องการยกเลิกการจองนี้หรือไม่',
-                            onConfirm: () {
-                              cancleReserve(e.reserveId);
-                            },
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red.shade600,
+                      child: ElevatedButton(
+                        onPressed: e.status == 1 || e.status == 2
+                            ? () {
+                                // Show confirmation dialog for cancellation
+                                showAlertRed(
+                                  title: 'ยืนยันยกเลิกการจอง?',
+                                  message: 'คุณต้องการยกเลิกการจองนี้หรือไม่',
+                                  onConfirm: () {
+                                    cancleReserve(e.reserveId);
+                                  },
+                                );
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade400,
+                          // foregroundColor: Colors.red.shade600,
                           side: BorderSide(color: Colors.red.shade400),
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -946,7 +954,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                         ),
                         child: Text(
                           'ยกเลิกการจอง',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, color: Colors.white),
                         ),
                       ),
                     ),

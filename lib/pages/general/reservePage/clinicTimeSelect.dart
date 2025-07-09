@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -501,58 +502,53 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
 
     log(combined.toString());
 
-    ClinicSlotReq req;
+    Map<String, dynamic> data;
 
     if (widget.aid == 0) {
-      req = ClinicSlotReq(
-          generalEmail: box.read('email'),
-          clinicEmail: widget.email,
-          dogDogId: widget.dogId.toString(),
-          status: 1,
-          appointmentAid: null,
-          date: combined.toString(),
-          type: 0);
+      data = {
+        'generalEmail': box.read('email'),
+        'clinicEmail': widget.email,
+        'dogDogId': widget.dogId.toString(),
+        'appointmentAid': null,
+        'status': 1,
+        'date': combined.toString(),
+        'type': 0,
+      };
     } else {
-      req = ClinicSlotReq(
-          generalEmail: box.read('email'),
-          clinicEmail: widget.email,
-          dogDogId: widget.dogId.toString(),
-          appointmentAid: widget.aid.toString(),
-          status: 1,
-          date: combined.toString(),
-          type: 0);
+      data = {
+        'generalEmail': box.read('email'),
+        'clinicEmail': widget.email,
+        'dogDogId': widget.dogId.toString(),
+        'appointmentAid': widget.aid.toString(),
+        'status': 1,
+        'date': combined.toString(),
+        'type': 0,
+      };
     }
 
-    var res = await http.post(
-      Uri.parse("$url/reserve/addRequest"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: clinicSlotReqToJson(req),
-    );
-    Get.back();
-    if (res.statusCode == 201) {
-      showAlertNoClose(
-          title: 'ส่งคำขอเรียบร้อยแล้ว',
-          message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
-          onConfirm: () {
-            Get.off(() => GeneralmainPage());
-          });
-    } else {
-      showAlertNoClose(
-          title: 'ไม่สามารถส่งคำขอได้',
-          message:
-              'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
-    }
-  }
+    var db = FirebaseFirestore.instance;
 
-  Future<void> openMap(double lat, double lng) async {
-    final googleMapsUrl = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+    db.collection('reserve').add(data);
 
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not open the map.';
-    }
+    // var res = await http.post(
+    //   Uri.parse("$url/reserve/addRequest"),
+    //   headers: {"Content-Type": "application/json; charset=utf-8"},
+    //   body: clinicSlotReqToJson(req),
+    // );
+    // Get.back();
+    // if (res.statusCode == 201) {
+    //   showAlertNoClose(
+    //       title: 'ส่งคำขอเรียบร้อยแล้ว',
+    //       message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
+    //       onConfirm: () {
+    //         Get.off(() => GeneralmainPage());
+    //       });
+    // } else {
+    //   showAlertNoClose(
+    //       title: 'ไม่สามารถส่งคำขอได้',
+    //       message:
+    //           'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
+    // }
   }
 
   Future<void> sendSpecialRequestToClinic(String time) async {
@@ -591,6 +587,17 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           title: 'ไม่สามารถส่งคำขอได้',
           message:
               'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
+    }
+  }
+
+  Future<void> openMap(double lat, double lng) async {
+    final googleMapsUrl = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not open the map.';
     }
   }
 
