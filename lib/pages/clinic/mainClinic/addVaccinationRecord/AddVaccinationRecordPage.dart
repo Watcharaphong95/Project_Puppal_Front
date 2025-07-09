@@ -615,15 +615,33 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
   Future<void> injectionAdd() async {
     // ✅ ตรวจสอบว่ากรอกข้อมูลครบ
-    if (_formKey.currentState!.validate() &&
-        vaccineChanged &&
-        dateChanged &&
-        nextDateController.text.isNotEmpty &&
-        vaccinationDate != null) {
-      showTopNotification(
-        context,
+    // if (_formKey.currentState!.validate() &&
+    //     vaccineChanged &&
+    //     dateChanged &&
+    //     nextDateController.text.isNotEmpty &&
+    //     vaccinationDate != null) {
+    //   showTopNotification(
+    //     context,
+    //     'กรุณากรอกข้อมูลให้ครบถ้วน',
+    //     isSuccess: false,
+    //   );
+    //   return;
+    // }
+    if (vaccineChanged ||
+        dateChanged ||
+        _imageFile == null ||
+        nextDateController.text.trim().isEmpty) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
-        isSuccess: false,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
       );
       return;
     }
@@ -655,26 +673,37 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     DateTime parsedDate =
         DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
 
-    // ✅ สร้าง request object
-    ClinicinjectionRecordPost req = ClinicinjectionRecordPost(
-      dog_Id: reserveList[0].dogDogId,
-      reserveId: reserveList[0].reserveId,
+    AppointmentPost appReq = AppointmentPost(
+      dogId: reserveList[0].dogDogId,
+      generalUserEmail: reserveList[0].generalEmail,
       vaccine: vaccineController.text,
       date: parsedDate,
-      vaccineLabel: imageUrl,
     );
 
     try {
       var res = await http.post(
-        Uri.parse("$url/clinicinjectionRecord/"),
+        Uri.parse("$url/appointment/"),
         headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: jsonEncode(req.toJson()),
+        body: jsonEncode(appReq.toJson()),
       );
 
-      if (res.statusCode == 201) {
-        log("บันทึกข้อมูลการฉีดวัคซีนเรียบร้อย");
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final Map<String, dynamic> appData = jsonDecode(res.body);
+        int aid = appData['insertId'];
 
-        // ✅ แสดงแจ้งเตือนสำเร็จจากด้านบน
+        ClinicinjectionRecordPost injReq = ClinicinjectionRecordPost(
+          reserveId: reserveList[0].reserveId,
+          vaccine: vaccineController.text,
+          date: parsedDate,
+          vaccineLabel: imageUrl,
+          appointmentAid: aid,
+        );
+
+        var injRes = await http.post(
+          Uri.parse("$url/clinicinjectionRecord/"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: jsonEncode(injReq.toJson()),
+        );
         showTopNotification(
           context,
           'บันทึกข้อมูลการฉีดวัคซีนเรียบร้อย ✨',
@@ -738,7 +767,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       }
 
       // ⏳ เพิ่มการนัดรอบถัดไป (ภายหลังจากบันทึกสำเร็จ)
-      appointmentAdd();
+      // appointmentAdd();
       updatestatus(reserveList[0].reserveId, 3);
     } catch (e) {
       log("เกิดข้อผิดพลาดในการบันทึก: $e");
@@ -975,7 +1004,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.png';
 
       final storageResponse = await Supabase.instance.client.storage
-          .from('clinic-image')
+          .from('vaccine-label')
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
@@ -985,7 +1014,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       }
 
       final publicUrl = Supabase.instance.client.storage
-          .from('clinic-image')
+          .from('vaccine-label')
           .getPublicUrl(fileName);
 
       log("Upload success. Public URL: $publicUrl");

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
@@ -30,6 +31,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
+  final doctor = Get.find<registerDoctorCtl>();
   String url = "";
   List<DoctorPost> doctorsList = [];
   bool isLoading = true;
@@ -186,7 +188,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
           child: Container(
             decoration: BoxDecoration(),
             child: Column(
-              children: doctorsList.map((doctor) {
+              children: doctorsList.map((doctors) {
                 return Container(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -224,9 +226,9 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                 ],
                               ),
                               child: ClipOval(
-                                child: doctor.image.isNotEmpty
+                                child: doctors.image.isNotEmpty
                                     ? Image.network(
-                                        doctor.image,
+                                        doctors.image,
                                         height: 120,
                                         width: 120,
                                         fit: BoxFit.cover,
@@ -294,7 +296,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                       color: Color(0xFF916B44), size: 25),
                                   const SizedBox(width: 8),
                                   Text(
-                                    doctor.careerNo,
+                                    doctors.careerNo,
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
@@ -336,7 +338,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                             _buildInfoField(
                               icon: Icons.person,
                               label: 'ชื่อ',
-                              value: doctor.name,
+                              value: doctors.name,
                               screenHeight: screenHeight,
                             ),
 
@@ -346,7 +348,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'นามสกุล',
-                              value: doctor.surname,
+                              value: doctors.surname,
                               screenHeight: screenHeight,
                             ),
 
@@ -420,7 +422,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              selectedSpecialty.isEmpty
+                                              special[0].name.isEmpty
                                                   ? 'เลือกความเชี่ยวชาญ'
                                                   : selectedSpecialty
                                                       .toSet()
@@ -437,10 +439,6 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                                         : FontWeight.w500,
                                               ),
                                             ),
-                                          ),
-                                          Icon(
-                                            Icons.arrow_drop_down,
-                                            color: Color(0xFF916B44),
                                           ),
                                         ],
                                       ),
@@ -462,7 +460,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                         child: ElevatedButton.icon(
                           onPressed: () {
                             Get.to(() =>
-                                Clinicdoctoreditprofile(name: doctor.name));
+                                Clinicdoctoreditprofile(name: doctors.name));
                           },
                           icon: Icon(
                             Icons.edit,
@@ -588,7 +586,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
 
   Future<void> searcheDoctor(name) async {
     final keyword = name.trim();
-    log("Keyword: $keyword");
+    // log("Keyword: $keyword");
     if (keyword.isEmpty) return;
 
     try {
@@ -601,7 +599,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
         for (var doctor in data) {
           // log("ชื่อหมอ: ${doctor.name}");
           log(doctor.careerNo);
-          // getSearchSpecial(doctor.careerNo);
+          getSearchSpecial(doctor.careerNo);
         }
         setState(() {
           doctorsList = data;
@@ -806,17 +804,18 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
   }
 
   Future<void> getSearchSpecial(String careerNo) async {
-    // log(careerNo);
     var res =
         await http.get(Uri.parse("$url/docspecial/search_doctorID/$careerNo"));
     if (res.statusCode == 200) {
-      var jsonData = getSpecialDataPostFromJson(res.body);
-      for (var data in jsonData) {
-        // log("ชื่อสาขา: ${data.specialName}");
-        // log("รหัสสาขา: ${data.specialId}");
-      }
+      var rawSpecials = getSpecialDataPostFromJson(
+          res.body); // <-- คืนค่า List<GetSpecialDataPost>
+
+      special = rawSpecials
+          .map((e) => SpecialPost(name: e.specialName, specialId: e.specialId))
+          .toList();
+      log(special[0].name);
       setState(() {
-        selectedSpecialty = jsonData.map((e) => e.specialName).toList();
+        selectedSpecialty = special.map((e) => e.name).toList();
       });
     } else {
       log("Failed to load specialties: ${res.statusCode}");

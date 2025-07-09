@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -325,9 +326,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           Column(
             children: [
               if (todayList.any((data) =>
-                  data.status != 2 &&
-                  data.status != 3 &&
-                  data.type == (isNormalSelected ? 0 : 1)))
+                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 8),
                   child: Align(
@@ -339,17 +338,13 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 ),
               ...todayList
                   .where((data) =>
-                      data.status != 0 &&
-                      data.status != 2 &&
-                      data.status != 3 &&
+                      data.status == 1 &&
                       data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
+
               if (yesterdayList.any((data) =>
-                  data.status != 0 &&
-                  data.status != 2 &&
-                  data.status != 3 &&
-                  data.type == (isNormalSelected ? 0 : 1)))
+                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 12),
                   child: Align(
@@ -361,17 +356,13 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 ),
               ...yesterdayList
                   .where((data) =>
-                      data.status != 0 &&
-                      data.status != 2 &&
-                      data.status != 3 &&
+                      data.status == 1 &&
                       data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
+
               if (earlierList.any((data) =>
-                  data.status != 0 &&
-                  data.status != 2 &&
-                  data.status != 3 &&
-                  data.type == (isNormalSelected ? 0 : 1)))
+                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0, top: 12),
                   child: Align(
@@ -383,14 +374,40 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 ),
               ...earlierList
                   .where((data) =>
-                      data.status != 0 &&
-                      data.status != 2 &&
-                      data.status != 3 &&
+                      data.status == 1 &&
                       data.type == (isNormalSelected ? 0 : 1))
                   .map((data) => _buildRequestCard('รอตอบรับ', data.username,
                       formatshowTime(data.date.toString()), data.reserveId)),
+
+              // ✅ กรณีไม่มีคำขอจองฉีดวัคซีนเลย
+              if (!todayList.any((data) =>
+                      data.status == 1 &&
+                      data.type == (isNormalSelected ? 0 : 1)) &&
+                  !yesterdayList.any((data) =>
+                      data.status == 1 &&
+                      data.type == (isNormalSelected ? 0 : 1)) &&
+                  !earlierList.any((data) =>
+                      data.status == 1 &&
+                      data.type == (isNormalSelected ? 0 : 1)))
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          FontAwesomeIcons.syringe,
+                          color: Color(0xFF916B44),
+                        ),
+                        Text(
+                          'ไม่มีคำขอจองฉีดวัคซีน',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
-          ),
+          )
         ]));
   }
 
@@ -827,21 +844,21 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     }
   }
 
-  Future<void> updateType(int reserveID, int status) async {
-    ClinicUpdateTypePost req =
-        ClinicUpdateTypePost(reserveId: reserveID, type: status);
-    var res = await http.put(
-      Uri.parse("$url/reserve/type/$reserveID"),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(req.toJson()),
-    );
-    if (res.statusCode == 200) {
-      updateType(reserveID, 2);
-      log("Update data clinic success");
-    } else {
-      log("Failed to update doctor info: ${res.statusCode}");
-    }
-  }
+  // Future<void> updateType(int reserveID, int status) async {
+  //   ClinicUpdateTypePost req =
+  //       ClinicUpdateTypePost(reserveId: reserveID, type: status);
+  //   var res = await http.put(
+  //     Uri.parse("$url/reserve/type/$reserveID"),
+  //     headers: {"Content-Type": "application/json"},
+  //     body: json.encode(req.toJson()),
+  //   );
+  //   if (res.statusCode == 200) {
+  //     updateType(reserveID, 1);
+  //     log("Update data clinic success");
+  //   } else {
+  //     log("Failed to update doctor info: ${res.statusCode}");
+  //   }
+  // }
 
   void _showAcceptDialog() {
     showDialog(

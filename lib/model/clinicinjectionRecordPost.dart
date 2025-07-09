@@ -12,15 +12,15 @@ String clinicinjectionRecordPostToJson(List<ClinicinjectionRecordPost> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ClinicinjectionRecordPost {
-  int dog_Id;
   int reserveId;
+  int appointmentAid;
   String vaccine;
   DateTime date;
   String vaccineLabel;
 
   ClinicinjectionRecordPost({
-    required this.dog_Id,
     required this.reserveId,
+    required this.appointmentAid,
     required this.vaccine,
     required this.date,
     required this.vaccineLabel,
@@ -28,16 +28,16 @@ class ClinicinjectionRecordPost {
 
   factory ClinicinjectionRecordPost.fromJson(Map<String, dynamic> json) =>
       ClinicinjectionRecordPost(
-        dog_Id: json["dog_Id"],
         reserveId: json["reserveID"],
+        appointmentAid: json["appointment_aid"],
         vaccine: json["vaccine"],
         date: DateTime.parse(json["date"]),
         vaccineLabel: json["vaccine_label"],
       );
 
   Map<String, dynamic> toJson() => {
-        "dog_Id": dog_Id,
         "reserveID": reserveId,
+        "appointment_aid": appointmentAid,
         "vaccine": vaccine,
         "date": date.toIso8601String(),
         "vaccine_label": vaccineLabel,
