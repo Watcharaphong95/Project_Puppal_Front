@@ -19,6 +19,7 @@ import 'package:shimmer/shimmer.dart';
 class ClinicsearchPage extends StatefulWidget {
   final int dogId;
   final String vaccineName;
+  final String? reserveId;
   final DateTime date;
   final int aid;
 
@@ -26,6 +27,7 @@ class ClinicsearchPage extends StatefulWidget {
       {super.key,
       required this.dogId,
       required this.vaccineName,
+      required this.reserveId,
       required this.date,
       required this.aid});
 
@@ -58,6 +60,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     log(widget.vaccineName);
     log(widget.date.toString());
     log(widget.aid.toString());
+    log(widget.reserveId.toString());
     init();
     super.initState();
   }
@@ -72,6 +75,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     } else {
       await searchClinic();
     }
+
     setState(() {
       _loadingData = false;
       _loadingSearchData = false;
@@ -732,6 +736,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                                           vaccineName: widget
                                                               .vaccineName,
                                                           aid: widget.aid,
+                                                          reserveId:
+                                                              widget.reserveId,
                                                         ));
                                                   },
                                                   child: Padding(

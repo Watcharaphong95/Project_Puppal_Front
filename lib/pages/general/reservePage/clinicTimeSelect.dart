@@ -25,6 +25,7 @@ class ClinictimeselectPage extends StatefulWidget {
   final double distance;
   final DateTime date;
   final String vaccineName;
+  final String? reserveId;
   final int aid;
 
   const ClinictimeselectPage({
@@ -34,6 +35,7 @@ class ClinictimeselectPage extends StatefulWidget {
     required this.distance,
     required this.date,
     required this.vaccineName,
+    required this.reserveId,
     required this.aid,
   });
 
@@ -65,6 +67,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     log(widget.email);
     log(widget.date.toString());
     log(widget.aid.toString());
+    log(widget.reserveId.toString());
     init();
     super.initState();
   }
@@ -502,53 +505,66 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
 
     log(combined.toString());
 
-    Map<String, dynamic> data;
+    try {
+      Map<String, dynamic> data;
 
-    if (widget.aid == 0) {
-      data = {
-        'generalEmail': box.read('email'),
-        'clinicEmail': widget.email,
-        'dogDogId': widget.dogId.toString(),
-        'appointmentAid': null,
-        'status': 1,
-        'date': combined.toString(),
-        'type': 0,
-      };
-    } else {
-      data = {
-        'generalEmail': box.read('email'),
-        'clinicEmail': widget.email,
-        'dogDogId': widget.dogId.toString(),
-        'appointmentAid': widget.aid.toString(),
-        'status': 1,
-        'date': combined.toString(),
-        'type': 0,
-      };
+      var db = FirebaseFirestore.instance;
+
+      if (widget.reserveId != null) {
+        log('reserverId NULL');
+        var docSnapshot = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(widget.reserveId)
+            .get();
+
+        if (docSnapshot.exists) {
+          await db
+              .collection('reserve')
+              .doc(widget.reserveId)
+              .update({'status': 1, 'type': 0});
+        }
+      } else {
+        log('reserverId LEGIT');
+        if (widget.aid == 0) {
+          data = {
+            'generalEmail': box.read('email'),
+            'clinicEmail': widget.email,
+            'dogDogId': widget.dogId.toString(),
+            'appointmentAid': null,
+            'status': 1,
+            'date': combined.toString(),
+            'type': 0,
+            'createAt': DateTime.now()
+          };
+        } else {
+          data = {
+            'generalEmail': box.read('email'),
+            'clinicEmail': widget.email,
+            'dogDogId': widget.dogId.toString(),
+            'appointmentAid': widget.aid.toString(),
+            'status': 1,
+            'date': combined.toString(),
+            'type': 0,
+            'createAt': DateTime.now()
+          };
+        }
+        await db.collection('reserve').add(data);
+      }
+      Get.back();
+      showAlertNoClose(
+          title: 'ส่งคำขอเรียบร้อยแล้ว',
+          message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
+          onConfirm: () {
+            Get.off(() => GeneralmainPage());
+          });
+    } catch (e) {
+      Get.back();
+      log(e.toString());
+      showAlertNoClose(
+          title: 'ไม่สามารถส่งคำขอได้',
+          message:
+              'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
     }
-
-    var db = FirebaseFirestore.instance;
-
-    db.collection('reserve').add(data);
-
-    // var res = await http.post(
-    //   Uri.parse("$url/reserve/addRequest"),
-    //   headers: {"Content-Type": "application/json; charset=utf-8"},
-    //   body: clinicSlotReqToJson(req),
-    // );
-    // Get.back();
-    // if (res.statusCode == 201) {
-    //   showAlertNoClose(
-    //       title: 'ส่งคำขอเรียบร้อยแล้ว',
-    //       message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
-    //       onConfirm: () {
-    //         Get.off(() => GeneralmainPage());
-    //       });
-    // } else {
-    //   showAlertNoClose(
-    //       title: 'ไม่สามารถส่งคำขอได้',
-    //       message:
-    //           'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
-    // }
   }
 
   Future<void> sendSpecialRequestToClinic(String time) async {
@@ -560,34 +576,91 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
 
     log(combined.toString());
 
-    ClinicSlotReq req = ClinicSlotReq(
-        generalEmail: box.read('email'),
-        clinicEmail: widget.email,
-        dogDogId: widget.dogId.toString(),
-        appointmentAid: widget.aid.toString(),
-        date: combined.toString(),
-        status: 1,
-        type: 1);
+    Map<String, dynamic> data;
 
-    var res = await http.post(
-      Uri.parse("$url/reserve/addRequest"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: clinicSlotReqToJson(req),
-    );
-    Get.back();
-    if (res.statusCode == 201) {
-      showAlertNoClose(
-          title: 'ส่งคำขอพิเศษเรียบร้อยแล้ว',
-          message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
-          onConfirm: () {
-            Get.off(() => GeneralmainPage());
-          });
-    } else {
+    var db = FirebaseFirestore.instance;
+
+    try {
+      if (widget.reserveId != null) {
+        var docSnapshot = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(widget.reserveId)
+            .get();
+
+        if (docSnapshot.exists) {
+          await db
+              .collection('reserve')
+              .doc(widget.reserveId)
+              .update({'status': 1, 'type': 1});
+        }
+      } else {
+        if (widget.aid == 0) {
+          data = {
+            'generalEmail': box.read('email'),
+            'clinicEmail': widget.email,
+            'dogDogId': widget.dogId.toString(),
+            'appointmentAid': null,
+            'status': 1,
+            'date': combined.toString(),
+            'type': 1,
+            'createAt': DateTime.now()
+          };
+        } else {
+          data = {
+            'generalEmail': box.read('email'),
+            'clinicEmail': widget.email,
+            'dogDogId': widget.dogId.toString(),
+            'appointmentAid': widget.aid.toString(),
+            'status': 1,
+            'date': combined.toString(),
+            'type': 1,
+            'createAt': DateTime.now()
+          };
+        }
+        await db.collection('reserve').add(data);
+
+        showAlertNoClose(
+            title: 'ส่งคำขอพิเศษเรียบร้อยแล้ว',
+            message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
+            onConfirm: () {
+              Get.off(() => GeneralmainPage());
+            });
+      }
+    } catch (e) {
       showAlertNoClose(
           title: 'ไม่สามารถส่งคำขอได้',
           message:
               'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
     }
+
+    // ClinicSlotReq req = ClinicSlotReq(
+    //     generalEmail: box.read('email'),
+    //     clinicEmail: widget.email,
+    //     dogDogId: widget.dogId.toString(),
+    //     appointmentAid: widget.aid.toString(),
+    //     date: combined.toString(),
+    //     status: 1,
+    //     type: 1);
+
+    // var res = await http.post(
+    //   Uri.parse("$url/reserve/addRequest"),
+    //   headers: {"Content-Type": "application/json; charset=utf-8"},
+    //   body: clinicSlotReqToJson(req),
+    // );
+    // Get.back();
+    // if (res.statusCode == 201) {
+    //   showAlertNoClose(
+    //       title: 'ส่งคำขอพิเศษเรียบร้อยแล้ว',
+    //       message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
+    //       onConfirm: () {
+    //         Get.off(() => GeneralmainPage());
+    //       });
+    // } else {
+    //   showAlertNoClose(
+    //       title: 'ไม่สามารถส่งคำขอได้',
+    //       message:
+    //           'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
+    // }
   }
 
   Future<void> openMap(double lat, double lng) async {

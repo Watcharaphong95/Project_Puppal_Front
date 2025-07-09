@@ -1,17 +1,16 @@
 // To parse this JSON data, do
 //
-//     final reserveDoglist = reserveDoglistFromJson(jsonString);
+//     final dogsIdGet = dogsIdGetFromJson(jsonString);
 
 import 'dart:convert';
 
-List<ReserveDoglist> reserveDoglistFromJson(String str) =>
-    List<ReserveDoglist>.from(
-        json.decode(str).map((x) => ReserveDoglist.fromJson(x)));
+List<DogsIdGet> dogsIdGetFromJson(String str) =>
+    List<DogsIdGet>.from(json.decode(str).map((x) => DogsIdGet.fromJson(x)));
 
-String reserveDoglistToJson(List<ReserveDoglist> data) =>
+String dogsIdGetToJson(List<DogsIdGet> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class ReserveDoglist {
+class DogsIdGet {
   int dogId;
   String userEmail;
   String name;
@@ -24,9 +23,8 @@ class ReserveDoglist {
   int sterilization;
   String hair;
   String image;
-  int? status;
 
-  ReserveDoglist({
+  DogsIdGet({
     required this.dogId,
     required this.userEmail,
     required this.name,
@@ -39,10 +37,9 @@ class ReserveDoglist {
     required this.sterilization,
     required this.hair,
     required this.image,
-    this.status,
   });
 
-  factory ReserveDoglist.fromJson(Map<String, dynamic> json) => ReserveDoglist(
+  factory DogsIdGet.fromJson(Map<String, dynamic> json) => DogsIdGet(
         dogId: json["dogId"],
         userEmail: json["user_email"],
         name: json["name"],
@@ -55,7 +52,6 @@ class ReserveDoglist {
         sterilization: json["sterilization"],
         hair: json["Hair"],
         image: json["image"],
-        status: json["status"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -71,6 +67,5 @@ class ReserveDoglist {
         "sterilization": sterilization,
         "Hair": hair,
         "image": image,
-        "status": status,
       };
 }

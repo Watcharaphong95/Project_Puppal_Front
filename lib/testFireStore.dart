@@ -54,11 +54,14 @@ class _TestfirestorePageState extends State<TestfirestorePage> {
   }
 
   void readData() async {
-    var inboxRef = db.collection("reserve");
-    var query = inboxRef.where("name", isEqualTo: nameCtl.text);
-    var result = await query.get();
-    if (result.docs.isNotEmpty) {
-      log(result.docs.first.data()['message']);
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reserve') // <-- replace with your collection
+        .where('clinicEmail', isEqualTo: 'testBoth@gmail.com')
+        .get();
+
+    for (var doc in snapshot.docs) {
+      log('Document ID: ${doc.id}');
+      log('Data: ${doc.data()}');
     }
   }
 }
