@@ -12,7 +12,7 @@ import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoo
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;

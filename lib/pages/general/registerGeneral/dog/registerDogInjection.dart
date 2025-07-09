@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -5,9 +6,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
+import 'package:get_storage/get_storage.dart';
+import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/model/injectionRecordPost.dart';
+import 'package:puppal_application/model/vaccineGetAll.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogInjectionRecord.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterdoginjectionPage extends StatefulWidget {
   const RegisterdoginjectionPage({super.key});
@@ -21,13 +26,33 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
   late double screenWidth;
   late double screenHeight;
 
+  String url = "";
+  final box = GetStorage();
+
   final dogInjecRecord = Get.find<RegisterDogInjectionCtl>();
   final recordList = Get.find<injectionRecordList>();
+
+  List<VaccineGetAll> vaccines = [];
 
   TextEditingController clinicNameCtl = TextEditingController();
   TextEditingController vaccineTypeCtl = TextEditingController();
   TextEditingController vaccineTypeNameCtl = TextEditingController();
   TextEditingController dateCtl = TextEditingController();
+  TextEditingController statusCtl = TextEditingController();
+  TextEditingController statusNameCtl = TextEditingController();
+
+  @override
+  void initState() {
+    init();
+    super.initState();
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
+    await getAllVaccine();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +189,40 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
                         ),
                       ],
                     ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'สถานะ',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Material(
+                          elevation: 5,
+                          borderRadius: BorderRadius.circular(10),
+                          child: SizedBox(
+                            height: screenHeight * 0.055,
+                            child: TextField(
+                              controller: statusNameCtl,
+                              readOnly: true,
+                              onTap: () {
+                                _showSelectStatus();
+                              },
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: 'เลือกสถานะวัคซีน',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
+                                ),
+                                suffixIcon: const Icon(Icons.calendar_today),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 Padding(
@@ -214,16 +273,29 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
     dogInjecRecord.clinicName.value = clinicNameCtl.text;
     dogInjecRecord.vaccineType.value = vaccineTypeCtl.text;
     dogInjecRecord.date.value = dateCtl.text;
+    dogInjecRecord.status.value = statusCtl.text;
 
     InjectionRecordPost newRecord = InjectionRecordPost(
         dogId: 0,
         clinicName: dogInjecRecord.clinicName.value,
         vaccineType: dogInjecRecord.vaccineType.value,
-        date: dogInjecRecord.date.value);
+        date: dogInjecRecord.date.value,
+        status: int.parse(dogInjecRecord.status.value));
 
     recordList.addRecord(newRecord);
 
     Get.to(() => RegisterdoginjectionrecordPage());
+  }
+
+  Future<void> getAllVaccine() async {
+    var res = await http.get(Uri.parse("$url/vaccine"));
+    if (res.statusCode == 200) {
+      var jsonData = json.decode(res.body);
+      vaccines = jsonData
+          .map<VaccineGetAll>((e) => VaccineGetAll.fromJson(e))
+          .toList();
+      // log(vaccines.toString());
+    }
   }
 
   void _showSelectVaccine() async {
@@ -234,16 +306,90 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final List<Map<String, String>> dogVaccines = [
-          {'name': 'วัคซีนรวม 5 โรค (DHPPiL)', 'id': '1'},
-          {'name': 'วัคซีนพิษสุนัขบ้า', 'id': '2'},
-          {'name': 'วัคซีนป้องกันโรคไข้ฉี่หนู', 'id': '3'},
-          {'name': 'วัคซีนป้องกันเชื้อ Bordetella bronchiseptica', 'id': '4'},
-          {'name': 'วัคซีนป้องกันโรคลายม์', 'id': '5'},
-          {'name': 'วัคซีนป้องกันเชื้อโคโรนาไวรัส', 'id': '6'},
-          {'name': 'วัคซีนถ่ายพยาธิ', 'id': '7'},
-        ];
+        return Container(
+          height: 300,
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'เลือกวัคซีนที่ฉีด',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF916b44),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                    child: Column(
+                  children: [
+                    ...vaccines.map((vaccine) {
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          title: Center(
+                            child: Text(
+                              vaccine.name,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF916b44),
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            setState(() {
+                              vaccineTypeNameCtl.text = vaccine.name;
+                              vaccineTypeCtl.text = vaccine.vid.toString();
+                            });
+                            log(vaccineTypeCtl.text);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                )),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
+  void _showSelectStatus() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final List<Map<String, String>> status = [
+          {'name': 'รับวัคซีนครบแล้ว', 'id': '0'},
+          {'name': 'รอรับวัคซีนให้ครบ', 'id': '1'},
+          {'name': 'รอรับวัคซีนกระตุ้น', 'id': '2'},
+        ];
         return Container(
           height: 300,
           padding: EdgeInsets.all(16),
@@ -275,7 +421,7 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: dogVaccines.map((vaccine) {
+                    children: status.map((vaccine) {
                       return Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -295,10 +441,10 @@ class _RegisterdoginjectionPageState extends State<RegisterdoginjectionPage> {
                           ),
                           onTap: () {
                             setState(() {
-                              vaccineTypeNameCtl.text = vaccine['name']!;
-                              vaccineTypeCtl.text = vaccine['id']!;
+                              statusNameCtl.text = vaccine['name']!;
+                              statusCtl.text = vaccine['id']!;
                             });
-                            log(vaccineTypeCtl.text);
+                            log(statusCtl.text);
                             Navigator.pop(context);
                           },
                         ),

@@ -10,10 +10,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/main.dart';
+import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/generalProfilePost.dart';
 import 'package:puppal_application/model/userPost.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalProfile.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,13 +28,16 @@ class EditprofilePage extends StatefulWidget {
 class _EditprofilePageState extends State<EditprofilePage> {
   late double screenWidth;
   late double screenHeight;
-  late GeneralPost generalData;
+
   final box = GetStorage();
+
   String url = '';
   bool _loadingData = true;
   bool _dataChange = false;
 
   File? _imageFile;
+
+  late GeneralPost generalData;
 
   TextEditingController usernameCtl = TextEditingController();
   TextEditingController nameCtl = TextEditingController();
@@ -459,7 +463,7 @@ class _EditprofilePageState extends State<EditprofilePage> {
 
       // Upload to Supabase Storage
       final storageResponse = await Supabase.instance.client.storage
-          .from('general-image') // Use your actual bucket name here
+          .from('general-image')
           .uploadBinary(fileName, fileBytes,
               fileOptions: const FileOptions(upsert: true));
 
