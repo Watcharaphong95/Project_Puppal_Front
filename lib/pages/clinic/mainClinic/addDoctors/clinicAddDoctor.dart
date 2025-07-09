@@ -34,7 +34,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
   TextEditingController nameCtl = TextEditingController();
   TextEditingController surnameCtl = TextEditingController();
   TextEditingController careerNoCtl = TextEditingController();
-  // TextEditingController specialNoCtl = TextEditingController();
+  TextEditingController specialNoCtl = TextEditingController();
   TextEditingController searchController = TextEditingController();
 
   List<SpecialPost> special = [];
@@ -385,7 +385,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
 
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
-    controller.special.value = selectedSpecialId?.toString() ?? '';
+    // controller.special.value = selectedSpecialId?.toString() ?? '';
     controller.special.value = selectedSpecialty.join(', ');
     controller.careerNo.value = careerNoCtl.text;
 
@@ -469,15 +469,14 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
   }
 
   void _init() {
-    // โหลดข้อมูลหรือรีเฟรชหน้าตรงนี้
-    getSpecialData(); // ยกตัวอย่างเมธอดดึงข้อมูล
+    getSpecialData();
     setState(() {});
   }
 
   Future<bool> confirmDialog(BuildContext context) async {
     return await showDialog(
           context: context,
-          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
@@ -490,7 +489,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
             contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -525,10 +524,9 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                 ),
               ],
             ),
-            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsAlignment: MainAxisAlignment.center,
             actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
             actions: [
-              // ปุ่มยกเลิก
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
@@ -557,7 +555,6 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                 ),
               ),
               const SizedBox(width: 12),
-              // ปุ่มยืนยัน
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
@@ -613,150 +610,415 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+            return Container(
+              decoration: BoxDecoration(
+                // color: Color(0xFFE9CBAF),
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 16),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 5,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 16),
+                      // Handle Bar
+                      Container(
+                        width: 50,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: Color(0xFF916B44).withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          if (!isOtherSelected)
-                            TextField(
-                              controller: searchController,
-                              decoration: InputDecoration(
-                                hintText: 'ค้นหาความเชี่ยวชาญ',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                      SizedBox(height: 20),
+
+                      // Header
+                      Text(
+                        isOtherSelected
+                            ? 'เพิ่มความเชี่ยวชาญใหม่'
+                            : 'เลือกความเชี่ยวชาญ',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF916B44),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            // Search Field
+                            if (!isOtherSelected)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF916B44).withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                prefixIcon: Icon(Icons.search),
-                                suffixIcon: searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: Icon(Icons.clear),
+                                child: TextField(
+                                  controller: searchController,
+                                  decoration: InputDecoration(
+                                    hintText: 'ค้นหาความเชี่ยวชาญ',
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF916B44).withOpacity(0.5),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF916B44),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Color(0xFF916B44),
+                                    ),
+                                    suffixIcon: searchController.text.isNotEmpty
+                                        ? IconButton(
+                                            icon: Icon(
+                                              Icons.clear,
+                                              color: Color(0xFF916B44),
+                                            ),
+                                            onPressed: () {
+                                              searchController.clear();
+                                              setModalState(() {
+                                                filtered = List<String>.from(
+                                                    allSpecialties);
+                                              });
+                                            },
+                                          )
+                                        : null,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    setModalState(() {
+                                      filtered = allSpecialties
+                                          .where((s) => s
+                                              .toLowerCase()
+                                              .contains(value.toLowerCase()))
+                                          .toList();
+                                    });
+                                  },
+                                ),
+                              ),
+                            SizedBox(height: 20),
+
+                            // List Container
+                            if (!isOtherSelected)
+                              Container(
+                                constraints: BoxConstraints(maxHeight: 350),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF916B44).withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: filtered.isEmpty
+                                      ? Container(
+                                          height: 100,
+                                          child: Center(
+                                            child: Text(
+                                              'ไม่พบความเชี่ยวชาญ',
+                                              style: TextStyle(
+                                                color: Color(0xFF916B44)
+                                                    .withOpacity(0.6),
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : ListView.builder(
+                                          shrinkWrap: true,
+                                          padding: EdgeInsets.zero,
+                                          itemCount: filtered.length,
+                                          itemBuilder: (context, index) {
+                                            final item = filtered[index];
+                                            bool isSelected = selectedSpecialty
+                                                .contains(item);
+
+                                            return Container(
+                                              margin: EdgeInsets.only(
+                                                top: index == 0 ? 8 : 0,
+                                                bottom:
+                                                    index == filtered.length - 1
+                                                        ? 8
+                                                        : 0,
+                                              ),
+                                              child: item == "อื่นๆ"
+                                                  ? Container(
+                                                      margin:
+                                                          EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: Color(0xFFDBA871)
+                                                            .withOpacity(0.3),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                      child: ListTile(
+                                                        title: Text(
+                                                          "อื่นๆ",
+                                                          style: TextStyle(
+                                                            color: Color(
+                                                                0xFF916B44),
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                        trailing: Icon(
+                                                          Icons
+                                                              .arrow_forward_ios,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                          size: 16,
+                                                        ),
+                                                        onTap: () {
+                                                          setModalState(() {
+                                                            isOtherSelected =
+                                                                true;
+                                                          });
+                                                        },
+                                                      ),
+                                                    )
+                                                  : Container(
+                                                      margin:
+                                                          EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: isSelected
+                                                            ? Color(0xFFDBA871)
+                                                                .withOpacity(
+                                                                    0.2)
+                                                            : Colors
+                                                                .transparent,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                        border: isSelected
+                                                            ? Border.all(
+                                                                color: Color(
+                                                                        0xFF916B44)
+                                                                    .withOpacity(
+                                                                        0.3),
+                                                                width: 1,
+                                                              )
+                                                            : null,
+                                                      ),
+                                                      child: CheckboxListTile(
+                                                        title: Text(
+                                                          item,
+                                                          style: TextStyle(
+                                                            color: Color(
+                                                                0xFF916B44),
+                                                            fontWeight:
+                                                                isSelected
+                                                                    ? FontWeight
+                                                                        .w500
+                                                                    : FontWeight
+                                                                        .w400,
+                                                          ),
+                                                        ),
+                                                        value: isSelected,
+                                                        activeColor:
+                                                            Color(0xFF916B44),
+                                                        checkColor:
+                                                            Colors.white,
+                                                        onChanged:
+                                                            (bool? selected) {
+                                                          setModalState(() {
+                                                            if (selected ==
+                                                                true) {
+                                                              selectedSpecialty
+                                                                  .add(item);
+                                                            } else {
+                                                              selectedSpecialty
+                                                                  .remove(item);
+                                                            }
+                                                          });
+                                                        },
+                                                      ),
+                                                    ),
+                                            );
+                                          },
+                                        ),
+                                ),
+                              ),
+
+                            // Other Specialty Input
+                            if (isOtherSelected) ...[
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF916B44).withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: TextField(
+                                  controller: otherSpecialtyController,
+                                  decoration: InputDecoration(
+                                    hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
+                                    hintStyle: TextStyle(
+                                      color: Color(0xFF916B44).withOpacity(0.5),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF916B44),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 20),
+
+                              // Action Buttons
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 48,
+                                      child: ElevatedButton(
                                         onPressed: () {
-                                          searchController.clear();
                                           setModalState(() {
-                                            filtered = List<String>.from(
-                                                allSpecialties);
+                                            isOtherSelected = false;
+                                            otherSpecialtyController.clear();
                                           });
                                         },
-                                      )
-                                    : null,
-                              ),
-                              onChanged: (value) {
-                                setModalState(() {
-                                  filtered = allSpecialties
-                                      .where((s) => s
-                                          .toLowerCase()
-                                          .contains(value.toLowerCase()))
-                                      .toList();
-                                });
-                              },
-                            ),
-                          SizedBox(height: 16),
-                          if (!isOtherSelected)
-                            ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: 300),
-                              child: filtered.isEmpty
-                                  ? Center(child: Text('ไม่พบความเชี่ยวชาญ'))
-                                  : ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: filtered.length,
-                                      itemBuilder: (context, index) {
-                                        final item = filtered[index];
-
-                                        return Card(
-                                          child: item == "อื่นๆ"
-                                              ? ListTile(
-                                                  title: Text("อื่นๆ"),
-                                                  trailing: Icon(
-                                                      Icons.arrow_forward_ios),
-                                                  onTap: () {
-                                                    setModalState(() {
-                                                      isOtherSelected = true;
-                                                    });
-                                                  },
-                                                )
-                                              : CheckboxListTile(
-                                                  title: Text(item),
-                                                  value: selectedSpecialty
-                                                      .contains(item),
-                                                  onChanged: (bool? selected) {
-                                                    setModalState(() {
-                                                      if (selected == true) {
-                                                        selectedSpecialty
-                                                            .add(item);
-                                                      } else {
-                                                        selectedSpecialty
-                                                            .remove(item);
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                        );
-                                      },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Color(0xFF916B44),
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            side: BorderSide(
+                                              color: Color(0xFF916B44),
+                                              width: 1,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "ยกเลิก",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                            ),
-                          // ignore: dead_code
-                          if (isOtherSelected) ...[
-                            TextField(
-                              controller: otherSpecialtyController,
-                              decoration: InputDecoration(
-                                hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Container(
+                                      height: 48,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          if (isOtherSelected &&
+                                              otherSpecialtyController.text
+                                                  .trim()
+                                                  .isNotEmpty) {
+                                            selectedSpecialty.add(
+                                                otherSpecialtyController.text
+                                                    .trim());
+                                            await specialAdd(
+                                                otherSpecialtyController.text
+                                                    .trim());
+                                          }
+
+                                          setState(() {
+                                            selectedSpecialty =
+                                                List.from(selectedSpecialty);
+                                          });
+
+                                          Navigator.pop(context);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Color(0xFF916B44),
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "บันทึก",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () async {
-                                if (isOtherSelected &&
-                                    otherSpecialtyController.text
-                                        .trim()
-                                        .isNotEmpty) {
-                                  selectedSpecialty.add(
-                                      otherSpecialtyController.text.trim());
-                                  await specialAdd(
-                                      otherSpecialtyController.text.trim());
-                                }
-
-                                setState(() {
-                                  selectedSpecialty =
-                                      List.from(selectedSpecialty);
-                                });
-
-                                Navigator.pop(context);
-                              },
-                              child: Text("บันทึก"),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             );

@@ -583,7 +583,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
         body: json.encode(req.toJson()),
       );
       if (res.statusCode == 200) {
-        updateType(reserveID, 2);
+        // updateType(reserveID, 2);
 
         log("Update data clinic success");
       } else {
@@ -592,20 +592,20 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     }
   }
 
-  Future<void> updateType(int reserveID, int status) async {
-    ClinicUpdateTypePost req =
-        ClinicUpdateTypePost(reserveId: reserveID, type: status);
-    var res = await http.put(
-      Uri.parse("$url/reserve/type/$reserveID"),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(req.toJson()),
-    );
-    if (res.statusCode == 200) {
-      log("Update data clinic success");
-    } else {
-      log("Failed to update doctor info: ${res.statusCode}");
-    }
-  }
+  // Future<void> updateType(int reserveID, int status) async {
+  //   ClinicUpdateTypePost req =
+  //       ClinicUpdateTypePost(reserveId: reserveID, type: status);
+  //   var res = await http.put(
+  //     Uri.parse("$url/reserve/type/$reserveID"),
+  //     headers: {"Content-Type": "application/json"},
+  //     body: json.encode(req.toJson()),
+  //   );
+  //   if (res.statusCode == 200) {
+  //     log("Update data clinic success");
+  //   } else {
+  //     log("Failed to update doctor info: ${res.statusCode}");
+  //   }
+  // }
 
   void _showAcceptDialog() {
     showDialog(

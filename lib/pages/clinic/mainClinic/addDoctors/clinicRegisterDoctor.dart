@@ -165,89 +165,229 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Text(
-              'เพิ่มหมอ',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: Obx(() {
-                return Wrap(
-                  spacing: 10.0, // Space between items horizontally
-                  runSpacing: 10.0, // Space between rows
+      body: Container(
+        color: const Color(0xFFE9CBAF).withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ...doctorListController.doctorList.map((doctor) {
-                      return SizedBox(
-                        width: screenWidth * 0.9,
-                        height: screenHeight * 0.12,
-                        child: Card(
-                          margin: EdgeInsets.symmetric(vertical: 8.0),
-                          child: ListTile(
-                            leading: doctor.image != null
-                                ? Image.network(
-                                    doctor.image,
-                                    width: screenWidth * 0.2,
-                                    height: screenHeight * 0.10,
-                                    fit: BoxFit.fill,
-                                  )
-                                : SizedBox(
-                                    width: 50,
-                                    height: 50), // Default if no image
-                            title: Text(doctor.name),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF916B44),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.medical_services,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'เพิ่มหมอ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF916B44),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-                            trailing: IconButton(
-                              icon: Icon(
-                                Icons.delete,
-                                color: Colors.red,
+              // Doctor List
+              Expanded(
+                child: Obx(() {
+                  return ListView(
+                    children: [
+                      ...doctorListController.doctorList.map((doctors) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE9CBAF),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Doctor Image
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color(0xFFE9CBAF).withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: doctors.image != null
+                                      ? Image.network(
+                                          doctors.image,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Icon(
+                                          Icons.person,
+                                          color: const Color(0xFF916B44)
+                                              .withOpacity(0.6),
+                                          size: 30,
+                                        ),
+                                ),
                               ),
-                              onPressed: () {
-                                showAlert(
+                              const SizedBox(width: 16),
+
+                              // Doctor Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${doctors.name} ${doctors.surname}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                        color: const Color(0xFF916B44),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'เลขที่: ${doctors.careerNo}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF916B44),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFDBA871)
+                                            .withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        doctor.special.value,
+                                        style: TextStyle(
+                                          color: const Color(0xFF916B44),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Delete Button
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red[400],
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  showAlert(
                                     context: context,
                                     title: "คุณต้องการลบคุณหมอใช่หรือไม่",
                                     message: "คุณหมอจะถูกลบออกจากรายการ",
                                     onConfirm: () {
                                       setState(() {
                                         doctorListController
-                                            .removeDoctor(doctor);
+                                            .removeDoctor(doctors);
                                       });
-                                    });
-                              },
-                            ),
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                      );
-                    }).toList(),
-                    SizedBox(
-                      width: screenWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: screenWidth * 0.3,
-                            child: FloatingActionButton(
-                              onPressed: () {
+                        );
+                      }).toList(),
+
+                      // Add Doctor Button
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
                                 Get.to(() => RegisterdocterPage());
                               },
-                              backgroundColor: const Color(0xFFd2a679),
-                              child: const Icon(Icons.add, color: Colors.white),
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF916B44),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 12),
+                            Text(
+                              'เพิ่มหมอใหม่',
+                              style: const TextStyle(
+                                color: Color(0xFF916B44),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }),
+                    ],
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      // Bottom Button
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(screenHeight * 0.075),
         child: ElevatedButton(
           onPressed: () {
             if (doctorListController.doctorList.isEmpty) {
@@ -260,20 +400,38 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
             }
 
             showAlert(
-                context: context,
-                title: 'เพิ่มหมอ?',
-                message: 'คุณต้องการเพิ่มหมอทั้งหมดนี้ใช่หรือไม่?',
-                onConfirm: doctorAdd);
+              context: context,
+              title: 'เพิ่มหมอ?',
+              message: 'คุณต้องการเพิ่มหมอทั้งหมดนี้ใช่หรือไม่?',
+              onConfirm: doctorAdd,
+            );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF916b44),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            minimumSize: const Size.fromHeight(50),
+            backgroundColor: const Color(0xFF916B44),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 0,
           ),
-          child: const Text(
-            'เพิ่ม',
-            style: TextStyle(fontSize: 18, color: Colors.white),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.person_add,
+                size: 20,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'เพิ่มหมอทั้งหมด',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
