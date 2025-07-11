@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -9,10 +10,13 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/clinicUpdateTypePost.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveGeneralPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
@@ -23,6 +27,7 @@ import 'package:puppal_application/pages/general/registerGeneral/registerUserGoo
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
+import 'dart:convert';
 
 class VaccineRequestsPage extends StatefulWidget {
   const VaccineRequestsPage({super.key});
@@ -35,13 +40,17 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   late double screenWidth;
   late double screenHeight;
   bool isNormalSelected = true;
+
   final box = GetStorage();
   String url = '';
-  List<ReserveClinicPost> reserveList = [];
+  List<GeneralPost> generalList = [];
+  List<DogDetailsPost> dogList = [];
   List<Reservebooking> reservebookingList = [];
-  List<ReserveClinicPost> todayList = [];
-  List<ReserveClinicPost> yesterdayList = [];
-  List<ReserveClinicPost> earlierList = [];
+  List<ReserveClinicFirebase> todayList = [];
+  List<ReserveClinicFirebase> yesterdayList = [];
+  List<ReserveClinicFirebase> earlierList = [];
+  var db = FirebaseFirestore.instance;
+  List<String> messages = [];
   bool isLoading = true;
   final Color primaryBrown = const Color(0xFF916B44);
   final Color secondaryBrown = const Color(0xFFDBA871);
@@ -52,7 +61,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve();
+      // getReserve();
+      fetchReserveData();
       _init();
     });
   }
@@ -325,79 +335,58 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           ),
           Column(
             children: [
-              if (todayList.any((data) =>
-                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
-                const Padding(
-                  padding: EdgeInsets.only(left: 16.0, top: 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('วันนี้',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+              if (todayList
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .isNotEmpty)
+                _buildDateHeader('วันนี้'),
               ...todayList
-                  .where((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard('รอตอบรับ', data.username,
-                      formatshowTime(data.date.toString()), data.reserveId)),
-
-              if (yesterdayList.any((data) =>
-                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
-                const Padding(
-                  padding: EdgeInsets.only(left: 16.0, top: 12),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('เมื่อวาน',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .map((data) => _buildRequestCard(
+                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                        data.generalEmail ?? '-',
+                        formatshowTime(data.date.toString()),
+                        data.docId,
+                      )),
+              if (yesterdayList
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .isNotEmpty)
+                _buildDateHeader('เมื่อวาน'),
               ...yesterdayList
-                  .where((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard('รอตอบรับ', data.username,
-                      formatshowTime(data.date.toString()), data.reserveId)),
-
-              if (earlierList.any((data) =>
-                  data.status == 1 && data.type == (isNormalSelected ? 0 : 1)))
-                const Padding(
-                  padding: EdgeInsets.only(left: 16.0, top: 12),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('ก่อนหน้านี้',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .map((data) => _buildRequestCard(
+                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                        data.generalEmail ?? '-',
+                        formatshowTime(data.date.toString()),
+                        data.docId,
+                      )),
+              if (earlierList
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .isNotEmpty)
+                _buildDateHeader('ก่อนหน้านี้'),
               ...earlierList
-                  .where((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard('รอตอบรับ', data.username,
-                      formatshowTime(data.date.toString()), data.reserveId)),
-
-              // ✅ กรณีไม่มีคำขอจองฉีดวัคซีนเลย
-              if (!todayList.any((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1)) &&
-                  !yesterdayList.any((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1)) &&
-                  !earlierList.any((data) =>
-                      data.status == 1 &&
-                      data.type == (isNormalSelected ? 0 : 1)))
+                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                  .map((data) => _buildRequestCard(
+                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                        data.generalEmail ?? '-',
+                        formatshowTime(data.date.toString()),
+                        data.docId,
+                      )),
+              if (todayList
+                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                      .isEmpty &&
+                  yesterdayList
+                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                      .isEmpty &&
+                  earlierList
+                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
+                      .isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(
-                          FontAwesomeIcons.syringe,
-                          color: Color(0xFF916B44),
-                        ),
+                        Icon(FontAwesomeIcons.syringe,
+                            color: Color(0xFF916B44)),
                         Text(
                           'ไม่มีคำขอจองฉีดวัคซีน',
                           style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -407,17 +396,114 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   ),
                 ),
             ],
-          )
+          ),
         ]));
   }
 
+  Widget _buildDateHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, top: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  // void readData() async {
+  //   var query = db.collection("reserve").where("name");
+  //   var result = await query.get();
+
+  //   List<String> newMessages =
+  //       result.docs.map((doc) => doc['message'] as String).toList();
+
+  //   setState(() {
+  //     messages = newMessages;
+  //   });
+  // }
+
+  Future<void> fetchReserveData() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reserve')
+        .where('clinicEmail', isEqualTo: box.read("email"))
+        .get();
+
+    List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
+      return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
+    }).toList();
+
+    allData.sort((a, b) => b.date.compareTo(a.date));
+
+    todayList.clear();
+    yesterdayList.clear();
+    earlierList.clear();
+
+    for (var item in allData) {
+      final date = item.date.toLocal();
+      if (isToday(date)) {
+        todayList.add(item);
+      } else if (isYesterday(date)) {
+        yesterdayList.add(item);
+      } else {
+        earlierList.add(item);
+      }
+    }
+
+    todayList.sort((a, b) => b.date.compareTo(a.date));
+    yesterdayList.sort((a, b) => b.date.compareTo(a.date));
+    earlierList.sort((a, b) => b.date.compareTo(a.date));
+
+    setState(() {
+      // อัปเดต state
+      todayList = todayList;
+      yesterdayList = yesterdayList;
+      earlierList = earlierList;
+    });
+
+    // ดึง reserveBook จาก doc แรกที่เจอ
+    if (todayList.isNotEmpty) {
+      await getReserveBook(todayList[0].docId);
+      await getGeneral(todayList[0].generalEmail);
+    } else if (yesterdayList.isNotEmpty) {
+      await getReserveBook(yesterdayList[0].docId);
+      await getGeneral(todayList[0].generalEmail);
+    } else if (earlierList.isNotEmpty) {
+      await getReserveBook(earlierList[0].docId);
+      await getGeneral(todayList[0].generalEmail);
+    } else {
+      log("ℹ️ No reserve data to fetch reserveBook.");
+    }
+  }
+
   Widget _buildRequestCard(
-      String status, String name, String time, int reserveId) {
+      String status, String name, String time, String docid) {
     return GestureDetector(
       onTap: () async {
-        await getReserveBook(reserveId);
-        if (reservebookingList.isNotEmpty) {
-          _showAppointmentPopup(context, reservebookingList.first);
+        log("📋 กำลังดึงข้อมูล docid: $docid");
+
+        final reserveData = await getReserveBook(docid);
+
+        if (reserveData != null) {
+          final generalEmail = reserveData['generalEmail'];
+          final dogDogIdRaw = reserveData['dogDogId'];
+          final dogDogId = dogDogIdRaw is int
+              ? dogDogIdRaw
+              : int.tryParse(dogDogIdRaw.toString()) ??
+                  0; // หรือ handle กรณีแปลงไม่ได้
+
+          final dogDetails = await getdog(dogDogId); // ได้ DogDetailsPost?
+
+          if (generalEmail != null && generalEmail.isNotEmpty) {
+            await getGeneral(generalEmail);
+          }
+
+          _showAppointmentPopup(
+              context, reserveData, dogDetails, reserveData['docId']);
+        } else {
+          log("⚠️ ไม่มีข้อมูลการจองใน reserveData");
         }
       },
       child: Container(
@@ -435,43 +521,38 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: GestureDetector(
-                  // onTap: () =>
-                  //     _showAppointmentPopup(context, reservebookingList.first),
-                  child: Padding(
-                    padding: const EdgeInsets.all(9.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          status,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.all(9.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        status,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
-                        Text.rich(
-                          TextSpan(
-                            text: 'คุณ ',
-                            children: [
-                              TextSpan(
-                                text: name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const TextSpan(
-                                  text: ' ได้จองเวลากับคลินิกของคุณ'),
-                            ],
-                          ),
+                      ),
+                      Text.rich(
+                        TextSpan(
+                          text: 'คุณ ',
+                          children: [
+                            TextSpan(
+                              text: name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const TextSpan(text: ' ได้จองเวลากับคลินิกของคุณ'),
+                          ],
                         ),
-                        Text(
-                          time,
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                      ),
+                      Text(
+                        time,
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -480,11 +561,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     const BorderRadius.horizontal(right: Radius.circular(12)),
                 child: GestureDetector(
                   onTap: () {
-                    // ไปหน้า booking detail พร้อมส่งข้อมูลรายการที่เลือก
-                    // Get.to(() => BookingdetailPage(
-                    //       reserveID: reserveId,
-                    //     ));
-                    _openBookingDetail(reserveId);
+                    _openBookingDetail(docid);
                   },
                   child: Container(
                     color: const Color(0xFFFFB703),
@@ -501,8 +578,15 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  // Pop-up Dialog Method
-  void _showAppointmentPopup(BuildContext context, Reservebooking reservation) {
+// Pop-up Dialog Method - ปรับปรุงให้รับ Map แทน Reservebooking object
+  void _showAppointmentPopup(
+      BuildContext context,
+      Map<String, dynamic> reserveData,
+      DogDetailsPost? dogDetails,
+      String docId) {
+    final ownerName = generalList.isNotEmpty ? generalList[0].name : 'ไม่ระบุ';
+    final ownerPhone =
+        generalList.isNotEmpty ? generalList[0].phone : 'ไม่ระบุ';
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -572,7 +656,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             width: 10,
                           ),
                           Text(
-                            reservation.username,
+                            ownerName, // ใช้ชื่อจาก getGeneral
                             style: TextStyle(
                               color: primaryBrown,
                               fontSize: 22,
@@ -587,16 +671,17 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                       const SizedBox(height: 24),
 
-                      // Pet Name - Main Focus
+                      // Owner Image and Info - แสดงรูปภาพและข้อมูลเจ้าของ
                       Padding(
                         padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  reservation.name,
+                                  dogDetails!.name, // ชื่อเจ้าของจาก getGeneral
                                   style: TextStyle(
                                     color: primaryBrown,
                                     fontSize: 24,
@@ -606,7 +691,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  reservation.breed,
+                                  dogDetails!.breed, // เบอร์โทรจาก getGeneral
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 14,
@@ -618,7 +703,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  // shape: BoxShape.circle,
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(14),
                                   boxShadow: [
@@ -631,9 +715,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: reservation.image.isNotEmpty
+                                  child: dogDetails!.image.isNotEmpty
                                       ? Image.network(
-                                          reservation.image,
+                                          dogDetails!
+                                              .image, // รูปภาพจาก getGeneral
                                           height: 90,
                                           width: 120,
                                           fit: BoxFit.cover,
@@ -666,7 +751,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                                   BorderRadius.circular(12),
                                             ),
                                             child: const Icon(
-                                              Icons.pets,
+                                              Icons.person,
                                               size: 50,
                                               color: Colors.white,
                                             ),
@@ -681,7 +766,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                                 BorderRadius.circular(12),
                                           ),
                                           child: const Icon(
-                                            Icons.pets,
+                                            Icons.person,
                                             size: 50,
                                             color: Colors.white,
                                           ),
@@ -702,15 +787,21 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                       const SizedBox(height: 24),
 
-                      // Details
-                      _buildPopupDetailRow('ผู้ใช้', reservation.username),
-                      _buildPopupDetailRow('เบอร์โทร', reservation.phone),
+                      // Details - ใช้ข้อมูลจาก reserveData
+                      _buildPopupDetailRow('ผู้ใช้', ownerName),
+                      _buildPopupDetailRow('เบอร์โทร', ownerPhone),
                       _buildPopupDetailRow(
-                          'วัคซีน', reservation.appointmentAid.toString()),
+                          'วัคซีน',
+                          reserveData['appointmentAid']?.toString() ??
+                              'ไม่ระบุ'),
                       _buildPopupDetailRow(
-                          'วันที่จอง', formatThaiDateTime(reservation.date!)),
+                          'วันที่จอง', _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
-                          'เวลาที่จอง', _formatDate(reservation.date!)),
+                          'เวลาที่จอง', _formatDate(reserveData['date'])),
+                      _buildPopupDetailRow('รหัสสุนัข',
+                          reserveData['dogDogId']?.toString() ?? 'ไม่ระบุ'),
+                      _buildPopupDetailRow('ประเภทการจอง',
+                          reserveData['type']?.toString() ?? 'ไม่ระบุ'),
 
                       const SizedBox(height: 32),
 
@@ -722,8 +813,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                               label: 'ปฏิเสธการจอง',
                               onPressed: () {
                                 Navigator.pop(context);
-                                acceptrequest(reservation.reserveId, 0);
-                                _showRejectDialog();
+                                _showRejectDialog(docId);
                               },
                               isPrimary: false,
                             ),
@@ -733,9 +823,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             child: _buildPopupActionButton(
                               label: 'ยืนยันการจอง',
                               onPressed: () {
-                                acceptrequest(reservation.reserveId, 2);
                                 Navigator.pop(context);
-                                _showAcceptDialog();
+                                _showAcceptDialog(docId);
                               },
                               isPrimary: true,
                             ),
@@ -751,6 +840,25 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         );
       },
     );
+  }
+
+  Future<void> acceptrequest(String docId, int status) async {
+    if (status == 0 || status == 2) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .update({
+          'status': status,
+        });
+
+        log('✅ Updated status to $status for docId=$docId');
+      } catch (e) {
+        log('❌ Failed to update status: $e');
+      }
+    } else {
+      log('⚠️ Status not allowed to update: $status');
+    }
   }
 
   Widget _buildPopupDetailRow(String label, String value) {
@@ -817,50 +925,25 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final localDate = date.toLocal();
-
-    final hour = localDate.hour.toString().padLeft(2, '0');
-    final minute = localDate.minute.toString().padLeft(2, '0');
-
-    return '$hour:$minute ';
-  }
-
-  Future<void> acceptrequest(int reserveID, int status) async {
-    if (status == 2 || status == 0) {
-      _showAcceptDialog();
-      ReserveUpdateStatusPost req =
-          ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-      var res = await http.put(
-        Uri.parse("$url/reserve/$reserveID"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(req.toJson()),
-      );
-      if (res.statusCode == 200) {
-        log("Update data clinic success");
-      } else {
-        log("Failed to update doctor info: ${res.statusCode}");
-      }
-    }
-  }
-
-  // Future<void> updateType(int reserveID, int status) async {
-  //   ClinicUpdateTypePost req =
-  //       ClinicUpdateTypePost(reserveId: reserveID, type: status);
-  //   var res = await http.put(
-  //     Uri.parse("$url/reserve/type/$reserveID"),
-  //     headers: {"Content-Type": "application/json"},
-  //     body: json.encode(req.toJson()),
-  //   );
-  //   if (res.statusCode == 200) {
-  //     updateType(reserveID, 1);
-  //     log("Update data clinic success");
-  //   } else {
-  //     log("Failed to update doctor info: ${res.statusCode}");
+  // Future<void> acceptrequest(int reserveID, int status) async {
+  //   if (status == 2 || status == 0) {
+  //     _showAcceptDialog();
+  //     ReserveUpdateStatusPost req =
+  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
+  //     var res = await http.put(
+  //       Uri.parse("$url/reserve/$reserveID"),
+  //       headers: {"Content-Type": "application/json"},
+  //       body: json.encode(req.toJson()),
+  //     );
+  //     if (res.statusCode == 200) {
+  //       log("Update data clinic success");
+  //     } else {
+  //       log("Failed to update doctor info: ${res.statusCode}");
+  //     }
   //   }
   // }
 
-  void _showAcceptDialog() {
+  void _showAcceptDialog(String docId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -933,14 +1016,12 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                       await Future.delayed(const Duration(seconds: 3));
 
-                      // ปิด loading dialog
                       Navigator.of(context, rootNavigator: true).pop();
 
-                      // กลับหน้าก่อนหน้า (พร้อมส่งค่ากลับ true)
                       Navigator.pop(context, true);
 
-                      // ทำงานต่อ
-                      _acceptReservation();
+                      acceptrequest(docId, 2);
+                      // _acceptReservation();
                       _init();
                     },
                     style: ElevatedButton.styleFrom(
@@ -959,7 +1040,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  void _showRejectDialog() {
+  void _showRejectDialog(String docId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1017,7 +1098,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.pop(context, true);
-                      _rejectReservation();
+                      acceptrequest(docId, 0);
+                      // _rejectReservation();
                       _init();
                     },
                     style: ElevatedButton.styleFrom(
@@ -1076,63 +1158,85 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         yesterday.day == local.day;
   }
 
-  Future<void> getReserve() async {
+  List<GeneralPost> generalPostFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is List) {
+      return jsonData
+          .map((item) => GeneralPost.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    } else if (jsonData is Map) {
+      return [GeneralPost.fromJson(Map<String, dynamic>.from(jsonData))];
+    } else {
+      throw Exception("Unexpected JSON format");
+    }
+  }
+
+  Future<DogDetailsPost?> getdog(int dogId) async {
     try {
-      var res = await http.get(Uri.parse("$url/reserve/${box.read("email")}"));
+      log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
       if (res.statusCode == 200) {
-        reserveList = reserveClinicPostFromJson(res.body);
-
-        reserveList.sort((a, b) => b.date.compareTo(a.date));
-
-        todayList.clear();
-        yesterdayList.clear();
-        earlierList.clear();
-
-        for (var item in reserveList) {
-          final date = item.date.toLocal();
-          if (isToday(date)) {
-            todayList.add(item);
-          } else if (isYesterday(date)) {
-            yesterdayList.add(item);
-          } else {
-            earlierList.add(item);
-          }
+        final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
+        if (dogList.isNotEmpty) {
+          return dogList.first;
         }
+        return null; // กรณีไม่มีข้อมูล
+      } else {
+        log("❌ Failed to load dog: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching dog info: $e");
+      return null;
+    }
+  }
 
-        todayList.sort((a, b) => b.date.compareTo(a.date));
-        yesterdayList.sort((a, b) => b.date.compareTo(a.date));
-        earlierList.sort((a, b) => b.date.compareTo(a.date));
+  Future<void> getGeneral(String generalEmail) async {
+    try {
+      var res = await http.get(Uri.parse("$url/general/$generalEmail"));
+      if (res.statusCode == 200) {
+        generalList = generalPostFromJson(res.body);
 
-        for (var item in todayList) {
-          print('วันนี้: ${item.username} เวลา ${item.date.toLocal()}');
+        if (generalList.isNotEmpty) {
+          log(generalList[0].name);
+          log(generalList[0].phone);
+          log(generalList[0].image);
+        } else {
+          log("⚠️ generalList is empty");
         }
 
         setState(() {
           isLoading = false;
-          getReserveBook(reserveList[0].reserveId);
         });
+        log("✅ Loaded successfully: ${res.statusCode}");
       } else {
-        log("Failed to load: ${res.statusCode}");
+        log("❌ Failed to load: ${res.statusCode}");
       }
     } catch (e) {
       log("Error: $e");
     }
   }
 
-  Future<void> getReserveBook(int reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reservebookingList = reservebookingFromJson(res.body);
-      for (var data in reserveList) {
-        // log(data.reserveId.toString());
+  Future<Map<String, dynamic>?> getReserveBook(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          data['docId'] = doc.id; // ✅ เพิ่มบรรทัดนี้เพื่อฝัง docId ใน Map
+          return data;
+        }
+      } else {
+        log('❌ No document found for docId=$docId');
       }
-      setState(() {
-        isLoading = false;
-      });
-      // _showAppointmentPopup(context, reservebookingList.first);
-    } else {
-      log("Failed to load: ${res.statusCode}");
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
     }
+    return null;
   }
 
   String formatshowTime(String isoDate) {
@@ -1161,6 +1265,55 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     final minute = date.minute.toString().padLeft(2, '0');
 
     return 'เวลา $hour:$minute วันที่ $day $month $year';
+  }
+
+  // Helper function สำหรับจัดการวันที่ - ใช้ฟังก์ชัน formatThaiDateTime ที่มีอยู่
+  String _formatDateString(dynamic dateValue) {
+    try {
+      if (dateValue == null) return 'ไม่ระบุ';
+
+      DateTime dateTime;
+      if (dateValue is String) {
+        dateTime = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        dateTime = dateValue;
+      } else if (dateValue is Timestamp) {
+        dateTime = dateValue.toDate();
+      } else {
+        return 'รูปแบบวันที่ไม่ถูกต้อง';
+      }
+
+      return formatThaiDateTime(dateTime); // ใช้ฟังก์ชันที่มีอยู่
+    } catch (e) {
+      log("❌ Error formatting date: $e");
+      return 'ไม่สามารถแสดงวันที่ได้';
+    }
+  }
+
+// ฟังก์ชัน _formatDate และ formatThaiDateTime ที่มีอยู่แล้ว
+  String _formatDate(dynamic dateValue) {
+    try {
+      if (dateValue == null) return 'ไม่ระบุ';
+
+      DateTime dateTime;
+      if (dateValue is String) {
+        dateTime = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        dateTime = dateValue;
+      } else if (dateValue is Timestamp) {
+        dateTime = dateValue.toDate();
+      } else {
+        return 'รูปแบบเวลาไม่ถูกต้อง';
+      }
+
+      String hour = dateTime.hour.toString().padLeft(2, '0');
+      String minute = dateTime.minute.toString().padLeft(2, '0');
+
+      return '$hour:$minute น.';
+    } catch (e) {
+      log("❌ Error formatting time: $e");
+      return 'ไม่สามารถแสดงเวลาได้';
+    }
   }
 
   String formatThaiDateTime(DateTime date) {
@@ -1192,17 +1345,16 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   Future<void> _init() async {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
-    await getReserve();
+    // await getReserve();
   }
 
-  Future<void> _openBookingDetail(int reserveId) async {
+  Future<void> _openBookingDetail(String docid) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (_) => BookingdetailPage(reserveID: reserveId)),
+      MaterialPageRoute(builder: (_) => BookingdetailPage(docid: docid)),
     );
     if (result == true) {
-      await getReserve(); // รีโหลดข้อมูลใหม่ตอนกลับมาหน้านี้
+      // await getReserve();
       setState(() {});
     }
   }
