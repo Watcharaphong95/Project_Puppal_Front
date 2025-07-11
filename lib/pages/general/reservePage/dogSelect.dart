@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,6 +10,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/fireStoreReserveGet.dart';
 import 'package:puppal_application/model/reserveDogList.dart';
 import 'package:puppal_application/model/reserveDogListPostReq.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
@@ -315,6 +317,7 @@ class _DogselectPageState extends State<DogselectPage> {
       itemCount: filterDogs.length,
       itemBuilder: (context, index) {
         final dog = filterDogs[index];
+        // glksdopgjkrsiojgoir
         final isBooked = dog.status == 0;
 
         return Container(
@@ -341,6 +344,7 @@ class _DogselectPageState extends State<DogselectPage> {
                             vaccineName: '',
                             date: widget.date,
                             aid: 0,
+                            reserveId: null,
                           ));
                     },
               borderRadius: BorderRadius.circular(16),
@@ -536,7 +540,32 @@ class _DogselectPageState extends State<DogselectPage> {
           .map<ReserveDoglist>((e) => ReserveDoglist.fromJson(e))
           .toList();
       filterDogs = List<ReserveDoglist>.from(dogs);
-      // log(res.body);
+    }
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reserve')
+        .where('generalEmail', isEqualTo: box.read('email'))
+        .get();
+
+    List<ReserveAppointmentFireStore> appointments = snapshot.docs
+        .map((doc) => ReserveAppointmentFireStore.fromJson(doc.data(), doc.id))
+        .toList();
+
+    updateDogStatusByDate(dogs, appointments, widget.date);
+  }
+
+  void updateDogStatusByDate(List<ReserveDoglist> dogs,
+      List<ReserveAppointmentFireStore> appointments, DateTime selectedDate) {
+    for (var dog in dogs) {
+      // Check if this dog has an appointment on selectedDate
+      bool hasAppointment = appointments.any((appointment) {
+        return appointment.dogId == dog.dogId.toString() &&
+            appointment.date.toLocal().year == selectedDate.year &&
+            appointment.date.toLocal().month == selectedDate.month &&
+            appointment.date.toLocal().day == selectedDate.day;
+      });
+
+      dog.status = hasAppointment ? 0 : 1;
     }
   }
 

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,10 +10,14 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/dogAppointmentEmailGet.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
+import 'package:puppal_application/model/dogsIdGet.dart';
+import 'package:puppal_application/model/fireStoreReserveGet.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -23,6 +29,7 @@ import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:puppal_application/pages/general/reservePage/dogSelect.dart';
 import 'package:puppal_application/pages/general/reservePage/reserveInfo.dart';
 import 'package:puppal_application/pages/login/index.dart';
+import 'package:puppal_application/services/changeNotifier.dart';
 import 'package:puppal_application/testFireStore.dart';
 import 'package:puppal_application/testNotification.dart';
 import 'package:shimmer/shimmer.dart';
@@ -40,6 +47,9 @@ class GeneralmainPage extends StatefulWidget {
 class _GeneralmainPageState extends State<GeneralmainPage> {
   late double screenWidth;
   late double screenHeight;
+
+  late StreamSubscription listener;
+
   final box = GetStorage();
 
   bool _loadingData = true;
@@ -50,8 +60,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   var _focusedDay = DateTime.now();
   var events = [];
 
-  List<AppointmentGetEmail> appointment = [];
+  List<DogsIdGet> dogData = [];
+  // List<AppointmentGet> appointmentData = [];
+
+  List<AppointmentGetEmail> appointmentAll = [];
   Map<DateTime, List<Dog>> eventMap = {};
+
+  var db = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -63,7 +78,14 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     log('focusDay ${box.read('focusedDay')}');
     log(box.read('generalImage'));
     init();
+    startRealtimeGet();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    stopRealTime(); // 👈 Stop the listener when page is destroyed
+    super.dispose();
   }
 
   void init() async {
@@ -81,419 +103,431 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'หน้าหลัก',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Color(0xFF916B44),
-      ),
-      drawer: Drawer(
-        child: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/indexBg.png'),
-              fit: BoxFit.cover,
-            ),
+    return ChangeNotifierProvider(
+      create: (_) {
+        var provider = ReserveProvider();
+        provider.startListening();
+        log(provider.toString());
+        return provider;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            'หน้าหลัก',
+            style: TextStyle(color: Colors.white),
           ),
+          backgroundColor: Color(0xFF916B44),
+        ),
+        drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+              image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(2, 2),
-                ),
-              ],
             ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.85),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Color(0xFF916b44),
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipOval(
+                          child: Image.network(
+                            box.read('generalImage'),
+                            width: screenWidth * 0.2,
+                            height: screenWidth * 0.2,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: screenWidth * 0.2,
+                                  height: screenWidth * 0.2,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          box.read('generalName') ?? "ผู้ใช้งาน",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          box.read('generalImage'),
-                          width: screenWidth * 0.2,
-                          height: screenWidth * 0.2,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                width: screenWidth * 0.2,
-                                height: screenWidth * 0.2,
-                                color: Colors.white,
-                              ),
-                            );
+                  ListTile(
+                    leading: Icon(
+                      FontAwesomeIcons.house,
+                      color: Color(0xFF916b44),
+                    ),
+                    title: Text(
+                      'หน้าหลัก',
+                      style: TextStyle(
+                        color: Color(0xFF916b44),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(FontAwesomeIcons.solidBell,
+                        color: Color(0xFF916b44)),
+                    title: Text('การแจ้งเตือน'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralnotificationPage());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
+                    title: Text('สุนัข'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneraldogPage());
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(FontAwesomeIcons.syringe,
+                        color: Color(0xFF916b44)),
+                    title: Text('ประวัติการฉีดยา'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralrecordsearchPage());
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(FontAwesomeIcons.userLarge,
+                        color: Color(0xFF916b44)),
+                    title: Text('โปรไฟล์'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralprofilePage());
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
+                    title: Text('คู่มือ'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralguidePage());
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                    title: Text('ตั้งค่า'),
+                    onTap: () {
+                      Get.to(() => TestfirestorePage());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+                    title: Text('สลับโหมด'),
+                    onTap: () async {
+                      var resClinic = await http.get(
+                          Uri.parse("$url/clinic/name/${box.read('email')}"));
+                      if (resClinic.statusCode == 200) {
+                        showAlert(
+                          title: 'สลับไปยังบัญชีคลินิก?',
+                          message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
+                          onConfirm: () {
+                            box.write('clinicName',
+                                jsonDecode(resClinic.body)['name']);
+                            box.write('clinicImage',
+                                jsonDecode(resClinic.body)['image']);
+                            log('Name ${box.read('clinicName')}');
+                            Get.offAll(() => ClinicmainPage());
                           },
+                        );
+                      } else {
+                        showAlert(
+                          title: 'คุณยังไม่มีบัญชีคลินิก!',
+                          message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
+                          onConfirm: () {
+                            Get.back();
+                            Get.to(() => RegisterclinicgooglePage());
+                          },
+                        );
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(FontAwesomeIcons.doorOpen,
+                        color: Colors.redAccent),
+                    title: Text('ออกจากระบบ'),
+                    onTap: () {
+                      showAlert(
+                        title: 'ออกจากระบบ?',
+                        message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                        onConfirm: () {
+                          box.erase();
+                          Get.offAll(() => IndexPage());
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        body: _loadingData
+            ? Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Container(
+                  height: screenHeight * 0.9,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage('assets/images/indexBg.png'),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                            Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                  ),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: screenHeight * 0.01,
+                      ),
+                      Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFEF7FF),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: screenWidth * 0.9,
+                            child: TableCalendar(
+                              locale: 'th_TH',
+                              firstDay: DateTime(2020, 1, 1),
+                              lastDay: DateTime(DateTime.now().year + 10),
+                              focusedDay: _focusedDay,
+                              headerStyle: HeaderStyle(
+                                formatButtonVisible: false,
+                                titleCentered: true,
+                              ),
+                              calendarStyle: CalendarStyle(
+                                todayDecoration: BoxDecoration(
+                                    color: Color(0xFFE6C29C),
+                                    shape: BoxShape.circle),
+                                selectedDecoration: BoxDecoration(
+                                    color: Color(0xFFDBA871),
+                                    shape: BoxShape.circle),
+                              ),
+                              selectedDayPredicate: (day) {
+                                return isSameDay(_selectedDay, day);
+                              },
+                              onDaySelected: (selectedDay, focusedDay) {
+                                setState(() {
+                                  _focusedDay = focusedDay;
+                                  _selectedDay = selectedDay;
+                                  box.write('focusedDay', focusedDay);
+                                  events = getEventsForDay(_selectedDay);
+                                });
+                              },
+                              onPageChanged: (focusedDay) {
+                                _focusedDay = focusedDay;
+                              },
+                              eventLoader: getEventsForDay,
+                              calendarBuilders: CalendarBuilders(
+                                markerBuilder: (context, date, events) {
+                                  if (events.isEmpty) return SizedBox.shrink();
+
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: events.map((event) {
+                                      Color dotColor;
+
+                                      // Example logic based on event.status
+                                      switch ((event as Dog).status) {
+                                        case 0:
+                                          dotColor = Colors.red;
+                                          break;
+                                        case 1:
+                                          dotColor = Colors.yellow.shade600;
+                                          break;
+                                        case 2:
+                                          dotColor = Colors.lightBlueAccent;
+                                          break;
+                                        case 3:
+                                          dotColor = Colors.lightGreenAccent;
+                                          break;
+                                        default:
+                                          dotColor = Colors.grey;
+                                      }
+
+                                      return Container(
+                                        width: 6,
+                                        height: 6,
+                                        margin: EdgeInsets.symmetric(
+                                            horizontal: 0.5),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: dotColor,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        box.read('generalName') ?? "ผู้ใช้งาน",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Divider(),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.1,
+                            vertical: screenHeight * 0.005),
+                        child: Row(
+                          children: [
+                            Text(
+                              DateFormat('d MMMM y', 'th').format(_selectedDay),
+                              style: TextStyle(
+                                  fontSize: 24, fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.025),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                                0, 0, 0, screenHeight * 0.05),
+                            child: Column(
+                              children: [
+                                events.isNotEmpty
+                                    ? Column(
+                                        children: events.map((e) {
+                                          return Card(
+                                            elevation: 2,
+                                            child: InkWell(
+                                              onTap: () {
+                                                e.status != 0
+                                                    ? showReserveInfoAlert(
+                                                        context, e)
+                                                    : Get.to(() =>
+                                                        ClinicsearchPage(
+                                                          dogId: e.dogId,
+                                                          vaccineName: e
+                                                              .vaccines
+                                                              .join(', '),
+                                                          date: _selectedDay,
+                                                          aid: e.aid,
+                                                          reserveId:
+                                                              e.reserveId,
+                                                        ));
+                                                // log(e.dogId.toString());
+                                              },
+                                              child: ListTile(
+                                                title: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    dogInfoCard(e),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      )
+                                    : Row(
+                                        children: [
+                                          Container(
+                                            width: screenWidth * 0.015,
+                                            height: screenHeight * 0.03,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                            ),
+                                          ),
+                                          Text(
+                                            '  ไม่มีนัดวันนี้',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                color: Color(0xFF916B44)),
+                                          ),
+                                        ],
+                                      ),
+                                Card(
+                                  elevation: 2,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Get.to(() => DogselectPage(
+                                            date: _selectedDay,
+                                          ));
+                                    },
+                                    child: ListTile(
+                                      title: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            FontAwesomeIcons.plus,
+                                            color: Colors.grey,
+                                          ),
+                                          Text(
+                                            'จองคลินิก',
+                                            style:
+                                                TextStyle(color: Colors.grey),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                ListTile(
-                  leading: Icon(
-                    FontAwesomeIcons.house,
-                    color: Color(0xFF916b44),
-                  ),
-                  title: Text(
-                    'หน้าหลัก',
-                    style: TextStyle(
-                      color: Color(0xFF916b44),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.solidBell,
-                      color: Color(0xFF916b44)),
-                  title: Text('การแจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralnotificationPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
-                  title: Text('สุนัข'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneraldogPage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
-                  title: Text('ประวัติการฉีดยา'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralrecordsearchPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.userLarge,
-                      color: Color(0xFF916b44)),
-                  title: Text('โปรไฟล์'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralprofilePage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
-                  title: Text('คู่มือ'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralguidePage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                  title: Text('ตั้งค่า'),
-                  onTap: () {
-                    Get.to(() => TestfirestorePage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                  title: Text('สลับโหมด'),
-                  onTap: () async {
-                    var resClinic = await http.get(
-                        Uri.parse("$url/clinic/name/${box.read('email')}"));
-                    if (resClinic.statusCode == 200) {
-                      showAlert(
-                        title: 'สลับไปยังบัญชีคลินิก?',
-                        message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
-                        onConfirm: () {
-                          box.write(
-                              'clinicName', jsonDecode(resClinic.body)['name']);
-                          box.write('clinicImage',
-                              jsonDecode(resClinic.body)['image']);
-                          log('Name ${box.read('clinicName')}');
-                          Get.offAll(() => ClinicmainPage());
-                        },
-                      );
-                    } else {
-                      showAlert(
-                        title: 'คุณยังไม่มีบัญชีคลินิก!',
-                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
-                        onConfirm: () {
-                          Get.back();
-                          Get.to(() => RegisterclinicgooglePage());
-                        },
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.doorOpen, color: Colors.redAccent),
-                  title: Text('ออกจากระบบ'),
-                  onTap: () {
-                    showAlert(
-                      title: 'ออกจากระบบ?',
-                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
-                        box.erase();
-                        Get.offAll(() => IndexPage());
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: _loadingData
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Container(
-                height: screenHeight * 0.9,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage('assets/images/indexBg.png'),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: screenHeight * 0.01,
-                    ),
-                    Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFEF7FF),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: SizedBox(
-                          width: screenWidth * 0.9,
-                          child: TableCalendar(
-                            locale: 'th_TH',
-                            firstDay: DateTime(2020, 1, 1),
-                            lastDay: DateTime(DateTime.now().year + 10),
-                            focusedDay: _focusedDay,
-                            headerStyle: HeaderStyle(
-                              formatButtonVisible: false,
-                              titleCentered: true,
-                            ),
-                            calendarStyle: CalendarStyle(
-                              todayDecoration: BoxDecoration(
-                                  color: Color(0xFFE6C29C),
-                                  shape: BoxShape.circle),
-                              selectedDecoration: BoxDecoration(
-                                  color: Color(0xFFDBA871),
-                                  shape: BoxShape.circle),
-                            ),
-                            selectedDayPredicate: (day) {
-                              return isSameDay(_selectedDay, day);
-                            },
-                            onDaySelected: (selectedDay, focusedDay) {
-                              setState(() {
-                                _focusedDay = focusedDay;
-                                _selectedDay = selectedDay;
-                                box.write('focusedDay', focusedDay);
-                                events = getEventsForDay(_selectedDay);
-                              });
-                            },
-                            onPageChanged: (focusedDay) {
-                              _focusedDay = focusedDay;
-                            },
-                            eventLoader: getEventsForDay,
-                            calendarBuilders: CalendarBuilders(
-                              markerBuilder: (context, date, events) {
-                                if (events.isEmpty) return SizedBox.shrink();
-
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: events.map((event) {
-                                    Color dotColor;
-
-                                    // Example logic based on event.status
-                                    switch ((event as Dog).status) {
-                                      case 0:
-                                        dotColor = Colors.red;
-                                        break;
-                                      case 1:
-                                        dotColor = Colors.yellow.shade600;
-                                        break;
-                                      case 2:
-                                        dotColor = Colors.lightBlueAccent;
-                                        break;
-                                      case 3:
-                                        dotColor = Colors.lightGreenAccent;
-                                        break;
-                                      default:
-                                        dotColor = Colors.grey;
-                                    }
-
-                                    return Container(
-                                      width: 6,
-                                      height: 6,
-                                      margin:
-                                          EdgeInsets.symmetric(horizontal: 0.5),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: dotColor,
-                                      ),
-                                    );
-                                  }).toList(),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Divider(),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.1,
-                          vertical: screenHeight * 0.005),
-                      child: Row(
-                        children: [
-                          Text(
-                            DateFormat('d MMMM y', 'th').format(_selectedDay),
-                            style: TextStyle(
-                                fontSize: 24, fontStyle: FontStyle.italic),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.025),
-                        child: Padding(
-                          padding:
-                              EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
-                          child: Column(
-                            children: [
-                              events.isNotEmpty
-                                  ? Column(
-                                      children: events.map((e) {
-                                        return Card(
-                                          elevation: 2,
-                                          child: InkWell(
-                                            onTap: () {
-                                              e.status != 0
-                                                  ? showReserveInfoAlert(
-                                                      context, e)
-                                                  : Get.to(
-                                                      () => ClinicsearchPage(
-                                                            dogId: e.dogId,
-                                                            vaccineName: e
-                                                                .vaccines
-                                                                .join(', '),
-                                                            date: _selectedDay,
-                                                            aid: e.aid,
-                                                          ));
-                                              // log(e.dogId.toString());
-                                            },
-                                            child: ListTile(
-                                              title: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  dogInfoCard(e),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    )
-                                  : Row(
-                                      children: [
-                                        Container(
-                                          width: screenWidth * 0.015,
-                                          height: screenHeight * 0.03,
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(50),
-                                          ),
-                                        ),
-                                        Text(
-                                          '  ไม่มีนัดวันนี้',
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              color: Color(0xFF916B44)),
-                                        ),
-                                      ],
-                                    ),
-                              Card(
-                                elevation: 2,
-                                child: InkWell(
-                                  onTap: () {
-                                    Get.to(() => DogselectPage(
-                                          date: _selectedDay,
-                                        ));
-                                  },
-                                  child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          FontAwesomeIcons.plus,
-                                          color: Colors.grey,
-                                        ),
-                                        Text(
-                                          'จองคลินิก',
-                                          style: TextStyle(color: Colors.grey),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -600,16 +634,18 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
             SizedBox(
               height: 5,
             ),
-            SizedBox(
-              width: screenWidth * 0.5,
-              child: Text(
-                e.vaccines.length != 0
-                    ? 'วัคซีน: ${e.vaccines.join(', ')}'
-                    : '',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            if (e.vaccines != null &&
+                e.vaccines.isNotEmpty &&
+                e.vaccines
+                    .any((vaccine) => vaccine.toString().trim().isNotEmpty))
+              SizedBox(
+                width: screenWidth * 0.5,
+                child: Text(
+                  'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
-            ),
             SizedBox(
               width: screenWidth * 0.55,
               child: Row(
@@ -631,6 +667,54 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         ),
       ],
     );
+  }
+
+  void startRealtimeGet() {
+    stopRealTime(); // stop any previous listener
+
+    final colRef = db.collection("reserve").where("generalEmail",
+        isEqualTo: box.read("email")); // collection, not doc
+
+    context.read<AppData>().listener = colRef.snapshots().listen(
+      (querySnapshot) {
+        for (var change in querySnapshot.docChanges) {
+          var docId = change.doc.id;
+          var data = change.doc.data();
+
+          if (data != null && data.containsKey('status')) {
+            int newStatus = data['status'];
+            log("🔄 Change type: ${change.type}");
+            // log("📄 Updated document: ${change.doc.id}");
+            // log("📝 Data: $data");
+            eventMap.forEach((date, dogList) {
+              for (int i = 0; i < dogList.length; i++) {
+                if (dogList[i].reserveId == docId) {
+                  dogList[i].status = newStatus;
+                  // log("✅ Updated status of Dog with reserveId $docId to $newStatus");
+                  setState(() {});
+                  break;
+                }
+              }
+            });
+          }
+        }
+      },
+      onError: (error) => log("❌ Listen failed: $error"),
+    );
+  }
+
+  void stopRealTime() {
+    final appData = context.read<AppData>();
+
+    if (appData.listener != null) {
+      appData.listener?.cancel().then((_) {
+        log('🔕 Listener is stopped');
+      }).catchError((e) {
+        log('⚠️ Failed to stop listener: $e');
+      });
+    } else {
+      log('ℹ️ No listener was running');
+    }
   }
 
   void showReserveInfoAlert(BuildContext context, dynamic e) {
@@ -1039,11 +1123,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Future<void> cancleReserve(int reserveId) async {
-    var res = await http.put(
-      Uri.parse("$url/reserve/cancleReserve/$reserveId"),
-    );
-    log(res.statusCode.toString());
+  Future<void> cancleReserve(String reserveId) async {
+    FirebaseFirestore.instance
+        .collection('reserve')
+        .doc(reserveId)
+        .update({'status': 0});
   }
 
   Future<void> openMap(double lat, double lng) async {
@@ -1058,20 +1142,254 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   Future<void> getAppointmentEmail() async {
-    appointment.clear();
-    List<AppointmentGetEmail> appointmentGetList = [];
-    List<AppointmentGetEmail> reserveList = [];
+    final snapshot = await FirebaseFirestore.instance
+        .collection('reserve')
+        .where('generalEmail', isEqualTo: box.read('email'))
+        .get();
 
-    var res2 =
-        await http.get(Uri.parse("$url/reserve/general/${box.read('email')}"));
-    if (res2.statusCode == 200) {
-      var jsonData2 = json.decode(res2.body);
-      reserveList.addAll(jsonData2
-          .map<AppointmentGetEmail>((e) => AppointmentGetEmail.fromJson(e)));
+    List<ReserveAppointmentFireStore> appointments = snapshot.docs
+        .map((doc) => ReserveAppointmentFireStore.fromJson(doc.data(), doc.id))
+        .toList();
 
-      appointment.addAll([...reserveList]);
-      buildEventMap(appointment);
+    final groupedAppointments = groupByDate(appointments);
+
+    List<int> listDogId = []; // Use Set to avoid duplicates
+    List<int?> listAid = [];
+    List<String> listClinicEmail = [];
+
+    groupedAppointments.forEach((date, list) {
+      for (var app in list) {
+        listDogId.add(int.parse(app.dogId));
+
+        listAid.add(int.tryParse(app.appointmentAid));
+
+        listClinicEmail.add(app.clinicEmail);
+      }
+    });
+
+    final resAppointment = await http.post(
+      Uri.parse("$url/appointment/dataList"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: json.encode({
+        "email": box.read('email'),
+        "dogId": listDogId.toList(),
+        "aid": listAid.toList(),
+        "clinicEmail": listClinicEmail.toList()
+      }),
+    );
+    var jsonData = jsonDecode(resAppointment.body);
+    appointmentAll = mergeAppointments(
+        firestoreData: appointments,
+        dogs: jsonData['dogs'],
+        appointments: jsonData['appointments'],
+        clinics: jsonData['clinics']);
+
+    for (var a in appointmentAll) {
+      for (var d in a.dogs) {
+        log(jsonEncode(d.toJson()));
+      }
     }
+
+    buildEventMap(appointmentAll);
+  }
+
+  List<AppointmentGetEmail> mergeAppointments({
+    required List<ReserveAppointmentFireStore> firestoreData,
+    required List<dynamic> dogs,
+    required List<dynamic> appointments,
+    required List<dynamic> clinics,
+  }) {
+    // Initialize grouped appointments by date
+    final Map<DateTime, List<Dog>> grouped = {};
+
+    // Convert dynamic date to DateTime (truncate to day)
+    DateTime toDate(dynamic date,
+        {required String source, required String id}) {
+      if (date is DateTime) {
+        return DateTime(date.year, date.month, date.day);
+      }
+      if (date is String) {
+        final dt = DateTime.tryParse(date);
+        if (dt != null) {
+          return DateTime(dt.year, dt.month, dt.day);
+        }
+      }
+      return DateTime(2000, 1, 1); // Fallback date
+    }
+
+    // Find a key in grouped within 1 day of target date
+    DateTime? findCloseDateKey(DateTime target) {
+      for (var key in grouped.keys) {
+        if (key.difference(target).inDays.abs() <= 1) {
+          final midTimestamp =
+              (key.millisecondsSinceEpoch + target.millisecondsSinceEpoch) ~/ 2;
+          return DateTime.fromMillisecondsSinceEpoch(midTimestamp);
+        }
+      }
+      return null;
+    }
+
+    // Add dog to grouped appointments
+    void addDogToGroup(DateTime date, Dog dog) {
+      final closeKey = findCloseDateKey(date);
+      final groupKey = closeKey ?? date;
+
+      if (closeKey != null) {
+        final keysToRemove = grouped.keys
+            .where((k) => k.difference(groupKey).inDays.abs() <= 1)
+            .toList();
+        final mergedDogs = <Dog>[];
+        for (var key in keysToRemove) {
+          mergedDogs.addAll(grouped[key]!);
+          grouped.remove(key);
+        }
+        mergedDogs.add(dog);
+        grouped[groupKey] = mergedDogs;
+      } else {
+        grouped.putIfAbsent(groupKey, () => []).add(dog);
+      }
+    }
+
+    // Create lookup maps for O(1) access
+    final dogMap = {for (var d in dogs) d['dogId'] as int: d};
+    final appointmentMap = {for (var a in appointments) a['aid'] as int: a};
+    final clinicMap = {for (var c in clinics) c['user_email'] as String: c};
+
+    // Process Firestore data
+    for (final fs in firestoreData) {
+      // Parse dogId
+      int? dogId;
+      try {
+        dogId = int.parse(fs.dogId);
+      } catch (e) {
+        log('Error parsing dogId: ${fs.dogId} for docId: ${fs.docId}');
+        continue;
+      }
+
+      // Get dog, appointment, and clinic data
+      final dogData = dogMap[dogId];
+      if (dogData == null) {
+        log('⚠️ Missing dogData for dogId=$dogId (docId=${fs.docId})');
+      }
+      int? aid;
+      Map<String, dynamic>? appointmentData;
+      if (fs.appointmentAid != null) {
+        aid = int.tryParse(fs.appointmentAid);
+        appointmentData = aid != null ? appointmentMap[aid] : null;
+      }
+      final clinicData = clinicMap[fs.clinicEmail];
+
+      // Ensure date is a valid DateTime for formatting
+      final dateTime = fs.date is DateTime
+          ? fs.date as DateTime
+          : DateTime.tryParse(fs.date as String);
+      if (dateTime == null) {
+        continue;
+      }
+
+      // Create Dog object
+      final dog = Dog(
+        reserveId: fs.docId,
+        aid: aid,
+        status: fs.status,
+        dogId: dogData != null ? dogData['dogId'] as int : dogId,
+        name: dogData != null ? dogData['name'] as String : 'Unknown Dog',
+        image: dogData != null ? dogData['image'] as String : '',
+        birthday: dogData != null ? dogData['birthday'] as String : '',
+        vaccines: aid != null && appointmentData != null
+            ? [appointmentData['vaccine'] as String]
+            : [''],
+        time: DateFormat('HH:mm').format(dateTime),
+        clinicName: clinicData != null ? clinicData['name'] as String : '',
+        clinicImage: clinicData != null ? clinicData['image'] as String : '',
+        clinicPhone: clinicData != null ? clinicData['phone'] as String : '',
+        clinicLat: clinicData != null ? clinicData['lat'] as String : '',
+        clinicLng: clinicData != null ? clinicData['lng'] as String : '',
+      );
+
+      // Group by date
+      final date = toDate(fs.date, source: 'firestoreData', id: fs.docId);
+      addDogToGroup(date, dog);
+    }
+
+    // Process non-Firestore appointments with status=0
+    final firestoreAidSet = firestoreData
+        .map((fs) => int.tryParse(fs.appointmentAid))
+        .whereType<int>()
+        .toSet();
+
+    for (final appointment in appointments) {
+      final aid = appointment['aid'] as int?;
+      if (aid != null && firestoreAidSet.contains(aid)) continue;
+
+      final status = appointment['status'] as int? ?? 0;
+      if (status != 0) continue;
+
+      final dogData = dogMap[appointment['dogId'] as int];
+      if (dogData == null) {
+        log('Missing dog data for dogId: ${appointment['dogId']} in appointment aid: $aid');
+        continue;
+      }
+
+      // Safely handle clinicEmail
+      final clinicEmail = appointment['clinicEmail'] as String?;
+      final clinicData = clinicEmail != null ? clinicMap[clinicEmail] : null;
+
+      // Validate date
+      if (appointment['date'] is! DateTime && appointment['date'] is! String) {
+        log('Invalid date type: ${appointment['date'].runtimeType} for aid: $aid');
+        continue;
+      }
+
+      // Create Dog object
+      final dog = Dog(
+        reserveId: null,
+        aid: aid,
+        status: status,
+        dogId: dogData['dogId'] as int,
+        name: dogData['name'] as String,
+        image: dogData['image'] as String,
+        birthday: dogData['birthday'] as String,
+        vaccines: appointment['vaccine'] != null
+            ? [appointment['vaccine'] as String]
+            : [''],
+        time: '',
+        clinicName: clinicData != null ? clinicData['name'] as String : '',
+        clinicImage: clinicData != null ? clinicData['image'] as String : '',
+        clinicPhone: clinicData != null ? clinicData['phone'] as String : '',
+        clinicLat: clinicData != null ? clinicData['lat'] as String : '',
+        clinicLng: clinicData != null ? clinicData['lng'] as String : '',
+      );
+
+      // Group by date
+      final date = toDate(appointment['date'],
+          source: 'appointments', id: aid?.toString() ?? 'null');
+      addDogToGroup(date, dog);
+    }
+
+    // Convert to AppointmentGetEmail list
+    return grouped.entries
+        .map((e) => AppointmentGetEmail(date: e.key, dogs: e.value))
+        .toList();
+  }
+
+  Map<String, List<ReserveAppointmentFireStore>> groupByDate(
+      List<ReserveAppointmentFireStore> appointments) {
+    final formatter = DateFormat('yyyy-MM-dd');
+
+    Map<String, List<ReserveAppointmentFireStore>> grouped = {};
+
+    for (var appointment in appointments) {
+      String dateKey = formatter.format(appointment.date);
+
+      if (grouped.containsKey(dateKey)) {
+        grouped[dateKey]!.add(appointment);
+      } else {
+        grouped[dateKey] = [appointment];
+      }
+    }
+
+    return grouped;
   }
 
   List<Dog> getEventsForDay(DateTime day) {

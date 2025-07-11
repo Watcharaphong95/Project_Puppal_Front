@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
@@ -32,7 +34,10 @@ Future<void> main() async {
   Get.put(RegisterDogInjectionCtl());
   Get.put(injectionRecordList());
 
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (_) => AppData(),
+    child: MyApp(),
+  ));
 }
 
 final supabase = Supabase.instance.client;
@@ -61,4 +66,8 @@ class MyApp extends StatelessWidget {
       home: const LoadingcheckPage(),
     );
   }
+}
+
+class AppData with ChangeNotifier {
+  StreamSubscription? listener;
 }
