@@ -666,8 +666,6 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       );
       return;
     }
-
-    // ✅ แปลงวันที่ไทย -> ค.ศ.
     DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
         .parse(nextDateController.text);
     DateTime parsedDate =

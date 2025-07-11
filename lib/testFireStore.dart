@@ -38,14 +38,14 @@ class _TestfirestorePageState extends State<TestfirestorePage> {
           ),
           FilledButton(
               onPressed: () {
-                readData();
-                // var data = {
-                //   'name': nameCtl.text,
-                //   'message': messageCtl.text,
-                //   'createAt': DateTime.timestamp()
-                // };
+                // readData();
+                var data = {
+                  'name': nameCtl.text,
+                  'message': messageCtl.text,
+                  'createAt': DateTime.timestamp()
+                };
 
-                // db.collection('reserve').doc(docCtl.text).set(data);
+                db.collection('reserve').doc(docCtl.text).set(data);
               },
               child: const Text('Add Data'))
         ],
