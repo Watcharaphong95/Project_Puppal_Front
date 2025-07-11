@@ -388,7 +388,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                           dotColor = Colors.lightBlueAccent;
                                           break;
                                         case 3:
-                                          dotColor = Colors.lightGreenAccent;
+                                          dotColor = Colors.lightGreen.shade400;
                                           break;
                                         default:
                                           dotColor = Colors.grey;
@@ -548,7 +548,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
             width: screenWidth * 0.02,
             height: screenHeight * 0.1,
             decoration: BoxDecoration(
-              color: Colors.yellow,
+              color: Colors.yellow.shade600,
               borderRadius: BorderRadius.circular(50),
             ),
           )
@@ -566,7 +566,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
             width: screenWidth * 0.02,
             height: screenHeight * 0.1,
             decoration: BoxDecoration(
-              color: Colors.lightGreenAccent,
+              color: Colors.lightGreen.shade400,
               borderRadius: BorderRadius.circular(50),
             ),
           )
@@ -681,16 +681,18 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           var docId = change.doc.id;
           var data = change.doc.data();
 
-          if (data != null && data.containsKey('status')) {
+          if (change.type == DocumentChangeType.removed) {
+            eventMap.forEach((date, dogList) {
+              dogList.removeWhere((dog) => dog.reserveId == docId);
+            });
+            setState(() {});
+          } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
             log("🔄 Change type: ${change.type}");
-            // log("📄 Updated document: ${change.doc.id}");
-            // log("📝 Data: $data");
             eventMap.forEach((date, dogList) {
               for (int i = 0; i < dogList.length; i++) {
                 if (dogList[i].reserveId == docId) {
                   dogList[i].status = newStatus;
-                  // log("✅ Updated status of Dog with reserveId $docId to $newStatus");
                   setState(() {});
                   break;
                 }
@@ -971,29 +973,57 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                           child: Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: e.vaccines
-                                .map<Widget>(
-                                  (vaccine) => Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFDBA871).withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
+                            children: e.vaccines != null &&
+                                    e.vaccines.isNotEmpty &&
+                                    e.vaccines.any((vaccine) =>
+                                        vaccine.toString().trim().isNotEmpty)
+                                ? e.vaccines
+                                    .map<Widget>(
+                                      (vaccine) => Container(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
                                           color: Color(0xFFDBA871)
-                                              .withOpacity(0.5)),
-                                    ),
-                                    child: Text(
-                                      vaccine,
-                                      style: TextStyle(
-                                        color: Color(0xFF916B44),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                              .withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                              color: Color(0xFFDBA871)
+                                                  .withOpacity(0.5)),
+                                        ),
+                                        child: Text(
+                                          vaccine,
+                                          style: TextStyle(
+                                            color: Color(0xFF916B44),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                                    )
+                                    .toList()
+                                : [
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFFDBA871).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                            color: Color(0xFFDBA871)
+                                                .withOpacity(0.5)),
+                                      ),
+                                      child: Text(
+                                        'ไม่มี',
+                                        style: TextStyle(
+                                          color: Color(0xFF916B44),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    )
+                                  ],
                           ),
                         ),
                     ],
@@ -1124,10 +1154,28 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   Future<void> cancleReserve(String reserveId) async {
-    FirebaseFirestore.instance
-        .collection('reserve')
-        .doc(reserveId)
-        .update({'status': 0});
+    showLoadingDialog();
+
+    final docRef =
+        FirebaseFirestore.instance.collection('reserve').doc(reserveId);
+    final snapshot = await docRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data();
+      if (data != null &&
+          data['status'] != 0 &&
+          data['appointmentAid'] == null) {
+        await docRef.delete();
+      } else if (data != null && data['status'] != 0) {
+        await docRef.update({'status': 0});
+      } else {
+        log("Reserve already cancelled or invalid data");
+      }
+    } else {
+      log("Document not found");
+    }
+    Get.back();
+    Get.back();
   }
 
   Future<void> openMap(double lat, double lng) async {
@@ -1184,11 +1232,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         appointments: jsonData['appointments'],
         clinics: jsonData['clinics']);
 
-    for (var a in appointmentAll) {
-      for (var d in a.dogs) {
-        log(jsonEncode(d.toJson()));
-      }
-    }
+    // for (var a in appointmentAll) {
+    //   for (var d in a.dogs) {
+    //     log(jsonEncode(d.toJson()));
+    //   }
+    // }
 
     buildEventMap(appointmentAll);
   }
@@ -1752,6 +1800,56 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
       radius: 16,
+    );
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

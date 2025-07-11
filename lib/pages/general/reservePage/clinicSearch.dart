@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -93,7 +94,24 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       ),
       body: _loadingData
           ? Center(
-              child: CircularProgressIndicator(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังค้นหาคลินิก...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             )
           : Container(
               height: screenHeight * 0.9,
@@ -194,293 +212,12 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                     duration: Duration(milliseconds: 300),
                                     curve: Curves.easeInOut,
                                     child: _isDogInfoExpanded
-                                        ? ClipRect(
-                                            child: Align(
-                                              alignment: Alignment.topCenter,
-                                              heightFactor: _isDogInfoExpanded
-                                                  ? 1.0
-                                                  : 0.0,
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                        20, 0, 20, 20),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    // Dog Image with enhanced styling
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(16),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(
-                                                                    0.1),
-                                                            blurRadius: 10,
-                                                            spreadRadius: 0,
-                                                            offset:
-                                                                Offset(0, 3),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(16),
-                                                        child: Image.network(
-                                                          dog[0].image,
-                                                          width:
-                                                              screenWidth * 0.4,
-                                                          height: screenHeight *
-                                                              0.18,
-                                                          fit: BoxFit.cover,
-                                                          loadingBuilder: (context,
-                                                              child,
-                                                              loadingProgress) {
-                                                            if (loadingProgress ==
-                                                                null) {
-                                                              return child;
-                                                            }
-                                                            return Shimmer
-                                                                .fromColors(
-                                                              baseColor: Colors
-                                                                  .grey
-                                                                  .shade300,
-                                                              highlightColor:
-                                                                  Colors.grey
-                                                                      .shade100,
-                                                              child: Container(
-                                                                width:
-                                                                    screenWidth *
-                                                                        0.4,
-                                                                height:
-                                                                    screenHeight *
-                                                                        0.18,
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              16),
-                                                                ),
-                                                              ),
-                                                            );
-                                                          },
-                                                        ),
-                                                      ),
-                                                    ),
-
-                                                    SizedBox(height: 12),
-
-                                                    // Dog Info
-                                                    Container(
-                                                      width: double.infinity,
-                                                      child: Text(
-                                                        dog[0].name,
-                                                        style: TextStyle(
-                                                          fontSize: 20,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              Color(0xFF2C3E50),
-                                                        ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        maxLines: 2,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 8),
-                                                    Container(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 12,
-                                                              vertical: 6),
-                                                      decoration: BoxDecoration(
-                                                        color: Color(0xFFDBA871)
-                                                            .withOpacity(0.1),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                      ),
-                                                      child: Text(
-                                                        'อายุ ${getDogAge(dog[0].birthday)}',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                          color:
-                                                              Color(0xFFDBA871),
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 12),
-
-                                                    // Vaccine Info
-                                                    Container(
-                                                      width: double.infinity,
-                                                      constraints:
-                                                          BoxConstraints(
-                                                        maxHeight:
-                                                            screenHeight * 0.15,
-                                                      ),
-                                                      padding:
-                                                          EdgeInsets.all(12),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors
-                                                            .green.shade50,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                        border: Border.all(
-                                                            color: Colors.green
-                                                                .shade200),
-                                                      ),
-                                                      child:
-                                                          SingleChildScrollView(
-                                                        child: ReadMoreText(
-                                                          widget.vaccineName
-                                                              .split(',')
-                                                              .map((e) =>
-                                                                  '• ${e.trim()}')
-                                                              .join('\n'),
-                                                          trimMode:
-                                                              TrimMode.Line,
-                                                          trimLines: 3,
-                                                          colorClickableText:
-                                                              Colors
-                                                                  .transparent,
-                                                          trimCollapsedText:
-                                                              'แสดงเพิ่มเติม',
-                                                          trimExpandedText:
-                                                              '\n\nย่อข้อความ',
-                                                          style: TextStyle(
-                                                            fontSize: 13,
-                                                            color: Colors
-                                                                .green.shade700,
-                                                          ),
-                                                          moreStyle: TextStyle(
-                                                            fontSize: 13,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors
-                                                                .green.shade600,
-                                                          ),
-                                                          lessStyle: TextStyle(
-                                                            fontSize: 13,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors
-                                                                .red.shade600,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          )
+                                        ? dogInfoExpanded()
                                         : SizedBox.shrink(),
                                   ),
 
                                   // Minimized view
-                                  if (!_isDogInfoExpanded)
-                                    Container(
-                                      padding:
-                                          EdgeInsets.fromLTRB(20, 0, 20, 20),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 0,
-                                                  offset: Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: Image.network(
-                                                dog[0].image,
-                                                width: screenWidth * 0.15,
-                                                height: screenWidth * 0.15,
-                                                fit: BoxFit.cover,
-                                                loadingBuilder: (context, child,
-                                                    loadingProgress) {
-                                                  if (loadingProgress == null) {
-                                                    return child;
-                                                  }
-                                                  return Shimmer.fromColors(
-                                                    baseColor:
-                                                        Colors.grey.shade300,
-                                                    highlightColor:
-                                                        Colors.grey.shade100,
-                                                    child: Container(
-                                                      width: screenWidth * 0.15,
-                                                      height:
-                                                          screenWidth * 0.15,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  dog[0].name,
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF2C3E50),
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                                SizedBox(height: 4),
-                                                Text(
-                                                  'อายุ ${getDogAge(dog[0].birthday)}',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Color(0xFFDBA871),
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                  if (!_isDogInfoExpanded) dogInfoMinimized(),
                                 ],
                               ),
                             ),
@@ -520,7 +257,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       ),
                                       Switch(
                                         value: _currentPosition,
-                                        onChanged: (value) {
+                                        onChanged: (value) async {
                                           setState(() {
                                             _currentPosition = value;
                                             if (_currentPosition) {
@@ -542,89 +279,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                   SizedBox(height: 16),
 
                                   // Search Field
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.05),
-                                          blurRadius: 8,
-                                          spreadRadius: 0,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: TextField(
-                                      controller: searchClinicCtl,
-                                      onChanged: (value) {
-                                        if (_currentPosition) {
-                                          searchClinicCurrentPosition();
-                                        } else {
-                                          searchClinic();
-                                        }
-                                      },
-                                      decoration: InputDecoration(
-                                        hintText: 'ค้นหาคลินิก',
-                                        hintStyle: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontSize: 16,
-                                        ),
-                                        filled: true,
-                                        fillColor: Colors.grey.shade50,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: Color(0xFFDBA871),
-                                            width: 2,
-                                          ),
-                                        ),
-                                        prefixIcon: Container(
-                                          padding: EdgeInsets.all(12),
-                                          child: Icon(
-                                            FontAwesomeIcons.magnifyingGlass,
-                                            color: Color(0xFFDBA871),
-                                            size: 20,
-                                          ),
-                                        ),
-                                        suffixIcon: searchClinicCtl
-                                                .text.isNotEmpty
-                                            ? Container(
-                                                margin: EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey.shade200,
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: IconButton(
-                                                  icon: Icon(
-                                                    Icons.clear,
-                                                    color: Colors.grey.shade600,
-                                                    size: 20,
-                                                  ),
-                                                  onPressed: () {
-                                                    searchClinicCtl.clear();
-                                                    FocusScope.of(context)
-                                                        .unfocus();
-                                                    setState(() {
-                                                      if (_currentPosition) {
-                                                        searchClinicCurrentPosition();
-                                                      } else {
-                                                        searchClinic();
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
+                                  searchBox(context),
                                 ],
                               ),
                             ),
@@ -660,330 +315,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                 ),
                               )
                             else
-                              SafeArea(
-                                child: SizedBox(
-                                  height: _isDogInfoExpanded
-                                      ? screenHeight * 0.19
-                                      : screenHeight * 0.43,
-                                  child: clinics.isEmpty
-                                      ? Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.search_off,
-                                                size: 48,
-                                                color: Colors.grey.shade400,
-                                              ),
-                                              SizedBox(height: 16),
-                                              Text(
-                                                'ไม่พบคลินิกที่ค้นหา',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  color: Colors.grey.shade600,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              SizedBox(height: 8),
-                                              Text(
-                                                'ลองค้นหาด้วยคำค้นอื่น',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey.shade500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : ListView.builder(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          itemCount: clinics.length,
-                                          itemBuilder: (context, index) {
-                                            return Container(
-                                              margin:
-                                                  EdgeInsets.only(bottom: 12),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.08),
-                                                    blurRadius: 12,
-                                                    spreadRadius: 0,
-                                                    offset: Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                  onTap: () {
-                                                    Get.to(() =>
-                                                        ClinictimeselectPage(
-                                                          email: clinics[index]
-                                                              .userEmail,
-                                                          dogId: widget.dogId,
-                                                          distance:
-                                                              clinics[index]
-                                                                  .distanceKm,
-                                                          date: widget.date,
-                                                          vaccineName: widget
-                                                              .vaccineName,
-                                                          aid: widget.aid,
-                                                          reserveId:
-                                                              widget.reserveId,
-                                                        ));
-                                                  },
-                                                  child: Padding(
-                                                    padding: EdgeInsets.all(16),
-                                                    child: Row(
-                                                      children: [
-                                                        // Clinic Image
-                                                        Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                            boxShadow: [
-                                                              BoxShadow(
-                                                                color: Colors
-                                                                    .black
-                                                                    .withOpacity(
-                                                                        0.1),
-                                                                blurRadius: 8,
-                                                                spreadRadius: 0,
-                                                                offset: Offset(
-                                                                    0, 2),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          child: ClipRRect(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                            child:
-                                                                Image.network(
-                                                              clinics[index]
-                                                                  .image,
-                                                              width:
-                                                                  screenWidth *
-                                                                      0.22,
-                                                              height:
-                                                                  screenHeight *
-                                                                      0.1,
-                                                              fit: BoxFit.cover,
-                                                              loadingBuilder:
-                                                                  (context,
-                                                                      child,
-                                                                      loadingProgress) {
-                                                                if (loadingProgress ==
-                                                                    null)
-                                                                  return child;
-                                                                return Shimmer
-                                                                    .fromColors(
-                                                                  baseColor: Colors
-                                                                      .grey
-                                                                      .shade300,
-                                                                  highlightColor:
-                                                                      Colors
-                                                                          .grey
-                                                                          .shade100,
-                                                                  child:
-                                                                      Container(
-                                                                    width:
-                                                                        screenWidth *
-                                                                            0.22,
-                                                                    height:
-                                                                        screenHeight *
-                                                                            0.1,
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: Colors
-                                                                          .white,
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              12),
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ),
-                                                        ),
-
-                                                        SizedBox(width: 16),
-
-                                                        // Clinic Info
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                clinics[index]
-                                                                    .name,
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: Color(
-                                                                      0xFF2C3E50),
-                                                                ),
-                                                                maxLines: 2,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                              ),
-                                                              SizedBox(
-                                                                  height: 6),
-                                                              Container(
-                                                                padding: EdgeInsets
-                                                                    .symmetric(
-                                                                        horizontal:
-                                                                            8,
-                                                                        vertical:
-                                                                            4),
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  color: Colors
-                                                                      .blue
-                                                                      .shade50,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              6),
-                                                                ),
-                                                                child: Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: [
-                                                                    Icon(
-                                                                      Icons
-                                                                          .pin_drop,
-                                                                      color: Colors
-                                                                          .blue
-                                                                          .shade600,
-                                                                      size: 16,
-                                                                    ),
-                                                                    SizedBox(
-                                                                        width:
-                                                                            4),
-                                                                    Text(
-                                                                      '${clinics[index].distanceKm.toStringAsFixed(3)} กม.',
-                                                                      style:
-                                                                          TextStyle(
-                                                                        color: Colors
-                                                                            .blue
-                                                                            .shade600,
-                                                                        fontSize:
-                                                                            13,
-                                                                        fontWeight:
-                                                                            FontWeight.w500,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                  height: 4),
-                                                              Row(
-                                                                children: [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .access_time,
-                                                                    color: Colors
-                                                                        .green
-                                                                        .shade600,
-                                                                    size: 16,
-                                                                  ),
-                                                                  SizedBox(
-                                                                      width: 4),
-                                                                  Text(
-                                                                    'เปิด ${clinics[index].open} - ${clinics[index].close}',
-                                                                    style:
-                                                                        TextStyle(
-                                                                      color: Colors
-                                                                          .green
-                                                                          .shade600,
-                                                                      fontSize:
-                                                                          13,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500,
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-
-                                                        // Arrow Button
-                                                        Container(
-                                                          width: 40,
-                                                          height: 40,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            gradient:
-                                                                LinearGradient(
-                                                              begin: Alignment
-                                                                  .topLeft,
-                                                              end: Alignment
-                                                                  .bottomRight,
-                                                              colors: [
-                                                                Color(
-                                                                    0xFFDBA871),
-                                                                Color(
-                                                                    0xFFCD9A5B),
-                                                              ],
-                                                            ),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20),
-                                                            boxShadow: [
-                                                              BoxShadow(
-                                                                color: Color(
-                                                                        0xFFDBA871)
-                                                                    .withOpacity(
-                                                                        0.3),
-                                                                blurRadius: 8,
-                                                                spreadRadius: 0,
-                                                                offset: Offset(
-                                                                    0, 3),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          child: Icon(
-                                                            Icons
-                                                                .arrow_forward_ios,
-                                                            color: Colors.white,
-                                                            size: 18,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                ),
-                              ),
+                              showClinicResult(),
                           ],
                         ),
                       ],
@@ -995,10 +327,745 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     );
   }
 
+  SafeArea showClinicResult() {
+    return SafeArea(
+      child: SizedBox(
+        height: _isDogInfoExpanded ? screenHeight * 0.19 : screenHeight * 0.43,
+        child: clinics.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 48,
+                      color: Colors.grey.shade400,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'ไม่พบคลินิกที่ค้นหา',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'ลองค้นหาด้วยคำค้นอื่น',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                itemCount: clinics.length,
+                itemBuilder: (context, index) {
+                  final clinic = clinics[index];
+                  final isSpecial = clinic.special == 1;
+                  final isFull = clinic.full == 1;
+                  final isDisabled = isFull && !isSpecial;
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: isDisabled ? Colors.grey.shade200 : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black
+                              .withOpacity(isDisabled ? 0.04 : 0.08),
+                          blurRadius: 12,
+                          spreadRadius: 0,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: isDisabled
+                            ? null
+                            : () {
+                                Get.to(() => ClinictimeselectPage(
+                                      email: clinic.userEmail,
+                                      dogId: widget.dogId,
+                                      distance: clinic.distanceKm,
+                                      date: widget.date,
+                                      vaccineName: widget.vaccineName,
+                                      aid: widget.aid,
+                                      reserveId: widget.reserveId,
+                                      special: isSpecial,
+                                    ));
+                              },
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  // Clinic Image
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          spreadRadius: 0,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: ColorFiltered(
+                                            colorFilter: ColorFilter.mode(
+                                              isDisabled
+                                                  ? Colors.grey
+                                                  : Colors.transparent,
+                                              isDisabled
+                                                  ? BlendMode.saturation
+                                                  : BlendMode.multiply,
+                                            ),
+                                            child: Image.network(
+                                              clinic.image,
+                                              width: screenWidth * 0.22,
+                                              height: screenHeight * 0.1,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return Shimmer.fromColors(
+                                                  baseColor:
+                                                      Colors.grey.shade300,
+                                                  highlightColor:
+                                                      Colors.grey.shade100,
+                                                  child: Container(
+                                                    width: screenWidth * 0.22,
+                                                    height: screenHeight * 0.1,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        // Full overlay
+                                        if (isFull && !isSpecial)
+                                          Positioned.fill(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.black
+                                                    .withOpacity(0.3),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  SizedBox(width: 16),
+
+                                  // Clinic Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          clinic.name,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDisabled
+                                                ? Colors.grey.shade600
+                                                : Color(0xFF2C3E50),
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: isDisabled
+                                                ? Colors.grey.shade100
+                                                : Colors.blue.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.pin_drop,
+                                                color: isDisabled
+                                                    ? Colors.grey.shade500
+                                                    : Colors.blue.shade600,
+                                                size: 16,
+                                              ),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                '${clinic.distanceKm.toStringAsFixed(3)} กม.',
+                                                style: TextStyle(
+                                                  color: isDisabled
+                                                      ? Colors.grey.shade500
+                                                      : Colors.blue.shade600,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              color: isDisabled
+                                                  ? Colors.grey.shade500
+                                                  : Colors.green.shade600,
+                                              size: 16,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'เปิด ${clinic.open} - ${clinic.close}',
+                                              style: TextStyle(
+                                                color: isDisabled
+                                                    ? Colors.grey.shade500
+                                                    : Colors.green.shade600,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Arrow Button
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: isDisabled
+                                            ? [
+                                                Colors.grey.shade400,
+                                                Colors.grey.shade500,
+                                              ]
+                                            : [
+                                                Color(0xFFDBA871),
+                                                Color(0xFFCD9A5B),
+                                              ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isDisabled
+                                                  ? Colors.grey.shade400
+                                                  : Color(0xFFDBA871))
+                                              .withOpacity(0.3),
+                                          blurRadius: 8,
+                                          spreadRadius: 0,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Special and Full Badges in a row
+                            if (isSpecial && isFull)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Special Badge
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFFDBA871),
+                                            Color(0xFFCD9A5B),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Color(0xFFDBA871)
+                                                .withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'พิเศษ',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    // Full Badge
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade600,
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.orange.shade600
+                                                .withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.people,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'เต็ม',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            // Only Full Badge when not special
+                            else if (isFull)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade600,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.shade600
+                                            .withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.block,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'เต็ม',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  Container searchBox(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: searchClinicCtl,
+        onChanged: (value) {
+          if (_currentPosition) {
+            searchClinicCurrentPosition();
+          } else {
+            searchClinic();
+          }
+        },
+        decoration: InputDecoration(
+          hintText: 'ค้นหาคลินิก',
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 16,
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Color(0xFFDBA871),
+              width: 2,
+            ),
+          ),
+          prefixIcon: Container(
+            padding: EdgeInsets.all(12),
+            child: Icon(
+              FontAwesomeIcons.magnifyingGlass,
+              color: Color(0xFFDBA871),
+              size: 20,
+            ),
+          ),
+          suffixIcon: searchClinicCtl.text.isNotEmpty
+              ? Container(
+                  margin: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.grey.shade600,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      searchClinicCtl.clear();
+                      FocusScope.of(context).unfocus();
+                      setState(() {
+                        if (_currentPosition) {
+                          searchClinicCurrentPosition();
+                        } else {
+                          searchClinic();
+                        }
+                      });
+                    },
+                  ),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Container dogInfoMinimized() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                dog[0].image,
+                width: screenWidth * 0.15,
+                height: screenWidth * 0.15,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(
+                      width: screenWidth * 0.15,
+                      height: screenWidth * 0.15,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dog[0].name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'อายุ ${getDogAge(dog[0].birthday)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFDBA871),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ClipRect dogInfoExpanded() {
+    return ClipRect(
+      child: Align(
+        alignment: Alignment.topCenter,
+        heightFactor: _isDogInfoExpanded ? 1.0 : 0.0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Dog Image with enhanced styling
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    dog[0].image,
+                    width: screenWidth * 0.4,
+                    height: screenHeight * 0.18,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          width: screenWidth * 0.4,
+                          height: screenHeight * 0.18,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 12),
+
+              // Dog Info
+              Container(
+                width: double.infinity,
+                child: Text(
+                  dog[0].name,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: 8),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDBA871).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'อายุ ${getDogAge(dog[0].birthday)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFDBA871),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(height: 12),
+
+              // Vaccine Info
+              Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  maxHeight: screenHeight * 0.15,
+                ),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: SingleChildScrollView(
+                  child: widget.vaccineName != ""
+                      ? ReadMoreText(
+                          widget.vaccineName
+                              .split(',')
+                              .map((e) => '• ${e.trim()}')
+                              .join('\n'),
+                          trimMode: TrimMode.Line,
+                          trimLines: 3,
+                          colorClickableText: Colors.transparent,
+                          trimCollapsedText: 'แสดงเพิ่มเติม',
+                          trimExpandedText: '\n\nย่อข้อความ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.green.shade700,
+                          ),
+                          moreStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade600,
+                          ),
+                          lessStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade600,
+                          ),
+                        )
+                      : ReadMoreText(
+                          "ไม่มีวัคซีน",
+                          trimMode: TrimMode.Line,
+                          trimLines: 3,
+                          colorClickableText: Colors.transparent,
+                          trimCollapsedText: 'แสดงเพิ่มเติม',
+                          trimExpandedText: '\n\nย่อข้อความ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.green.shade700,
+                          ),
+                          moreStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade600,
+                          ),
+                          lessStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade600,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> searchClinic() async {
     _loadingSearchData = true;
-    ClinicSearch req =
-        ClinicSearch(email: box.read('email'), word: searchClinicCtl.text);
+    ClinicSearch req = ClinicSearch(
+        email: box.read('email'),
+        word: searchClinicCtl.text,
+        date: widget.date.toString());
 
     var res = await http.post(
       Uri.parse("$url/clinic/search"),
@@ -1034,8 +1101,10 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     Position currentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
 
-    ClinicSearch req =
-        ClinicSearch(email: box.read('email'), word: searchClinicCtl.text);
+    ClinicSearch req = ClinicSearch(
+        email: box.read('email'),
+        word: searchClinicCtl.text,
+        date: widget.date.toString());
 
     var res = await http.post(
       Uri.parse("$url/clinic/search"),
@@ -1056,6 +1125,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
               double.parse(c.lng)) /
           1000;
     }
+
+    // Sort by distance (ascending)
+    clinics.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
 
     setState(() {
       _loadingSearchData = false;

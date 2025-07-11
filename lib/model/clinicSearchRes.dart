@@ -24,6 +24,8 @@ class ClinicSearchResponse {
   int numPerTime;
   double distanceKm;
   String distance;
+  int special;
+  int full;
 
   ClinicSearchResponse({
     required this.userEmail,
@@ -38,6 +40,8 @@ class ClinicSearchResponse {
     required this.numPerTime,
     required this.distanceKm,
     required this.distance,
+    required this.special,
+    required this.full,
   });
 
   factory ClinicSearchResponse.fromJson(Map<String, dynamic> json) =>
@@ -54,6 +58,8 @@ class ClinicSearchResponse {
         numPerTime: json["numPerTime"],
         distanceKm: json["distanceKm"]?.toDouble(),
         distance: json["distance"],
+        special: json["special"],
+        full: json["full"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -69,5 +75,7 @@ class ClinicSearchResponse {
         "numPerTime": numPerTime,
         "distanceKm": distanceKm,
         "distance": distance,
+        "special": special,
+        "full": full,
       };
 }
