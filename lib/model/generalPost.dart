@@ -19,6 +19,7 @@ class GeneralPost {
   String lat;
   String lng;
   String image;
+  String? fcmToken;
 
   GeneralPost({
     required this.userEmail,
@@ -30,6 +31,7 @@ class GeneralPost {
     required this.lat,
     required this.lng,
     required this.image,
+    fcmToken,
   });
 
   factory GeneralPost.fromJson(Map<String, dynamic> json) => GeneralPost(
@@ -42,6 +44,7 @@ class GeneralPost {
         lat: json["lat"],
         lng: json["lng"],
         image: json["image"],
+        fcmToken: json["fcmToken"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,5 +57,6 @@ class GeneralPost {
         "lat": lat,
         "lng": lng,
         "image": image,
+        "fcmToken": fcmToken,
       };
 }

@@ -1,4 +1,9 @@
 {
     "apiEndPoint1": "https://project-puppal-backend.onrender.com",
+<<<<<<< HEAD
     "apiEndPoint": "http://10.160.68.40:3000"
+=======
+    "apiEndPoint": "http://192.168.43.166:3000",
+    "apiEndPoint2": "http://10.160.65.131:3000"
+>>>>>>> 5e6bb5f65f5451a070013984388b2fc2cc33c4a7
 }

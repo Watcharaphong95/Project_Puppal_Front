@@ -27,6 +27,7 @@ class ClinictimeselectPage extends StatefulWidget {
   final String vaccineName;
   final String? reserveId;
   final int aid;
+  final bool special;
 
   const ClinictimeselectPage({
     super.key,
@@ -37,6 +38,7 @@ class ClinictimeselectPage extends StatefulWidget {
     required this.vaccineName,
     required this.reserveId,
     required this.aid,
+    required this.special,
   });
 
   @override
@@ -56,6 +58,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
   late ClinicSlotRes slot;
   late ClinicSlotRes slotFilled;
 
+  bool full = false;
   bool special = false;
 
   List<String> morningSlots = [];
@@ -73,6 +76,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
   }
 
   void init() async {
+    special = widget.special;
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
@@ -314,7 +318,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                               runSpacing: 8,
                               children: morningSlots.map((slot) {
                                 final isFilled =
-                                    slotFilled.timeSlots.contains(slot);
+                                    !slotFilled.timeSlots.contains(slot);
                                 return buildTimeButton(slot, isFilled);
                               }).toList(),
                             ),
@@ -344,14 +348,14 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                               runSpacing: 8,
                               children: afternoonSlots.map((slot) {
                                 final isFilled =
-                                    slotFilled.timeSlots.contains(slot);
+                                    !slotFilled.timeSlots.contains(slot);
                                 return buildTimeButton(slot, isFilled);
                               }).toList(),
                             ),
                           ],
 
                           // Special Request Section
-                          if (special) ...[
+                          if (special && full) ...[
                             SizedBox(height: 32),
                             Container(
                               padding: EdgeInsets.all(20),
@@ -509,6 +513,35 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
       Map<String, dynamic> data;
 
       var db = FirebaseFirestore.instance;
+
+      // Extract date and time
+      final selectedTime = combined.toString().substring(11, 16);
+      final selectedDate = combined.toString().substring(0, 10);
+
+      // Query all reservations for that clinic and date
+      final snapshot = await FirebaseFirestore.instance
+          .collection('reserve')
+          .where('clinicEmail', isEqualTo: widget.email)
+          .get();
+
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final d = doc['date']?.toString();
+        if (d != null &&
+            d.startsWith(selectedDate) &&
+            d.substring(11, 16) == selectedTime) {
+          count++;
+        }
+      }
+
+      if (count >= clinic.numPerTime) {
+        // Show error
+        showAlertNoClose(
+            title: 'ไม่สามารถส่งคำขอได้',
+            message: 'ช่วงเวลานี้มีคำขอเต็มแล้ว กรุณาเลือกช่วงเวลาอื่น',
+            onConfirm: getClinicTimeSlot);
+        return;
+      }
 
       if (widget.reserveId != null) {
         log('reserverId NULL');
@@ -683,19 +716,20 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     }
   }
 
-  Future<void> getReserveCheckSpecial() async {
-    ReserveSpecialCheck req = ReserveSpecialCheck(
-        clinicEmail: widget.email,
-        generalEmail: box.read('email'),
-        date: widget.date.toString());
+  // Future<void> checkSpecial() async {
+  //   ReserveSpecialCheck req = ReserveSpecialCheck(
+  //       generalEmail: box.read('email'),
+  //       clinicEmail: widget.email,
+  //       date: widget.date.toString());
 
-    var res = await http.post(
-      Uri.parse("$url/reserve/checkSpecial"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: reserveSpecialCheckToJson(req),
-    );
-    special = res.body.toLowerCase() == 'true';
-  }
+  //   var resSpecialCheck = await http.post(
+  //     Uri.parse("$url/reserve/checkSpecial"),
+  //     headers: {"Content-Type": "application/json; charset=utf-8"},
+  //     body: reserveSpecialCheckToJson(req),
+  //   );
+
+  //   special = jsonDecode(resSpecialCheck.body) as bool;
+  // }
 
   Future<void> getClinicTimeSlot() async {
     ClinicSlotPost req =
@@ -723,10 +757,17 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           slot.timeSlots.where((slot) => slot.compareTo("13:00") >= 0).toList();
     }
 
-    if (slotFilled.timeSlots.isEmpty) {
-      await getReserveCheckSpecial();
-    } else {
-      log('Slot remain');
+    bool listsEqual(List<String> a, List<String> b) {
+      if (a.length != b.length) return false;
+      for (int i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) return false;
+      }
+      return true;
+    }
+
+// Then use:
+    if (listsEqual(slot.timeSlots, slotFilled.timeSlots)) {
+      full = true;
     }
   }
 
