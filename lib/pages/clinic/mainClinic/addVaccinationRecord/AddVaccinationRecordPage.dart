@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,12 +15,13 @@ import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddVaccinationRecordPage extends StatefulWidget {
-  final int reserveId;
-  const AddVaccinationRecordPage({super.key, required this.reserveId});
+  final String docId;
+  const AddVaccinationRecordPage({super.key, required this.docId});
 
   @override
   State<AddVaccinationRecordPage> createState() =>
@@ -29,7 +31,7 @@ class AddVaccinationRecordPage extends StatefulWidget {
 class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   final _formKey = GlobalKey<FormState>();
   String url = '';
-  List<Reservebooking> reserveList = [];
+  List<ReserveClinicFirebase> reserveList = [];
   static const Color primaryColor = Color(0xFF916B44);
   static const Color secondaryColor = Color(0xFFDBA871);
   static const Color lightColor = Color(0xFFE9CBAF);
@@ -60,7 +62,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
 
-    await getReserve(widget.reserveId.toString());
+    await getReserve(widget.docId);
 
     setState(() {
       isLoading = false;
@@ -584,49 +586,69 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     return 'วันที่ $day $month $year';
   }
 
-  Future<void> getReserve(String reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reserveList = reservebookingFromJson(res.body);
+  Future<void> getReserve(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
 
-      for (var data in reserveList) {
-        log(data.reserveId.toString());
-        if (data != null) {
-          vaccineController.text = data.appointmentName ?? '';
-          dateController.text = formatThaiDateTime(data.date);
-          vaccineController.addListener(() {
-            vaccineChanged = true;
-          });
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
 
-          dateController.addListener(() {
-            dateChanged = true;
-          });
-        } else {
-          vaccineController.text = '';
+        final dynamic dogDogIdRaw = data?['dogDogId'];
+
+        // แปลงให้เป็น int ถ้า dogDogIdRaw เป็น String หรือ int
+        final int? dogDogId = dogDogIdRaw is int
+            ? dogDogIdRaw
+            : int.tryParse(dogDogIdRaw?.toString() ?? '');
+
+        // if (dogDogId != null) {
+        //   await getdog(dogDogId); // สมมุติว่าคุณมีฟังก์ชันนี้
+        // } else {
+        //   log('⚠️ dogDogId is invalid or empty.');
+        // }
+
+        // สมมุติว่า reserveList คือ List<Reservebooking> ที่คุณมี
+        for (var data in reserveList) {
+          log(data.docId.toString());
+          if (data != null) {
+            // vaccineController.text = data.appointme ?? '';
+            dateController.text = formatThaiDateTime(data.date);
+
+            vaccineController.addListener(() {
+              vaccineChanged = true;
+            });
+
+            dateController.addListener(() {
+              dateChanged = true;
+            });
+          } else {
+            vaccineController.text = '';
+          }
         }
+
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        log('❌ No document found for docId=$docId');
+        setState(() {
+          isLoading = false;
+        });
       }
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
       setState(() {
         isLoading = false;
       });
-    } else {
-      log("Failed to load: ${res.statusCode}");
     }
   }
 
+  Future<void> getAppointment(String) async {}
+
   Future<void> injectionAdd() async {
-    // ✅ ตรวจสอบว่ากรอกข้อมูลครบ
-    // if (_formKey.currentState!.validate() &&
-    //     vaccineChanged &&
-    //     dateChanged &&
-    //     nextDateController.text.isNotEmpty &&
-    //     vaccinationDate != null) {
-    //   showTopNotification(
-    //     context,
-    //     'กรุณากรอกข้อมูลให้ครบถ้วน',
-    //     isSuccess: false,
-    //   );
-    //   return;
-    // }
     if (vaccineChanged ||
         dateChanged ||
         _imageFile == null ||
@@ -645,15 +667,11 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       );
       return;
     }
-
-    // ✅ ถามยืนยันจากผู้ใช้
     bool isConfirmed = await confirmDialog(context);
     if (!isConfirmed) {
       log("ผู้ใช้ยกเลิกการบันทึก");
       return;
     }
-
-    // ✅ ดึงรูปภาพ
     final imageUrl = await confirmAvatarButton();
     log("imageUrl ก่อนส่ง: $imageUrl");
 
@@ -671,8 +689,12 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     DateTime parsedDate =
         DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
 
+    final String dogIdStr = reserveList[0].dogDogId;
+    final int dogId =
+        int.tryParse(dogIdStr) ?? 0; // แปลง ถ้าแปลงไม่ได้ใช้ 0 แทน
+
     AppointmentPost appReq = AppointmentPost(
-      dogId: reserveList[0].dogDogId,
+      dogId: dogId,
       generalUserEmail: reserveList[0].generalEmail,
       vaccine: vaccineController.text,
       date: parsedDate,
@@ -689,13 +711,18 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         final Map<String, dynamic> appData = jsonDecode(res.body);
         int aid = appData['insertId'];
 
+        final String? aidStr = reserveList[0].appointmentAid;
+        final int aidInt =
+            int.tryParse(aidStr ?? '') ?? 0; // แปลงถ้าแปลงไม่ได้ให้ 0
+
         ClinicinjectionRecordPost injReq = ClinicinjectionRecordPost(
-          reserveId: reserveList[0].reserveId,
-          vaccine: vaccineController.text,
-          date: parsedDate,
-          vaccineLabel: imageUrl,
-          appointmentAid: aid,
-        );
+            oldAppointmentAid: aidInt,
+            nextAppointmentAid: aid,
+            clinicEmail: reserveList[0].clinicEmail,
+            vaccine: vaccineController.text,
+            date: reserveList[0].date,
+            vaccineLabel: imageUrl,
+            type: reserveList[0].type);
 
         var injRes = await http.post(
           Uri.parse("$url/clinicinjectionRecord/"),
@@ -766,7 +793,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
       // ⏳ เพิ่มการนัดรอบถัดไป (ภายหลังจากบันทึกสำเร็จ)
       // appointmentAdd();
-      updatestatus(reserveList[0].reserveId, 3);
+      // updatestatus(reserveList[0].reserveId, 3);
     } catch (e) {
       log("เกิดข้อผิดพลาดในการบันทึก: $e");
       showTopNotification(
@@ -939,8 +966,11 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     String formattedDate = DateFormat('yyyy-MM-dd').format(parsedDate);
     // log(parsedThai.toString());
     // log(formattedDate);
+    final String dogIdStr = reserveList[0].dogDogId;
+    final int dogId =
+        int.tryParse(dogIdStr) ?? 0; // แปลง ถ้าแปลงไม่ได้ใช้ 0 แทน
     AppointmentPost req = AppointmentPost(
-        dogId: reserveList[0].dogDogId,
+        dogId: dogId,
         generalUserEmail: reserveList[0].generalEmail,
         vaccine: vaccineController.text,
         date: parsedDate);

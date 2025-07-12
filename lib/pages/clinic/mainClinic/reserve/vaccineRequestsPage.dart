@@ -671,7 +671,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                       const SizedBox(height: 24),
 
-                      // Owner Image and Info - แสดงรูปภาพและข้อมูลเจ้าของ
                       Padding(
                         padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                         child: Row(
@@ -925,24 +924,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  // Future<void> acceptrequest(int reserveID, int status) async {
-  //   if (status == 2 || status == 0) {
-  //     _showAcceptDialog();
-  //     ReserveUpdateStatusPost req =
-  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-  //     var res = await http.put(
-  //       Uri.parse("$url/reserve/$reserveID"),
-  //       headers: {"Content-Type": "application/json"},
-  //       body: json.encode(req.toJson()),
-  //     );
-  //     if (res.statusCode == 200) {
-  //       log("Update data clinic success");
-  //     } else {
-  //       log("Failed to update doctor info: ${res.statusCode}");
-  //     }
-  //   }
-  // }
-
   void _showAcceptDialog(String docId) {
     showDialog(
       context: context,
@@ -999,10 +980,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      // ปิด Alert ก่อน
                       Navigator.pop(context);
 
-                      // เปิด loading
                       showDialog(
                         context: context,
                         barrierDismissible: false,
@@ -1227,7 +1206,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
       if (doc.exists) {
         final data = doc.data();
         if (data != null) {
-          data['docId'] = doc.id; // ✅ เพิ่มบรรทัดนี้เพื่อฝัง docId ใน Map
+          data['docId'] = doc.id;
           return data;
         }
       } else {
@@ -1267,7 +1246,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return 'เวลา $hour:$minute วันที่ $day $month $year';
   }
 
-  // Helper function สำหรับจัดการวันที่ - ใช้ฟังก์ชัน formatThaiDateTime ที่มีอยู่
   String _formatDateString(dynamic dateValue) {
     try {
       if (dateValue == null) return 'ไม่ระบุ';
@@ -1290,7 +1268,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     }
   }
 
-// ฟังก์ชัน _formatDate และ formatThaiDateTime ที่มีอยู่แล้ว
   String _formatDate(dynamic dateValue) {
     try {
       if (dateValue == null) return 'ไม่ระบุ';

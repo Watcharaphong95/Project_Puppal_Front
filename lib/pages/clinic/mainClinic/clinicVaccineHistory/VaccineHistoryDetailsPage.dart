@@ -721,7 +721,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
       for (var data in reserveList) {
         log(data.reserveId.toString());
       }
-      getinjection(reserveID);
+      // getinjection(reserveID);
       setState(() {
         isLoading = false;
       });
@@ -730,27 +730,27 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
     }
   }
 
-  List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
-      String str) {
-    final decoded = json.decode(str);
-    final List<dynamic> dataList = decoded['data'];
-    return dataList.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
-  }
+  // List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
+  //     String str) {
+  //   final decoded = json.decode(str);
+  //   final List<dynamic> dataList = decoded['data'];
+  //   return dataList.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
+  // }
 
-  Future<void> getinjection(String reserveID) async {
-    final res =
-        await http.get(Uri.parse("$url/clinicinjectionRecord/$reserveID"));
+  // Future<void> getinjection(String reserveID) async {
+  //   final res =
+  //       await http.get(Uri.parse("$url/clinicinjectionRecord/$reserveID"));
 
-    if (res.statusCode == 200) {
-      injectionList = clinicinjectionRecordPostFromJson(res.body);
-      for (var data in injectionList) {
-        log(data.reserveId.toString());
-      }
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      log("Failed to load: ${res.statusCode}");
-    }
-  }
+  //   if (res.statusCode == 200) {
+  //     injectionList = clinicinjectionRecordPostFromJson(res.body);
+  //     for (var data in injectionList) {
+  //       log(data.reserveId.toString());
+  //     }
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   } else {
+  //     log("Failed to load: ${res.statusCode}");
+  //   }
+  // }
 }

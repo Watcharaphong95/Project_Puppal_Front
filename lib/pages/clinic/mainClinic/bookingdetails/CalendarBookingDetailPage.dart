@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
@@ -14,9 +16,9 @@ import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 
 class Calendarbookingdetailpage extends StatefulWidget {
-  final int reserveId;
+  final String docId;
 
-  const Calendarbookingdetailpage({super.key, required this.reserveId});
+  const Calendarbookingdetailpage({super.key, required this.docId});
 
   @override
   State<Calendarbookingdetailpage> createState() =>
@@ -29,6 +31,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
   late double screenHeight;
   bool isNormalSelected = true;
   final box = GetStorage();
+  List<DogDetailsPost> dogList = [];
   List<Reservebooking> reserveList = [];
   List<ReserveClinicPost> todayList = [];
   List<ReserveClinicPost> yesterdayList = [];
@@ -39,7 +42,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve(widget.reserveId.toString());
+      getReserve(widget.docId);
     });
   }
 
@@ -54,7 +57,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
           child: Container(
             decoration: BoxDecoration(),
             child: Column(
-              children: reserveList.map((reserve) {
+              children: dogList.map((dog) {
                 return Container(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -94,9 +97,9 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: reserve.image.isNotEmpty
+                                  child: dog.image.isNotEmpty
                                       ? Image.network(
-                                          reserve.image,
+                                          dog.image,
                                           height: 150,
                                           width: 250,
                                           fit: BoxFit.cover,
@@ -183,28 +186,28 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                             _buildInfoField(
                               icon: Icons.pets_outlined,
                               label: 'ชื่อสุนัข',
-                              value: reserve.name,
+                              value: dog.name,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'พันธุ์',
-                              value: reserve.breed,
+                              value: dog.breed,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.fire_extinguisher,
                               label: 'เพศ',
-                              value: reserve.gender,
+                              value: dog.gender,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'สี',
-                              value: reserve.color,
+                              value: dog.color,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
@@ -253,7 +256,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                   ],
                                 ),
                                 _buildInfoFieldSingle(
-                                  value: reserve.defect,
+                                  value: dog.defect,
                                   screenHeight: screenHeight,
                                 ),
                                 const SizedBox(height: 12),
@@ -263,58 +266,58 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'วันเกิด',
-                              value: formatThaiDateTime(reserve.birthday),
+                              value: formatThaiDateTime(dog.birthday),
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'โรคประจำตัว',
-                              value: reserve.congentialDisease,
+                              value: dog.congentialDisease,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'ประวัติการฉีดยา',
-                              value: reserve.breed,
+                              value: dog.breed,
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'การทำหมัน',
-                              value: reserve.sterilization.toString(),
+                              value: dog.sterilization.toString(),
                               screenHeight: screenHeight,
                             ),
                             const SizedBox(height: 20),
                             _buildInfoField(
                               icon: Icons.badge,
                               label: 'ลักษณะสุนัข',
-                              value: reserve.hair,
+                              value: dog.hair,
                               screenHeight: screenHeight,
                             ),
-                            const SizedBox(height: 20),
-                            _buildInfoField(
-                              icon: Icons.person,
-                              label: 'ชื่อเจ้าของสุนัข',
-                              value: reserve.username,
-                              screenHeight: screenHeight,
-                            ),
-                            const SizedBox(height: 20),
-                            _buildInfoField(
-                              icon: Icons.phone,
-                              label: 'เบอร์โทร',
-                              value: reserve.phone,
-                              screenHeight: screenHeight,
-                            ),
-                            const SizedBox(height: 20),
-                            _buildInfoField(
-                              icon: Icons.email,
-                              label: 'อีเมล',
-                              value: reserve.generalEmail,
-                              screenHeight: screenHeight,
-                            ),
+                            // const SizedBox(height: 20),
+                            // _buildInfoField(
+                            //   icon: Icons.person,
+                            //   label: 'ชื่อเจ้าของสุนัข',
+                            //   value: dog.username,
+                            //   screenHeight: screenHeight,
+                            // ),
+                            // const SizedBox(height: 20),
+                            // _buildInfoField(
+                            //   icon: Icons.phone,
+                            //   label: 'เบอร์โทร',
+                            //   value: reserve.phone,
+                            //   screenHeight: screenHeight,
+                            // ),
+                            // const SizedBox(height: 20),
+                            // _buildInfoField(
+                            //   icon: Icons.email,
+                            //   label: 'อีเมล',
+                            //   value: reserve.generalEmail,
+                            //   screenHeight: screenHeight,
+                            // ),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -330,7 +333,8 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  updatestatus(reserve.reserveId, 0);
+                                  // updatestatus(reserve.reserveId, 0);
+                                  _showRejectDialog(0);
                                 },
                                 icon: const Icon(Icons.cancel,
                                     color: Colors.white),
@@ -359,7 +363,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                               child: ElevatedButton.icon(
                                 onPressed: () {
                                   Get.to(() => AddVaccinationRecordPage(
-                                        reserveId: reserve.reserveId,
+                                        docId: widget.docId,
                                       ));
                                 },
                                 icon: const Icon(Icons.check_circle,
@@ -559,36 +563,68 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     );
   }
 
-  Future<void> getReserve(String reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reserveList = reservebookingFromJson(res.body);
-      for (var data in reserveList) {
-        log(data.reserveId.toString());
+  Future<void> getReserve(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
+
+        final dynamic dogDogIdRaw = data?['dogDogId'];
+
+        // แปลงให้เป็น int ถ้า dogDogIdRaw เป็น String หรือ int
+        final int? dogDogId = dogDogIdRaw is int
+            ? dogDogIdRaw
+            : int.tryParse(dogDogIdRaw?.toString() ?? '');
+
+        if (dogDogId != null) {
+          await getdog(dogDogId);
+        } else {
+          log('⚠️ dogDogId is invalid or empty.');
+        }
+      } else {
+        log('❌ No document found for docId=$docId');
       }
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      log("Failed to load: ${res.statusCode}");
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
     }
   }
 
-  Future<void> updatestatus(int reserveID, int status) async {
-    if (status == 4) {
-      _showAcceptDialog();
-      ReserveUpdateStatusPost req =
-          ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-      var res = await http.put(
-        Uri.parse("$url/reserve/$reserveID"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(req.toJson()),
-      );
+  Future<void> getdog(int dogId) async {
+    try {
+      log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
       if (res.statusCode == 200) {
-        log("Update data clinic success");
+        dogList = dogDetailsPostFromJson(res.body);
+        setState(() {});
       } else {
-        log("Failed to update doctor info: ${res.statusCode}");
+        log("❌ Failed to load dog: ${res.statusCode}");
       }
+    } catch (e) {
+      log("❌ Exception while fetching dog info: $e");
+    }
+  }
+
+  Future<void> updatestatus(String docId, int status) async {
+    if (status == 0) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .update({
+          'status': status,
+        });
+
+        log('✅ Updated status to $status for docId=$docId');
+      } catch (e) {
+        log('❌ Failed to update status: $e');
+      }
+    } else {
+      log('⚠️ Status not allowed to update: $status');
     }
   }
 
@@ -668,7 +704,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     );
   }
 
-  void _showRejectDialog() {
+  void _showRejectDialog(int status) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -726,6 +762,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.pop(context, true);
+                      updatestatus(widget.docId, 0);
                       _rejectReservation();
                     },
                     style: ElevatedButton.styleFrom(

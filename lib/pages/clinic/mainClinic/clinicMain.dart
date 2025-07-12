@@ -1,15 +1,19 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/bookingdetails/CalendarBookingDetailPage.dart';
@@ -43,10 +47,12 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<ReserveClinicPost> reserveList = [];
-  List<Reservebooking> reservebookingList = [];
-  List<Reservebooking> events = [];
-  List<Reservebooking> reservebookingListAll = [];
+  late GeneralPost generalData;
+  List<GeneralPost> generalList = [];
+  List<ReserveClinicFirebase> reserveList = [];
+  List<ReserveClinicFirebase> reservebookingList = [];
+  List<ReserveClinicFirebase> events = [];
+  List<ReserveClinicFirebase> reservebookingListAll = [];
 
   @override
   void initState() {
@@ -57,7 +63,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   Future<void> initialize() async {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
-    await initializeData();
+    await getReserve();
     box.write('type', 'clinic');
   }
 
@@ -349,9 +355,47 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 return Container(
                                   margin: EdgeInsets.only(bottom: 12),
                                   child: InkWell(
-                                    onTap: () {
-                                      _showAppointmentPopup(
-                                          context, reservebookingList.first);
+                                    onTap: () async {
+                                      final reserveData = await getReserveBook(
+                                          reserveList[0].docId);
+                                      final generalEmail =
+                                          reserveData?['generalEmail'];
+
+                                      if (reserveData != null) {
+                                        final generalEmail =
+                                            reserveData['generalEmail'];
+                                        final dogDogIdRaw =
+                                            reserveData['dogDogId'];
+
+                                        if (generalEmail != null &&
+                                            generalEmail.isNotEmpty) {
+                                          // final reserveData =
+                                          //     await getReserveBook(
+                                          //         reserveList[0].docId);
+
+                                          final dogDogId = dogDogIdRaw is int
+                                              ? dogDogIdRaw
+                                              : int.tryParse(
+                                                      dogDogIdRaw.toString()) ??
+                                                  0; // หรือ handle กรณีแปลงไม่ได้
+                                          final dogDetails = await getdog(
+                                              dogDogId); // ได้ DogDetailsPost?
+                                          final generalData = await getGeneral(
+                                              generalEmail); // ✅ ไม่มี error แล้ว
+                                          if (generalData != null) {
+                                            final docIdStr =
+                                                reserveData['docId'].toString();
+
+                                            _showAppointmentPopup(
+                                              context,
+                                              reserveData,
+                                              dogDetails,
+                                              docIdStr,
+                                              generalData,
+                                            );
+                                          }
+                                        }
+                                      }
                                     },
                                     borderRadius: BorderRadius.circular(16),
                                     child: Container(
@@ -396,7 +440,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                 borderRadius:
                                                     BorderRadius.circular(16),
                                                 child: Image.network(
-                                                  item.image,
+                                                  item.dogDogId,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (context, error,
                                                       stackTrace) {
@@ -435,7 +479,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                     children: [
                                                       Expanded(
                                                         child: Text(
-                                                          item.username,
+                                                          item.generalEmail,
                                                           style: TextStyle(
                                                             fontSize: 16,
                                                             fontWeight:
@@ -495,7 +539,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                       SizedBox(width: 8),
                                                       Expanded(
                                                         child: Text(
-                                                          item.appointmentName
+                                                          item.appointmentAid
                                                               .toString(),
                                                           style: TextStyle(
                                                             fontSize: 14,
@@ -519,8 +563,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                               onTap: () {
                                                 Get.to(() =>
                                                     Calendarbookingdetailpage(
-                                                        reserveId:
-                                                            item.reserveId));
+                                                        docId: item.docId));
                                               },
                                               child: Icon(
                                                 Icons.arrow_forward_ios,
@@ -547,7 +590,13 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   }
 
   // Pop-up Dialog Method
-  void _showAppointmentPopup(BuildContext context, Reservebooking reservation) {
+  void _showAppointmentPopup(
+    BuildContext context,
+    Map<String, dynamic> reserveData,
+    DogDetailsPost? dogDetails,
+    String docId,
+    GeneralPost generalData,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -617,7 +666,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                             width: 10,
                           ),
                           Text(
-                            reservation.username,
+                            generalData.username,
                             style: TextStyle(
                               color: primaryBrown,
                               fontSize: 22,
@@ -641,7 +690,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                             Column(
                               children: [
                                 Text(
-                                  reservation.name,
+                                  generalData.name,
                                   style: TextStyle(
                                     color: primaryBrown,
                                     fontSize: 24,
@@ -651,7 +700,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  reservation.breed,
+                                  dogDetails!.breed,
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 14,
@@ -676,9 +725,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: reservation.image.isNotEmpty
+                                  child: dogDetails.image.isNotEmpty
                                       ? Image.network(
-                                          reservation.image,
+                                          dogDetails.image,
                                           height: 90,
                                           width: 120,
                                           fit: BoxFit.cover,
@@ -748,14 +797,14 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       const SizedBox(height: 24),
 
                       // Details
-                      _buildPopupDetailRow('ผู้ใช้', reservation.username),
-                      _buildPopupDetailRow('เบอร์โทร', reservation.phone),
+                      _buildPopupDetailRow('ผู้ใช้', generalData.username),
+                      _buildPopupDetailRow('เบอร์โทร', generalData.phone),
                       // _buildPopupDetailRow(
                       //     'วัคซีน', reservation.appointmentAid.toString()),
                       _buildPopupDetailRow(
-                          'วันที่จอง', formatThaiDateTime(reservation.date!)),
+                          'วันที่จอง', _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
-                          'เวลาที่จอง', _formatDate(reservation.date!)),
+                          'เวลาที่จอง', _formatDate(reserveData['date'])),
 
                       const SizedBox(height: 32),
 
@@ -767,7 +816,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                               label: 'ยกเลิกการจอง',
                               onPressed: () {
                                 Navigator.pop(context);
-                                updatestatus(reservation.reserveId, 0);
+                                // updatestatus(reservation.reserveId, 0);
                                 // _showRejectDialog();
                               },
                               isPrimary: false,
@@ -781,7 +830,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 // acceptrequest(reservation.reserveId, 2);
                                 Navigator.pop(context);
                                 Get.to(() => AddVaccinationRecordPage(
-                                    reserveId: reservation.reserveId));
+                                    docId: reserveList[0].docId));
                                 // _showAcceptDialog();
                               },
                               isPrimary: true,
@@ -800,13 +849,51 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final localDate = date.toLocal();
+  String _formatDateString(dynamic dateValue) {
+    try {
+      if (dateValue == null) return 'ไม่ระบุ';
 
-    final hour = localDate.hour.toString().padLeft(2, '0');
-    final minute = localDate.minute.toString().padLeft(2, '0');
+      DateTime dateTime;
+      if (dateValue is String) {
+        dateTime = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        dateTime = dateValue;
+      } else if (dateValue is Timestamp) {
+        dateTime = dateValue.toDate();
+      } else {
+        return 'รูปแบบวันที่ไม่ถูกต้อง';
+      }
 
-    return '$hour:$minute ';
+      return formatThaiDateTime(dateTime); // ใช้ฟังก์ชันที่มีอยู่
+    } catch (e) {
+      log("❌ Error formatting date: $e");
+      return 'ไม่สามารถแสดงวันที่ได้';
+    }
+  }
+
+  String _formatDate(dynamic dateValue) {
+    try {
+      if (dateValue == null) return 'ไม่ระบุ';
+
+      DateTime dateTime;
+      if (dateValue is String) {
+        dateTime = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        dateTime = dateValue;
+      } else if (dateValue is Timestamp) {
+        dateTime = dateValue.toDate();
+      } else {
+        return 'รูปแบบเวลาไม่ถูกต้อง';
+      }
+
+      String hour = dateTime.hour.toString().padLeft(2, '0');
+      String minute = dateTime.minute.toString().padLeft(2, '0');
+
+      return '$hour:$minute น.';
+    } catch (e) {
+      log("❌ Error formatting time: $e");
+      return 'ไม่สามารถแสดงเวลาได้';
+    }
   }
 
   Widget _buildPopupActionButton({
@@ -947,7 +1034,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
         ],
       ),
       padding: const EdgeInsets.all(12),
-      child: TableCalendar<Reservebooking>(
+      child: TableCalendar<ReserveClinicFirebase>(
         locale: 'th_TH',
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(DateTime.now().year + 10),
@@ -1048,34 +1135,52 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
   Future<void> getReserve() async {
     try {
-      final res =
-          await http.get(Uri.parse("$url/reserve/${box.read("email")}"));
-      if (res.statusCode == 200) {
-        reserveList = reserveClinicPostFromJson(res.body);
-        reservebookingListAll.clear();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('reserve')
+          .where('clinicEmail', isEqualTo: box.read("email"))
+          .get();
 
-        // สร้าง List ของ Future เพื่อรอให้ทุก request เสร็จ
-        List<Future<void>> futures = [];
-        for (var data in reserveList) {
-          futures.add(getReserveBook(data.reserveId));
-        }
+      List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
+        return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
+      }).toList();
 
-        // รอให้ทุก Future เสร็จสิ้น
+      allData.sort((a, b) => b.date.compareTo(a.date));
+      reserveList = allData; // ตั้งค่า reserveList แทนที่เวอร์ชัน HTTP
+      reservebookingListAll.clear();
 
-        if (reserveList.isNotEmpty &&
-            (reserveList[0].status == 1 || reserveList[0].type == 1)) {
-          await Future.wait(futures);
-          log("Total reservebookingListAll: ${reservebookingListAll.length}");
-          for (var booking in reservebookingListAll) {
-            log("Booking - ID: ${booking.reserveId}, Date: ${booking.date}, User: ${booking.username}");
+      List<Future<void>> futures = [];
+
+      for (var data in reserveList) {
+        futures.add(getReserveBook(data.docId).then((bookingData) {
+          if (bookingData != null) {
+            try {
+              final booking =
+                  ReserveClinicFirebase.fromJson(bookingData, data.docId);
+              reservebookingListAll.add(booking);
+              log("✅ Added: ${booking.docId}");
+            } catch (e) {
+              log("❌ Error parsing ReserveClinicFirebase: $e");
+            }
+          } else {
+            log("⚠️ No booking data for docId=${data.docId}");
           }
-        }
-
-        setState(() {
-          // events = getEventsForDay(_selectedDay ?? DateTime.now());
-          isLoading = false;
-        });
+        }));
       }
+
+      // if (allData.isNotEmpty &&
+      //     (allData[0].status == 1 || allData[0].type == 1)) {
+      await Future.wait(futures);
+
+      log("Total reservebookingListAll: ${reservebookingListAll.length}");
+      for (var booking in reservebookingListAll) {
+        log("Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.clinicEmail}");
+      }
+      // }
+      // getGeneral(allData[0].generalEmail);
+
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       log("Error: $e");
       setState(() {
@@ -1084,70 +1189,93 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     }
   }
 
-  Future<void> getReserveBook(int reserveID) async {
+  Future<DogDetailsPost?> getdog(int dogId) async {
     try {
-      var res = await http.get(Uri.parse("$url/reserve/group/$reserveID"));
-
+      log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
       if (res.statusCode == 200) {
-        final decoded = json.decode(res.body);
-
-        // เคลียร์รายการก่อนเพิ่ม (ถ้าต้องการ)
-        reservebookingList.clear();
-
-        decoded.forEach((key, value) {
-          // value คือลิสต์ของ reserve
-          for (var item in value) {
-            final reserve = Reservebooking.fromJson(item);
-            reservebookingList.add(reserve);
-            reservebookingListAll.add(reserve); // เพิ่มใน list รวม
-
-            // debug logs
-            // log("reserveId: ${reserve.reserveId}");
-            // log("date: ${reserve.date}");
-            // log("username: ${reserve.username}");
-          }
-        });
+        final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
+        if (dogList.isNotEmpty) {
+          return dogList.first;
+        }
+        return null; // กรณีไม่มีข้อมูล
       } else {
-        log("Failed to load: ${res.statusCode}");
+        log("❌ Failed to load dog: ${res.statusCode}");
+        return null;
       }
     } catch (e) {
-      log("Error in getReserveBook: $e");
+      log("❌ Exception while fetching dog info: $e");
+      return null;
     }
   }
 
-  Future<void> updatestatus(int reserveID, int status) async {
-    if (status == 0) {
-      ReserveUpdateStatusPost req =
-          ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-      var res = await http.put(
-        Uri.parse("$url/reserve/$reserveID"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(req.toJson()),
-      );
-      if (res.statusCode == 200) {
-        log("Update data clinic success");
+  Future<Map<String, dynamic>?> getReserveBook(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          data['docId'] = doc.id;
+          return data;
+        }
       } else {
-        log("Failed to update doctor info: ${res.statusCode}");
+        log('❌ No document found for docId=$docId');
       }
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
+    }
+    return null;
+  }
+
+  GeneralPost generalPostFromJson(String str) {
+    final Map<String, dynamic> data = json.decode(str);
+    return GeneralPost.fromJson(data);
+  }
+
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
+    try {
+      var res = await http.get(Uri.parse("$url/general/$generalEmail"));
+      if (res.statusCode == 200) {
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return GeneralPost.fromJson(jsonMap);
+      } else {
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
     }
   }
 
-  List<Reservebooking> getEventsForDay(DateTime day) {
+  // Future<void> updatestatus(int reserveID, int status) async {
+  //   if (status == 0) {
+  //     ReserveUpdateStatusPost req =
+  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
+  //     var res = await http.put(
+  //       Uri.parse("$url/reserve/$reserveID"),
+  //       headers: {"Content-Type": "application/json"},
+  //       body: json.encode(req.toJson()),
+  //     );
+  //     if (res.statusCode == 200) {
+  //       log("Update data clinic success");
+  //     } else {
+  //       log("Failed to update doctor info: ${res.statusCode}");
+  //     }
+  //   }
+  // }
+
+  List<ReserveClinicFirebase> getEventsForDay(DateTime day) {
     final normalizedDay = normalizeDate(day);
 
     return reservebookingListAll.where((item) {
       final eventDay = normalizeDate(item.date!); // ไม่ต้อง parse แล้ว
       return eventDay == normalizedDay;
     }).toList();
-  }
-
-  Future<void> initializeData() async {
-    final config = await Configuration.getConfig();
-    url = config['apiEndPoint'];
-
-    await getReserve(); // รอให้ข้อมูลโหลดเสร็จก่อน
-
-    // ไม่ต้อง setState ที่นี่ เพราะ getReserve() จะ setState ให้แล้ว
   }
 
   void showAlert({
