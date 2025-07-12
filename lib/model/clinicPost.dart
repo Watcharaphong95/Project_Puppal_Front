@@ -20,6 +20,7 @@ class ClinicPost {
   String open;
   String close;
   int numPerTime;
+  String? fcmToken;
 
   ClinicPost({
     required this.userEmail,
@@ -32,6 +33,7 @@ class ClinicPost {
     required this.open,
     required this.close,
     required this.numPerTime,
+    fcmToken,
   });
 
   factory ClinicPost.fromJson(Map<String, dynamic> json) => ClinicPost(
@@ -45,6 +47,7 @@ class ClinicPost {
         open: json["open"],
         close: json["close"],
         numPerTime: json["numPerTime"],
+        fcmToken: json["fcmToken"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -58,5 +61,6 @@ class ClinicPost {
         "open": open,
         "close": close,
         "numPerTime": numPerTime,
+        "fcmToken": fcmToken,
       };
 }

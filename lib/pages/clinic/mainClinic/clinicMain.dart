@@ -198,6 +198,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                           title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
                           message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
                           onConfirm: () {
+                            box.write('type', 'general');
                             box.write('generalName',
                                 jsonDecode(resGeneral.body)['username']);
                             box.write('generalImage',

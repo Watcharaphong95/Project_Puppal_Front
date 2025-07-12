@@ -21,6 +21,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 Future<void> main() async {
   await GetStorage.init();
   await Firebase.initializeApp();
+  WidgetsFlutterBinding.ensureInitialized();
+  FirebaseMessaging.instance.requestPermission(provisional: true);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await NotificationService.initialize();
   await Supabase.initialize(
       url: 'https://ombydonicueujwrhhcnl.supabase.co',
@@ -42,8 +45,58 @@ Future<void> main() async {
 
 final supabase = Supabase.instance.client;
 
-class MyApp extends StatelessWidget {
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return GetMaterialApp(
+//       title: 'Flutter Demo',
+//       theme: ThemeData(
+//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+//         useMaterial3: true,
+//         fontFamily: GoogleFonts.notoSansThai().fontFamily,
+//       ),
+//       supportedLocales: const [
+//         Locale('th', 'TH'),
+//         Locale('en', 'US'),
+//       ],
+//       localizationsDelegates: [
+//         GlobalMaterialLocalizations.delegate,
+//         GlobalCupertinoLocalizations.delegate,
+//         GlobalWidgetsLocalizations.delegate,
+//       ],
+//       home: const LoadingcheckPage(),
+//     );
+//   }
+// }
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    FirebaseMessaging.instance.requestPermission();
+
+    FirebaseMessaging.instance.getToken().then((token) {
+      log("📲 Device Token: $token");
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      log('🔔 Notification Received: ${message.notification?.title}');
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      log('📨 App opened from notification');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,4 +123,8 @@ class MyApp extends StatelessWidget {
 
 class AppData with ChangeNotifier {
   StreamSubscription? listener;
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  log("🔕 Background message: ${message.notification?.title}");
 }

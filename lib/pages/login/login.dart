@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
@@ -252,17 +254,71 @@ class _LoginPageState extends State<LoginPage> {
       } else if (user.general == 1) {
         var resGeneral =
             await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
+        box.write('type', 'general');
         box.write('generalName', jsonDecode(resGeneral.body)['username']);
         box.write('generalImage', jsonDecode(resGeneral.body)['image']);
-        log('Name ${box.read('generalName')}');
-        Get.offAll(() => GeneralmainPage());
+
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        FcmTokenPost token =
+            FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+        var tokenUpdate = await http.put(
+          Uri.parse("$url/user/fcmToken"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: fcmTokenPostToJson(token),
+        );
+        if (tokenUpdate.statusCode == 201) {
+          log('Name ${box.read('generalName')}');
+          Get.offAll(() => GeneralmainPage());
+        } else {
+          Get.snackbar(
+            'ข้อผิดพลาด',
+            'กรุณาลองใหม่อีกครั้ง',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+            colorText: Colors.white,
+            borderRadius: 12,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+            snackStyle: SnackStyle.FLOATING,
+            isDismissible: true,
+          );
+          return;
+        }
       } else if (user.clinic == 1) {
         var resClinic =
             await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+        box.write('type', 'clinic');
         box.write('clinicName', jsonDecode(resClinic.body)['name']);
         box.write('clinicImage', jsonDecode(resClinic.body)['image']);
-        log('Name ${box.read('clinicName')}');
-        Get.offAll(() => ClinicmainPage());
+
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        FcmTokenPost token =
+            FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+        var tokenUpdate = await http.put(
+          Uri.parse("$url/user/fcmToken"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: fcmTokenPostToJson(token),
+        );
+        if (tokenUpdate.statusCode == 201) {
+          log('Name ${box.read('clinicName')}');
+          Get.offAll(() => ClinicmainPage());
+        } else {
+          Get.snackbar(
+            'ข้อผิดพลาด',
+            'กรุณาลองใหม่อีกครั้ง',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+            colorText: Colors.white,
+            borderRadius: 12,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+            snackStyle: SnackStyle.FLOATING,
+            isDismissible: true,
+          );
+          return;
+        }
       }
     } else {
       Get.snackbar(

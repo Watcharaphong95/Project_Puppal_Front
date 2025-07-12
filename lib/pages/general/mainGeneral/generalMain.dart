@@ -47,6 +47,7 @@ class GeneralmainPage extends StatefulWidget {
 class _GeneralmainPageState extends State<GeneralmainPage> {
   late double screenWidth;
   late double screenHeight;
+  late AppData appData;
 
   late StreamSubscription listener;
 
@@ -69,7 +70,14 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   var db = FirebaseFirestore.instance;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appData = context.read<AppData>(); // ✅ safe place
+  }
+
+  @override
   void initState() {
+    appData = context.read<AppData>();
     if (box.read('focusedDay') != null) {
       _focusedDay = box.read('focusedDay');
       _selectedDay = box.read('focusedDay');
@@ -263,6 +271,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                           title: 'สลับไปยังบัญชีคลินิก?',
                           message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
                           onConfirm: () {
+                            box.write('type', 'clinic');
                             box.write('clinicName',
                                 jsonDecode(resClinic.body)['name']);
                             box.write('clinicImage',
@@ -291,7 +300,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                       showAlert(
                         title: 'ออกจากระบบ?',
                         message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           box.erase();
                           Get.offAll(() => IndexPage());
                         },
@@ -706,8 +716,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   void stopRealTime() {
-    final appData = context.read<AppData>();
-
     if (appData.listener != null) {
       appData.listener?.cancel().then((_) {
         log('🔕 Listener is stopped');
@@ -1226,11 +1234,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       }),
     );
     var jsonData = jsonDecode(resAppointment.body);
-    appointmentAll = mergeAppointments(
-        firestoreData: appointments,
-        dogs: jsonData['dogs'],
-        appointments: jsonData['appointments'],
-        clinics: jsonData['clinics']);
+    if (appointments.isNotEmpty &&
+        jsonData['dogs'] != null &&
+        jsonData['appointments'] != null &&
+        jsonData['clinics'] != null) {
+      appointmentAll = mergeAppointments(
+          firestoreData: appointments,
+          dogs: jsonData['dogs'],
+          appointments: jsonData['appointments'],
+          clinics: jsonData['clinics']);
+    }
 
     // for (var a in appointmentAll) {
     //   for (var d in a.dogs) {

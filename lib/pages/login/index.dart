@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/main.dart';
+import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
@@ -36,7 +40,9 @@ class _IndexPageState extends State<IndexPage> {
 
   @override
   void initState() {
+    // box.erase();
     super.initState();
+
     if (box.read('emailGoogleRegister') != null) {
       log(box.read('emailGoogleRegister'));
       box.remove('emailGoogleRegister');
@@ -49,6 +55,7 @@ class _IndexPageState extends State<IndexPage> {
       url = config['apiEndPoint'];
     });
     await checkLogout();
+    stopRealTime();
     setState(() => isLoading = false);
   }
 
@@ -217,20 +224,72 @@ class _IndexPageState extends State<IndexPage> {
             showLoadingDialog();
             var resGeneral = await http
                 .get(Uri.parse("$url/general/name/${box.read('email')}"));
+            box.write('type', 'general');
             box.write('generalName', jsonDecode(resGeneral.body)['username']);
             box.write('generalImage', jsonDecode(resGeneral.body)['image']);
-            log('Name ${box.read('generalName')}');
-            Get.back();
-            Get.offAll(() => GeneralmainPage());
+            String? fcmToken = await FirebaseMessaging.instance.getToken();
+            FcmTokenPost token =
+                FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+            var tokenUpdate = await http.put(
+              Uri.parse("$url/user/fcmToken"),
+              headers: {"Content-Type": "application/json; charset=utf-8"},
+              body: fcmTokenPostToJson(token),
+            );
+            if (tokenUpdate.statusCode == 201) {
+              log('Name ${box.read('generalName')}');
+              Get.back();
+              Get.offAll(() => GeneralmainPage());
+            } else {
+              Get.snackbar(
+                'ข้อผิดพลาด',
+                'กรุณาลองใหม่อีกครั้ง',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+                colorText: Colors.white,
+                borderRadius: 12,
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
+                snackStyle: SnackStyle.FLOATING,
+                isDismissible: true,
+              );
+              return;
+            }
           } else if (user.clinic == 1) {
             showLoadingDialog();
             var resClinic = await http
                 .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+            box.write('type', 'clinic');
             box.write('clinicName', jsonDecode(resClinic.body)['name']);
             box.write('clinicImage', jsonDecode(resClinic.body)['image']);
-            log('Name ${box.read('clinicName')}');
-            Get.back();
-            Get.offAll(() => ClinicmainPage());
+            String? fcmToken = await FirebaseMessaging.instance.getToken();
+            FcmTokenPost token =
+                FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+            var tokenUpdate = await http.put(
+              Uri.parse("$url/user/fcmToken"),
+              headers: {"Content-Type": "application/json; charset=utf-8"},
+              body: fcmTokenPostToJson(token),
+            );
+            if (tokenUpdate.statusCode == 201) {
+              log('Name ${box.read('clinicName')}');
+              Get.back();
+              Get.offAll(() => ClinicmainPage());
+            } else {
+              Get.snackbar(
+                'ข้อผิดพลาด',
+                'กรุณาลองใหม่อีกครั้ง',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+                colorText: Colors.white,
+                borderRadius: 12,
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
+                snackStyle: SnackStyle.FLOATING,
+                isDismissible: true,
+              );
+              return;
+            }
           }
         } else {
           showLoadingDialog();
@@ -253,6 +312,20 @@ class _IndexPageState extends State<IndexPage> {
 
   void loginButton() {
     Get.to(() => LoginPage());
+  }
+
+  void stopRealTime() {
+    final appData = context.read<AppData>();
+
+    if (appData.listener != null) {
+      appData.listener?.cancel().then((_) {
+        log('🔕 Listener is stopped');
+      }).catchError((e) {
+        log('⚠️ Failed to stop listener: $e');
+      });
+    } else {
+      log('ℹ️ No listener was running');
+    }
   }
 
   void showAlertNoClose({
@@ -402,6 +475,7 @@ class _IndexPageState extends State<IndexPage> {
         } else if (user.general == 1) {
           var resGeneral = await http
               .get(Uri.parse("$url/general/name/${box.read('email')}"));
+          box.write('type', 'general');
           box.write('generalName', jsonDecode(resGeneral.body)['username']);
           box.write('generalImage', jsonDecode(resGeneral.body)['image']);
           log('Name ${box.read('generalName')}');
@@ -409,6 +483,7 @@ class _IndexPageState extends State<IndexPage> {
         } else if (user.clinic == 1) {
           var resClinic = await http
               .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+          box.write('type', 'clinic');
           box.write('clinicName', jsonDecode(resClinic.body)['name']);
           box.write('clinicImage', jsonDecode(resClinic.body)['image']);
           log('Name ${box.read('clinicName')}');
