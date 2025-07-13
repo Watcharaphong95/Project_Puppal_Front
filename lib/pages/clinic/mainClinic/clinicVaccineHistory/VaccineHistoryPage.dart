@@ -1,13 +1,18 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentClinic.dart';
+import 'package:puppal_application/model/appointmentPost.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/bookingdetails/CalendarBookingDetailPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryDetailsPage.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -30,10 +35,10 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
   final Color lightBrown = const Color(0xFFE9CBAF);
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<ReserveClinicPost> reserveList = [];
-  List<Reservebooking> reservebookingList = [];
-  List<Reservebooking> events = [];
-  List<Reservebooking> reservebookingListAll = [];
+  List<ReserveClinicFirebase> reserveList = [];
+  List<ReserveClinicFirebase> reservebookingList = [];
+  List<ReserveClinicFirebase> events = [];
+  List<ReserveClinicFirebase> reservebookingListAll = [];
 
   @override
   void initState() {
@@ -212,24 +217,64 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
-                                                child: Image.network(
-                                                  item.image,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error,
-                                                      stackTrace) {
-                                                    return Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Color(0xFFE9CBAF)
+                                                child: FutureBuilder<
+                                                    DogDetailsPost?>(
+                                                  future: getdog(
+                                                    item.dogDogId is int
+                                                        ? item.dogDogId as int
+                                                        : int.tryParse(item
+                                                                .dogDogId
+                                                                .toString()) ??
+                                                            0,
+                                                  ),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const Center(
+                                                          child:
+                                                              CircularProgressIndicator());
+                                                    }
+                                                    if (!snapshot.hasData ||
+                                                        snapshot.data == null ||
+                                                        snapshot.data!.image ==
+                                                            null) {
+                                                      return Container(
+                                                        color: const Color(
+                                                                0xFFE9CBAF)
                                                             .withOpacity(0.3),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(16),
-                                                      ),
-                                                      child: Icon(
-                                                        Icons.person,
-                                                        color:
-                                                            Color(0xFF916B44),
-                                                        size: 28,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: const Icon(
+                                                          Icons.pets,
+                                                          size: 28,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    final dogImageUrl =
+                                                        snapshot.data!.image!;
+                                                    return Image.network(
+                                                      dogImageUrl,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                              error,
+                                                              stackTrace) =>
+                                                          Container(
+                                                        color: const Color(
+                                                                0xFFE9CBAF)
+                                                            .withOpacity(0.3),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: const Icon(
+                                                          Icons.broken_image,
+                                                          size: 28,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
                                                       ),
                                                     );
                                                   },
@@ -252,7 +297,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                     children: [
                                                       Expanded(
                                                         child: Text(
-                                                          item.username,
+                                                          item.generalEmail,
                                                           style: TextStyle(
                                                             fontSize: 16,
                                                             fontWeight:
@@ -282,7 +327,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                           formatshowTime(
                                                               item.date!),
                                                           style: TextStyle(
-                                                            fontSize: 12,
+                                                            fontSize: 10,
                                                             fontWeight:
                                                                 FontWeight.w500,
                                                             color: Color(
@@ -311,19 +356,82 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                       ),
                                                       SizedBox(width: 8),
                                                       Expanded(
-                                                        child: Text(
-                                                          item.appointmentName
-                                                              .toString(),
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: Color(
-                                                                    0xFF916B44)
-                                                                .withOpacity(
-                                                                    0.7),
-                                                          ),
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
+                                                        child: (item.appointmentAid ==
+                                                                null)
+                                                            ? const Text(
+                                                                '-',
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        14),
+                                                              )
+                                                            : FutureBuilder<
+                                                                AppointmentClinic?>(
+                                                                future:
+                                                                    getvaccine(
+                                                                  item.appointmentAid
+                                                                      .toString(),
+                                                                  item.generalEmail,
+                                                                ),
+                                                                builder: (context,
+                                                                    snapshot) {
+                                                                  if (snapshot
+                                                                          .connectionState ==
+                                                                      ConnectionState
+                                                                          .waiting) {
+                                                                    return Text(
+                                                                      'กำลังโหลดวัคซีน...',
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        color: const Color(0xFF916B44)
+                                                                            .withOpacity(0.7),
+                                                                      ),
+                                                                    );
+                                                                  } else if (snapshot
+                                                                      .hasError) {
+                                                                    return Text(
+                                                                      'Error: ${snapshot.error}',
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              14,
+                                                                          color:
+                                                                              Colors.red),
+                                                                    );
+                                                                  } else if (!snapshot
+                                                                          .hasData ||
+                                                                      snapshot
+                                                                          .data!
+                                                                          .data
+                                                                          .isEmpty) {
+                                                                    return const Text(
+                                                                      'ไม่มีข้อมูลวัคซีน',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              14),
+                                                                    );
+                                                                  } else {
+                                                                    final vaccineName = snapshot
+                                                                        .data!
+                                                                        .data
+                                                                        .first
+                                                                        .vaccines;
+                                                                    return Text(
+                                                                      vaccineName!,
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        color: const Color(0xFF916B44)
+                                                                            .withOpacity(0.7),
+                                                                      ),
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    );
+                                                                  }
+                                                                },
+                                                              ),
                                                       ),
                                                     ],
                                                   ),
@@ -336,8 +444,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                               onTap: () {
                                                 Get.to(() =>
                                                     Vaccinehistorydetailspage(
-                                                        reserveId:
-                                                            item.reserveId));
+                                                        docId: item.docId));
                                               },
                                               child: Icon(
                                                 Icons.arrow_forward_ios,
@@ -383,7 +490,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         ],
       ),
       padding: const EdgeInsets.all(12),
-      child: TableCalendar<Reservebooking>(
+      child: TableCalendar<ReserveClinicFirebase>(
         locale: 'th_TH',
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(DateTime.now().year + 10),
@@ -482,6 +589,55 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
     );
   }
 
+  Future<DogDetailsPost?> getdog(int dogId) async {
+    try {
+      // log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      if (res.statusCode == 200) {
+        final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
+        if (dogList.isNotEmpty) {
+          return dogList.first;
+        }
+        return null; // กรณีไม่มีข้อมูล
+      } else {
+        log("❌ Failed to load dog: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching dog info: $e");
+      return null;
+    }
+  }
+
+  AppointmentClinic appointmentClinicFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is Map && jsonData['data'] != null) {
+      return AppointmentClinic.fromJson(
+        Map<String, dynamic>.from(jsonData),
+      );
+    }
+    throw Exception("Invalid JSON format");
+  }
+
+  Future<AppointmentClinic?> getvaccine(
+      String aids, String generalEmail) async {
+    try {
+      final res = await http
+          .get(Uri.parse("$url/appointment/latestdate/$aids/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        print('API response body: ${res.body}');
+        return appointmentClinicFromJson(res.body);
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
   String formatshowTime(DateTime isoDate) {
     final date = isoDate.toLocal();
 
@@ -510,7 +666,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
     return 'เวลา $hour:$minute วันที่ $day $month $year';
   }
 
-  List<Reservebooking> getEventsForDay(DateTime day) {
+  List<ReserveClinicFirebase> getEventsForDay(DateTime day) {
     final normalizedDay = normalizeDate(day);
 
     return reservebookingListAll.where((item) {
@@ -521,32 +677,52 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
 
   Future<void> getReserve() async {
     try {
-      final res =
-          await http.get(Uri.parse("$url/reserve/${box.read("email")}"));
-      if (res.statusCode == 200) {
-        reserveList = reserveClinicPostFromJson(res.body);
-        reservebookingListAll.clear();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('reserve')
+          .where('clinicEmail', isEqualTo: box.read("email"))
+          .get();
 
-        // สร้าง List ของ Future เพื่อรอให้ทุก request เสร็จ
-        List<Future<void>> futures = [];
-        for (var data in reserveList) {
-          futures.add(getReserveBook(data.reserveId));
-        }
+      List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
+        return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
+      }).toList();
 
-        // รอให้ทุก Future เสร็จสิ้น
-        await Future.wait(futures);
+      allData.sort((a, b) => b.date.compareTo(a.date));
+      reserveList = allData; // ตั้งค่า reserveList แทนที่เวอร์ชัน HTTP
+      reservebookingListAll.clear();
 
-        // Debug: แสดงข้อมูลทั้งหมดที่ได้
-        log("Total reservebookingListAll: ${reservebookingListAll.length}");
-        for (var booking in reservebookingListAll) {
-          log("Booking - ID: ${booking.reserveId}, Date: ${booking.date}, User: ${booking.username}");
-        }
+      List<Future<void>> futures = [];
 
-        setState(() {
-          // events = getEventsForDay(_selectedDay ?? DateTime.now());
-          isLoading = false;
-        });
+      for (var data in reserveList) {
+        futures.add(getReserveBook(data.docId).then((bookingData) {
+          if (bookingData != null) {
+            try {
+              final booking =
+                  ReserveClinicFirebase.fromJson(bookingData, data.docId);
+              reservebookingListAll.add(booking);
+              log("✅ Added: ${booking.docId}");
+            } catch (e) {
+              log("❌ Error parsing ReserveClinicFirebase: $e");
+            }
+          } else {
+            log("⚠️ No booking data for docId=${data.docId}");
+          }
+        }));
       }
+
+      // if (allData.isNotEmpty &&
+      //     (allData[0].status == 1 || allData[0].type == 1)) {
+      await Future.wait(futures);
+
+      log("Total reservebookingListAll: ${reservebookingListAll.length}");
+      for (var booking in reservebookingListAll) {
+        log("Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.clinicEmail}");
+      }
+      // }
+      // getGeneral(allData[0].generalEmail);
+
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       log("Error: $e");
       setState(() {
@@ -555,34 +731,25 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
     }
   }
 
-  Future<void> getReserveBook(int reserveID) async {
+  Future<Map<String, dynamic>?> getReserveBook(String docId) async {
     try {
-      var res = await http.get(Uri.parse("$url/reserve/group/$reserveID"));
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
 
-      if (res.statusCode == 200) {
-        final decoded = json.decode(res.body);
-
-        // เคลียร์รายการก่อนเพิ่ม (ถ้าต้องการ)
-        reservebookingList.clear();
-
-        decoded.forEach((key, value) {
-          // value คือลิสต์ของ reserve
-          for (var item in value) {
-            final reserve = Reservebooking.fromJson(item);
-            reservebookingList.add(reserve);
-            reservebookingListAll.add(reserve); // เพิ่มใน list รวม
-
-            // debug logs
-            log("reserveId: ${reserve.reserveId}");
-            log("date: ${reserve.date}");
-            log("username: ${reserve.username}");
-          }
-        });
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          data['docId'] = doc.id;
+          return data;
+        }
       } else {
-        log("Failed to load: ${res.statusCode}");
+        log('❌ No document found for docId=$docId');
       }
     } catch (e) {
-      log("Error in getReserveBook: $e");
+      log('❌ Error while fetching document: $e');
     }
+    return null;
   }
 }

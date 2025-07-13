@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -45,13 +46,14 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   String url = '';
   List<GeneralPost> generalList = [];
   List<DogDetailsPost> dogList = [];
-  List<Reservebooking> reservebookingList = [];
+  // List<Reservebooking> reservebookingList = [];
   List<ReserveClinicFirebase> todayList = [];
   List<ReserveClinicFirebase> yesterdayList = [];
   List<ReserveClinicFirebase> earlierList = [];
   var db = FirebaseFirestore.instance;
   List<String> messages = [];
   bool isLoading = true;
+  StreamSubscription? _reserveListener;
   final Color primaryBrown = const Color(0xFF916B44);
   final Color secondaryBrown = const Color(0xFFDBA871);
   final Color lightBrown = const Color(0xFFE9CBAF);
@@ -62,7 +64,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
       // getReserve();
-      fetchReserveData();
+      // fetchReserveData();
+      startRealtimeGet();
       _init();
     });
   }
@@ -333,70 +336,60 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
               ],
             ),
           ),
-          Column(
-            children: [
-              if (todayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('วันนี้'),
-              ...todayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (yesterdayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('เมื่อวาน'),
-              ...yesterdayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (earlierList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('ก่อนหน้านี้'),
-              ...earlierList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (todayList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty &&
-                  yesterdayList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty &&
-                  earlierList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(FontAwesomeIcons.syringe,
-                            color: Color(0xFF916B44)),
-                        Text(
-                          'ไม่มีคำขอจองฉีดวัคซีน',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          if (todayList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .isNotEmpty)
+            _buildDateHeader('วันนี้'),
+          ...todayList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .map((data) => _buildRequestCard(
+                    data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                    data.generalEmail ?? '-',
+                    formatshowTime(data.date.toString()),
+                    data.docId,
+                  )),
+          if (yesterdayList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .isNotEmpty)
+            _buildDateHeader('เมื่อวาน'),
+          ...yesterdayList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .map((data) => _buildRequestCard(
+                    data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                    data.generalEmail ?? '-',
+                    formatshowTime(data.date.toString()),
+                    data.docId,
+                  )),
+          if (earlierList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .isNotEmpty)
+            _buildDateHeader('ก่อนหน้านี้'),
+          ...earlierList
+              .where((data) =>
+                  data.type == (isNormalSelected ? 0 : 1) &&
+                  data.status != 2 &&
+                  data.status != 3)
+              .map((data) => _buildRequestCard(
+                    data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                    data.generalEmail ?? '-',
+                    formatshowTime(data.date.toString()),
+                    data.docId,
+                  )),
         ]));
   }
 
@@ -425,57 +418,60 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   //   });
   // }
 
-  Future<void> fetchReserveData() async {
-    final snapshot = await FirebaseFirestore.instance
+  void startRealtimeGet() {
+    stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
+
+    _reserveListener = FirebaseFirestore.instance
         .collection('reserve')
         .where('clinicEmail', isEqualTo: box.read("email"))
-        .get();
+        .snapshots()
+        .listen((snapshot) async {
+      try {
+        List<ReserveClinicFirebase> allData = snapshot.docs
+            .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
+            .where((e) => e.status != 3)
+            .toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
 
-    List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
-      return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
-    }).toList();
+        // เคลียร์ลิสต์เก่า
+        todayList.clear();
+        yesterdayList.clear();
+        earlierList.clear();
 
-    allData.sort((a, b) => b.date.compareTo(a.date));
+        for (var item in allData) {
+          final date = item.date.toLocal();
+          if (isToday(date)) {
+            todayList.add(item);
+          } else if (isYesterday(date)) {
+            yesterdayList.add(item);
+          } else {
+            earlierList.add(item);
+          }
+        }
 
-    todayList.clear();
-    yesterdayList.clear();
-    earlierList.clear();
+        setState(() {}); // อัปเดต UI
 
-    for (var item in allData) {
-      final date = item.date.toLocal();
-      if (isToday(date)) {
-        todayList.add(item);
-      } else if (isYesterday(date)) {
-        yesterdayList.add(item);
-      } else {
-        earlierList.add(item);
+        // ดึงข้อมูล reserveBook และ general จากรายการแรกที่มี
+        if (todayList.isNotEmpty) {
+          await getReserveBook(todayList[0].docId);
+          await getGeneral(todayList[0].generalEmail);
+        } else if (yesterdayList.isNotEmpty) {
+          await getReserveBook(yesterdayList[0].docId);
+          await getGeneral(yesterdayList[0].generalEmail);
+        } else if (earlierList.isNotEmpty) {
+          await getReserveBook(earlierList[0].docId);
+          await getGeneral(earlierList[0].generalEmail);
+        } else {
+          log("ℹ️ No reserve data found.");
+        }
+      } catch (e) {
+        log("❌ Error in realtime listener: $e");
       }
-    }
-
-    todayList.sort((a, b) => b.date.compareTo(a.date));
-    yesterdayList.sort((a, b) => b.date.compareTo(a.date));
-    earlierList.sort((a, b) => b.date.compareTo(a.date));
-
-    setState(() {
-      // อัปเดต state
-      todayList = todayList;
-      yesterdayList = yesterdayList;
-      earlierList = earlierList;
     });
+  }
 
-    // ดึง reserveBook จาก doc แรกที่เจอ
-    if (todayList.isNotEmpty) {
-      await getReserveBook(todayList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else if (yesterdayList.isNotEmpty) {
-      await getReserveBook(yesterdayList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else if (earlierList.isNotEmpty) {
-      await getReserveBook(earlierList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else {
-      log("ℹ️ No reserve data to fetch reserveBook.");
-    }
+  void stopRealTime() {
+    _reserveListener?.cancel();
   }
 
   Widget _buildRequestCard(
@@ -851,12 +847,12 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           'status': status,
         });
 
-        log('✅ Updated status to $status for docId=$docId');
+        log('Updated status to $status for docId=$docId');
       } catch (e) {
         log('❌ Failed to update status: $e');
       }
     } else {
-      log('⚠️ Status not allowed to update: $status');
+      log('Status not allowed to update: $status');
     }
   }
 
@@ -1187,9 +1183,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         setState(() {
           isLoading = false;
         });
-        log("✅ Loaded successfully: ${res.statusCode}");
+        log("Loaded successfully: ${res.statusCode}");
       } else {
-        log("❌ Failed to load: ${res.statusCode}");
+        log("Failed to load: ${res.statusCode}");
       }
     } catch (e) {
       log("Error: $e");

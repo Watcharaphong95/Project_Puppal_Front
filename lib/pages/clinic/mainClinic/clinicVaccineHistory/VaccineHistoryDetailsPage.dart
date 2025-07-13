@@ -1,18 +1,25 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentClinic.dart';
+import 'package:puppal_application/model/clinicGetInjectionRecord.dart';
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
+import 'package:puppal_application/model/injectionRecordPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 
 class Vaccinehistorydetailspage extends StatefulWidget {
-  final int reserveId;
-  const Vaccinehistorydetailspage({super.key, required this.reserveId});
+  final String docId;
+  const Vaccinehistorydetailspage({super.key, required this.docId});
 
   @override
   State<Vaccinehistorydetailspage> createState() =>
@@ -25,18 +32,19 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
   late double screenHeight;
   bool isNormalSelected = true;
   final box = GetStorage();
-  List<Reservebooking> reserveList = [];
-  List<ClinicinjectionRecordPost> injectionList = [];
-  List<ReserveClinicPost> todayList = [];
-  List<ReserveClinicPost> yesterdayList = [];
-  List<ReserveClinicPost> earlierList = [];
+  List<ReserveClinicFirebase> reserveList = [];
+  List<DogDetailsPost> dogList = [];
+  List<ClinicGetInjectionRecord> injectionList = [];
+  ClinicGetInjectionRecord? clinicRecord;
+  List<GeneralPost> generalList = [];
+
   bool isLoading = true;
   @override
   void initState() {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve(widget.reserveId.toString());
+      getReserve(widget.docId);
     });
   }
 
@@ -65,7 +73,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: reserveList.map((reserve) {
+              children: dogList.map((dog) {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
@@ -120,12 +128,12 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ],
                                   ),
                                   padding: const EdgeInsets.all(4),
-                                  child: reserve.image.isNotEmpty
+                                  child: dog.image.isNotEmpty
                                       ? ClipRRect(
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           child: Image.network(
-                                            reserve.image,
+                                            dog.image,
                                             width: 200,
                                             height: 150,
                                             fit: BoxFit.cover,
@@ -177,7 +185,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ],
                                   ),
                                   child: Text(
-                                    reserve.name,
+                                    dog.name,
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -201,7 +209,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ),
                                   ),
                                   child: Text(
-                                    'พันธุ์: ${reserve.breed}   เพศ: ${reserve.gender}',
+                                    'พันธุ์: ${dog.breed}   เพศ: ${dog.gender}',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF916B44),
@@ -229,22 +237,21 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
 
                           /// 🧾 รายการข้อมูลสำคัญ
                           _buildInfoRow(
-                              'วันเกิด', formatThaiDateTime(reserve.birthday)),
-                          _buildInfoRow('สี', reserve.color),
-                          _buildInfoRow('ตำหนิ', reserve.defect),
-                          _buildInfoRow(
-                              'โรคประจำตัว', reserve.congentialDisease),
+                              'วันเกิด', formatThaiDateTime(dog.birthday)),
+                          _buildInfoRow('สี', dog.color),
+                          _buildInfoRow('ตำหนิ', dog.defect),
+                          _buildInfoRow('โรคประจำตัว', dog.congentialDisease),
                           _buildInfoRow(
                             'การทำหมัน',
-                            (reserve.sterilization.toString() == '1' ||
-                                    reserve.sterilization
+                            (dog.sterilization.toString() == '1' ||
+                                    dog.sterilization
                                             .toString()
                                             .toLowerCase() ==
                                         'true')
                                 ? 'ทำหมันแล้ว'
                                 : 'ยังไม่ทำหมัน',
                           ),
-                          _buildInfoRow('ลักษณะขน', reserve.hair),
+                          _buildInfoRow('ลักษณะขน', dog.hair),
                           const SizedBox(height: 20),
 
                           /// 💉 ประวัติการฉีดยา
@@ -291,8 +298,9 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                if (injectionList.isNotEmpty)
-                                  ...injectionList.map((item) => Container(
+                                if (clinicRecord != null &&
+                                    clinicRecord!.data.isNotEmpty)
+                                  ...clinicRecord!.data.map((item) => Container(
                                         margin:
                                             const EdgeInsets.only(bottom: 16),
                                         padding: const EdgeInsets.all(16),
@@ -315,8 +323,10 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                           children: [
                                             _buildInfoRow(
                                                 'วัคซีน', item.vaccine),
-                                            _buildInfoRow('วันที่',
-                                                formatThaiDateTime(item.date)),
+                                            _buildInfoRow(
+                                                'วันที่',
+                                                formatThaiDateTime(
+                                                    item.injectionDateOnly)),
                                             const SizedBox(height: 12),
                                             Center(
                                               child: Column(
@@ -374,8 +384,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                                           BorderRadius.circular(
                                                               16),
                                                       child: Image.network(
-                                                        injectionList[0]
-                                                            .vaccineLabel,
+                                                        item.vaccineLabel,
                                                         width: 250,
                                                         height: 250,
                                                         fit: BoxFit.cover,
@@ -484,14 +493,38 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                       ),
                                     ],
                                   ),
-                                  child: Column(
-                                    children: [
-                                      _buildInfoRow('ชื่อ', reserve.username),
-                                      _buildInfoRow('เบอร์โทร', reserve.phone),
-                                      _buildInfoRow(
-                                          'อีเมล', reserve.generalEmail),
-                                    ],
-                                  ),
+                                  child: (reserveList.isEmpty)
+                                      ? const Text('ไม่มีข้อมูลจอง')
+                                      : FutureBuilder<GeneralPost?>(
+                                          future: getGeneral(
+                                              reserveList[0].clinicEmail),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const CircularProgressIndicator();
+                                            } else if (snapshot.hasError) {
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            } else if (!snapshot.hasData) {
+                                              return const Text(
+                                                  'No data found');
+                                            } else {
+                                              final general = snapshot.data!;
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  _buildInfoRow(
+                                                      'ชื่อ', general.username),
+                                                  _buildInfoRow('เบอร์โทร',
+                                                      general.phone),
+                                                  _buildInfoRow('อีเมล',
+                                                      general.userEmail),
+                                                ],
+                                              );
+                                            }
+                                          },
+                                        ),
                                 ),
                               ],
                             ),
@@ -714,19 +747,124 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
     );
   }
 
-  Future<void> getReserve(String reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reserveList = reservebookingFromJson(res.body);
-      for (var data in reserveList) {
-        log(data.reserveId.toString());
+  Future<void> getReserve(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
+
+        if (data != null) {
+          // ล้าง reserveList ก่อนถ้าต้องการโหลดใหม่
+          reserveList.clear();
+
+          // สร้าง model จากข้อมูลและเพิ่มเข้า list
+          reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
+
+          final dynamic dogDogIdRaw = data['dogDogId'];
+          final String? email = data['generalEmail'];
+          final String? date = data['date'];
+
+          // แปลง dogDogId เป็น int
+          final int? dogDogId = dogDogIdRaw is int
+              ? dogDogIdRaw
+              : int.tryParse(dogDogIdRaw?.toString() ?? '');
+
+          if (dogDogId != null && email != null && email.isNotEmpty) {
+            await getdog(dogDogId);
+            await getGeneral(email);
+            await getInjectionList(dogDogId, date!);
+          } else {
+            log('⚠️ dogDogId หรือ email ไม่ถูกต้องหรือว่าง');
+          }
+        }
+      } else {
+        log('❌ No document found for docId=$docId');
       }
-      // getinjection(reserveID);
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      log("Failed to load: ${res.statusCode}");
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
+    }
+  }
+
+  Future<void> getdog(int dogId) async {
+    try {
+      log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      if (res.statusCode == 200) {
+        dogList = dogDetailsPostFromJson(res.body);
+        setState(() {});
+      } else {
+        log("❌ Failed to load dog: ${res.statusCode}");
+      }
+    } catch (e) {
+      log("❌ Exception while fetching dog info: $e");
+    }
+  }
+
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
+    try {
+      final res = await http.get(Uri.parse("$url/general/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        final generalPost = generalPostFromJson(res.body);
+        log("✅ Loaded successfully: ${res.statusCode}");
+        return generalPost;
+      } else {
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
+    }
+  }
+
+  AppointmentClinic appointmentClinicFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is Map && jsonData['data'] != null) {
+      return AppointmentClinic.fromJson(
+        Map<String, dynamic>.from(jsonData),
+      );
+    }
+    throw Exception("Invalid JSON format");
+  }
+
+  Future<AppointmentClinic?> getvaccine(
+      String aids, String generalEmail) async {
+    try {
+      final res = await http
+          .get(Uri.parse("$url/appointment/latestdate/$aids/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        print('API response body: ${res.body}');
+        return appointmentClinicFromJson(res.body);
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  Future<void> getInjectionList(int dogId, String date) async {
+    log("$dogId : $date");
+    try {
+      final res =
+          await http.get(Uri.parse("$url/clinicinjectionRecord/$dogId/$date"));
+      if (res.statusCode == 200) {
+        clinicRecord = clinicGetInjectionRecordFromJson(res.body); // ✅
+        setState(() {});
+      } else {
+        log("❌ Failed to load injection list: ${res.statusCode}");
+      }
+    } catch (e) {
+      log("❌ Error loading injection list: $e");
     }
   }
 

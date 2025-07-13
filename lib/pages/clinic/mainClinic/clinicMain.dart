@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -8,6 +9,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentClinic.dart';
+import 'package:puppal_application/model/appointmentGet.dart';
+import 'package:puppal_application/model/appointmentGetEmail.dart';
+import 'package:puppal_application/model/appointmentPost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
@@ -49,10 +54,12 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   DateTime? _selectedDay;
   late GeneralPost generalData;
   List<GeneralPost> generalList = [];
+  List<Appointment> vaccineList = [];
   List<ReserveClinicFirebase> reserveList = [];
   List<ReserveClinicFirebase> reservebookingList = [];
   List<ReserveClinicFirebase> events = [];
   List<ReserveClinicFirebase> reservebookingListAll = [];
+  StreamSubscription? _reserveListener;
 
   @override
   void initState() {
@@ -63,7 +70,8 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   Future<void> initialize() async {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
-    await getReserve();
+    // await getReserve();
+    startRealtimeGet();
     box.write('type', 'clinic');
   }
 
@@ -352,13 +360,12 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 if (item.status != 2) {
                                   return const SizedBox.shrink();
                                 }
-
                                 return Container(
                                   margin: EdgeInsets.only(bottom: 12),
                                   child: InkWell(
                                     onTap: () async {
-                                      final reserveData = await getReserveBook(
-                                          reserveList[0].docId);
+                                      final reserveData =
+                                          await getReserveBook(item.docId);
                                       final generalEmail =
                                           reserveData?['generalEmail'];
 
@@ -440,24 +447,64 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
-                                                child: Image.network(
-                                                  item.dogDogId,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error,
-                                                      stackTrace) {
-                                                    return Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Color(0xFFE9CBAF)
+                                                child: FutureBuilder<
+                                                    DogDetailsPost?>(
+                                                  future: getdog(
+                                                    item.dogDogId is int
+                                                        ? item.dogDogId as int
+                                                        : int.tryParse(item
+                                                                .dogDogId
+                                                                .toString()) ??
+                                                            0,
+                                                  ),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const Center(
+                                                          child:
+                                                              CircularProgressIndicator());
+                                                    }
+                                                    if (!snapshot.hasData ||
+                                                        snapshot.data == null ||
+                                                        snapshot.data!.image ==
+                                                            null) {
+                                                      return Container(
+                                                        color: const Color(
+                                                                0xFFE9CBAF)
                                                             .withOpacity(0.3),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(16),
-                                                      ),
-                                                      child: Icon(
-                                                        Icons.person,
-                                                        color:
-                                                            Color(0xFF916B44),
-                                                        size: 28,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: const Icon(
+                                                          Icons.pets,
+                                                          size: 28,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    final dogImageUrl =
+                                                        snapshot.data!.image!;
+                                                    return Image.network(
+                                                      dogImageUrl,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                              error,
+                                                              stackTrace) =>
+                                                          Container(
+                                                        color: const Color(
+                                                                0xFFE9CBAF)
+                                                            .withOpacity(0.3),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: const Icon(
+                                                          Icons.broken_image,
+                                                          size: 28,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
                                                       ),
                                                     );
                                                   },
@@ -510,7 +557,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                           formatshowTime(
                                                               item.date!),
                                                           style: TextStyle(
-                                                            fontSize: 12,
+                                                            fontSize: 10,
                                                             fontWeight:
                                                                 FontWeight.w500,
                                                             color: Color(
@@ -539,19 +586,82 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                       ),
                                                       SizedBox(width: 8),
                                                       Expanded(
-                                                        child: Text(
-                                                          item.appointmentAid
-                                                              .toString(),
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: Color(
-                                                                    0xFF916B44)
-                                                                .withOpacity(
-                                                                    0.7),
-                                                          ),
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
+                                                        child: (item.appointmentAid ==
+                                                                null)
+                                                            ? const Text(
+                                                                '-',
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        14),
+                                                              )
+                                                            : FutureBuilder<
+                                                                AppointmentClinic?>(
+                                                                future:
+                                                                    getvaccine(
+                                                                  item.appointmentAid
+                                                                      .toString(),
+                                                                  item.generalEmail,
+                                                                ),
+                                                                builder: (context,
+                                                                    snapshot) {
+                                                                  if (snapshot
+                                                                          .connectionState ==
+                                                                      ConnectionState
+                                                                          .waiting) {
+                                                                    return Text(
+                                                                      'กำลังโหลดวัคซีน...',
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        color: const Color(0xFF916B44)
+                                                                            .withOpacity(0.7),
+                                                                      ),
+                                                                    );
+                                                                  } else if (snapshot
+                                                                      .hasError) {
+                                                                    return Text(
+                                                                      'Error: ${snapshot.error}',
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              14,
+                                                                          color:
+                                                                              Colors.red),
+                                                                    );
+                                                                  } else if (!snapshot
+                                                                          .hasData ||
+                                                                      snapshot
+                                                                          .data!
+                                                                          .data
+                                                                          .isEmpty) {
+                                                                    return const Text(
+                                                                      'ไม่มีข้อมูลวัคซีน',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              14),
+                                                                    );
+                                                                  } else {
+                                                                    final vaccineName = snapshot
+                                                                        .data!
+                                                                        .data
+                                                                        .first
+                                                                        .vaccines;
+                                                                    return Text(
+                                                                      vaccineName!,
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        color: const Color(0xFF916B44)
+                                                                            .withOpacity(0.7),
+                                                                      ),
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    );
+                                                                  }
+                                                                },
+                                                              ),
                                                       ),
                                                     ],
                                                   ),
@@ -1134,25 +1244,31 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     );
   }
 
-  Future<void> getReserve() async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('reserve')
-          .where('clinicEmail', isEqualTo: box.read("email"))
-          .get();
+  void startRealtimeGet() {
+    stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
 
-      List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
-        return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
-      }).toList();
+    _reserveListener = FirebaseFirestore.instance
+        .collection('reserve')
+        .where('clinicEmail', isEqualTo: box.read("email"))
+        .snapshots()
+        .listen((snapshot) async {
+      try {
+        setState(() {
+          isLoading = true;
+        });
 
-      allData.sort((a, b) => b.date.compareTo(a.date));
-      reserveList = allData; // ตั้งค่า reserveList แทนที่เวอร์ชัน HTTP
-      reservebookingListAll.clear();
+        List<ReserveClinicFirebase> allData = snapshot.docs
+            .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
+            .where((data) => data.status != 3) // ✅ กรอง status != 3
+            .toList();
 
-      List<Future<void>> futures = [];
+        allData.sort((a, b) => b.date.compareTo(a.date));
+        reserveList = allData;
+        reservebookingListAll.clear();
 
-      for (var data in reserveList) {
-        futures.add(getReserveBook(data.docId).then((bookingData) {
+        for (var data in reserveList) {
+          final bookingData = await getReserveBook(data.docId);
+          log(data.docId);
           if (bookingData != null) {
             try {
               final booking =
@@ -1160,39 +1276,37 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
               reservebookingListAll.add(booking);
               log("✅ Added: ${booking.docId}");
             } catch (e) {
-              log("❌ Error parsing ReserveClinicFirebase: $e");
+              log("❌ Error parsing bookingData: $e");
             }
           } else {
             log("⚠️ No booking data for docId=${data.docId}");
           }
-        }));
+        }
+
+        log("✅ Total reservebookingListAll: ${reservebookingListAll.length}");
+        for (var booking in reservebookingListAll) {
+          log("📌 Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.generalEmail}");
+        }
+
+        setState(() {
+          isLoading = false;
+        });
+      } catch (e) {
+        log("❌ Error during snapshot handling: $e");
+        setState(() {
+          isLoading = false;
+        });
       }
+    });
+  }
 
-      // if (allData.isNotEmpty &&
-      //     (allData[0].status == 1 || allData[0].type == 1)) {
-      await Future.wait(futures);
-
-      log("Total reservebookingListAll: ${reservebookingListAll.length}");
-      for (var booking in reservebookingListAll) {
-        log("Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.clinicEmail}");
-      }
-      // }
-      // getGeneral(allData[0].generalEmail);
-
-      setState(() {
-        isLoading = false;
-      });
-    } catch (e) {
-      log("Error: $e");
-      setState(() {
-        isLoading = false;
-      });
-    }
+  void stopRealTime() {
+    _reserveListener?.cancel();
   }
 
   Future<DogDetailsPost?> getdog(int dogId) async {
     try {
-      log("🐶 Getting dog info for ID: $dogId");
+      // log("🐶 Getting dog info for ID: $dogId");
       var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
       if (res.statusCode == 200) {
         final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
@@ -1207,6 +1321,43 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     } catch (e) {
       log("❌ Exception while fetching dog info: $e");
       return null;
+    }
+  }
+
+  AppointmentClinic appointmentClinicFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is Map && jsonData['data'] != null) {
+      return AppointmentClinic.fromJson(
+        Map<String, dynamic>.from(jsonData),
+      );
+    }
+    throw Exception("Invalid JSON format");
+  }
+
+  Future<AppointmentClinic?> getvaccine(
+      String aids, String generalEmail) async {
+    try {
+      final res = await http
+          .get(Uri.parse("$url/appointment/latestdate/$aids/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        print('API response body: ${res.body}');
+        return appointmentClinicFromJson(res.body);
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  String _formatAppointmentAid(dynamic aid) {
+    if (aid is List) {
+      return aid.join(','); // เช่น [35,56] -> "35,56"
+    } else {
+      return aid.toString(); // เช่น 35 -> "35"
     }
   }
 
