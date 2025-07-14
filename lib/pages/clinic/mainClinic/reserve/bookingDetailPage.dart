@@ -10,6 +10,7 @@ import 'package:puppal_application/model/clinicUpdateTypePost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/dogPost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
@@ -586,6 +587,8 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
             ? dogDogIdRaw
             : int.tryParse(dogDogIdRaw?.toString() ?? '');
 
+        await getGeneral(data?['generalEmail'] ?? '');
+
         if (dogDogId != null) {
           await getdog(dogDogId);
         } else {
@@ -601,6 +604,58 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
 
   // List<DogPost> AboutDialog(String str) =>
   //     List<DogPost>.from(json.decode(str).map((x) => DogPost.fromJson(x)));
+
+  Future<void> sendNotificationAccept(
+      String generalEmail, String userName) async {
+    final sql = Uri.parse("$url/reserve/notify/accept/general-reponse");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'generalEmail': generalEmail,
+          'userName': userName,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
+    }
+  }
+
+  Future<void> sendNotificationRefuse(
+      String generalEmail, String userName) async {
+    final sql = Uri.parse("$url/reserve/notify/refuse/general-reponse");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'generalEmail': generalEmail,
+          'userName': userName,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
+    }
+  }
 
   Future<void> getdog(int dogId) async {
     try {
@@ -620,12 +675,39 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   Future<void> acceptrequest(String docId, int status) async {
     if (status == 0 || status == 2) {
       try {
+        // 1. อัปเดต status
         await FirebaseFirestore.instance
             .collection('reserve')
             .doc(docId)
-            .update({
-          'status': status,
-        });
+            .update({'status': status});
+
+        // 2. ดึงข้อมูลของ reserve
+        final doc = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data();
+          final generalEmail = data?['generalEmail'];
+
+          if (generalEmail != null) {
+            final generalUser = await getGeneral(generalEmail);
+            final userName = generalUser?.name;
+
+            if (userName != null) {
+              if (status == 2) {
+                await sendNotificationAccept(generalEmail, userName);
+              } else if (status == 0) {
+                await sendNotificationRefuse(generalEmail, userName);
+              }
+            } else {
+              log("⚠️ Missing userName from getGeneral()");
+            }
+          } else {
+            log("⚠️ Missing generalEmail in document");
+          }
+        }
 
         log('✅ Updated status to $status for docId=$docId');
       } catch (e) {
@@ -636,6 +718,21 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     }
   }
 
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
+    try {
+      var res = await http.get(Uri.parse("$url/general/$generalEmail"));
+      if (res.statusCode == 200) {
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return GeneralPost.fromJson(jsonMap);
+      } else {
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
+    }
+  }
   // Future<void> updateType(int reserveID, int status) async {
   //   ClinicUpdateTypePost req =
   //       ClinicUpdateTypePost(reserveId: reserveID, type: status);
