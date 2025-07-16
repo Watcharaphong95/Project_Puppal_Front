@@ -993,12 +993,25 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
             .toList();
         final int oldAid = aids.isNotEmpty ? aids.first : 0;
 
+        // 1. ดึงวัคซีนล่าสุดจาก appointment ที่โหลดมา
+        final appointment = appointmentClinicFromJson(res.body);
+        String latestVaccine = '';
+        if (appointment.data.isNotEmpty) {
+          latestVaccine = appointment.data.first.vaccines ?? '';
+
+          // กรอกลง TextField (ถ้า controller ยังว่าง)
+          if (vaccineController.text.trim().isEmpty &&
+              latestVaccine.isNotEmpty) {
+            vaccineController.text = latestVaccine;
+          }
+        }
+
         ClinicinjectionRecordPost injReq = ClinicinjectionRecordPost(
           oldAppointmentAid: oldAid == 0 ? null : oldAid,
           nextAppointmentAid: aid,
           clinicEmail: reserveList[0].clinicEmail,
           doctorCareerNo: selectedDoctor?.careerNo ?? '',
-          vaccine: vaccineController.text,
+          vaccine: latestVaccine,
           date: oldDate,
           vaccineLabel: imageUrl,
           type: reserveList[0].type,

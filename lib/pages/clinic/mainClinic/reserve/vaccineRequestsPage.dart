@@ -567,9 +567,37 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         return FutureBuilder<String>(
           future: email.isNotEmpty ? getGeneralName(email) : Future.value(''),
           builder: (context, nameSnap) {
-            final ownerName = (nameSnap.data?.isNotEmpty ?? false)
-                ? nameSnap.data!
-                : fallbackName;
+            Widget nameText;
+
+            if (nameSnap.connectionState == ConnectionState.waiting) {
+              nameText = const Text(
+                'กำลังโหลดชื่อ...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              );
+            } else if (nameSnap.hasError) {
+              nameText = const Text(
+                'โหลดชื่อผิดพลาด',
+                style: TextStyle(color: Colors.red, fontSize: 14),
+              );
+            } else {
+              final name = nameSnap.data?.trim();
+              nameText = Text(
+                name != null && name.isNotEmpty ? name : 'ไม่มีชื่อ',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: name != null && name.isNotEmpty
+                      ? const Color(0xFF916B44)
+                      : Colors.grey[600],
+                  fontStyle: name != null && name.isNotEmpty
+                      ? FontStyle.normal
+                      : FontStyle.italic,
+                ),
+              );
+            }
             return StatefulBuilder(
               builder: (context, setState) {
                 bool pressed = false;
@@ -677,7 +705,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                     children: [
                                       const TextSpan(text: 'คุณ '),
                                       TextSpan(
-                                        text: ownerName,
+                                        text: nameText is Text
+                                            ? (nameText as Text).data
+                                            : 'ไม่ระบุ',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: Color(0xFF916B44),
@@ -994,8 +1024,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             child: _buildPopupActionButton(
                               label: 'ยืนยันการจอง',
                               onPressed: () {
-                                Navigator.pop(context);
                                 _showAcceptDialog(docId);
+                                Navigator.pop(context);
                               },
                               isPrimary: true,
                             ),
@@ -1152,12 +1182,15 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
+                      // ปิด confirm dialog
                       Navigator.pop(context);
 
+                      // แสดง loading dialog ด้วย rootNavigator
                       showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (BuildContext context) {
+                        useRootNavigator: true,
+                        builder: (BuildContext loadingContext) {
                           return const Center(
                             child: CircularProgressIndicator(
                                 color: Color(0xFF916B44)),
@@ -1165,15 +1198,31 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         },
                       );
 
-                      await Future.delayed(const Duration(seconds: 3));
+                      try {
+                        // รอการบันทึกข้อมูล
+                        await acceptrequest(docId, 2);
 
-                      Navigator.of(context, rootNavigator: true).pop();
+                        // รีโหลดข้อมูล (ถ้ามี)
+                        await _init();
 
-                      Navigator.pop(context, true);
+                        // ปิด loading dialog โดยใช้ rootNavigator ด้วย
+                        Navigator.of(context, rootNavigator: true).pop();
 
-                      acceptrequest(docId, 2);
-                      // _acceptReservation();
-                      _init();
+                        // แจ้งผลสำเร็จ
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("ยืนยันการจองสำเร็จ")),
+                        );
+
+                        // กลับหน้าก่อน หรือส่งค่ากลับ
+                        Navigator.pop(context, true);
+                      } catch (e) {
+                        // ปิด loading dialog ถ้ามี error
+                        Navigator.of(context, rootNavigator: true).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF916B44),
