@@ -13,12 +13,14 @@ import 'package:puppal_application/model/appointmentClinic.dart';
 import 'package:puppal_application/model/appointmentGet.dart';
 import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/appointmentPost.dart';
+import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/bookingdetails/CalendarBookingDetailPage.dart';
@@ -168,7 +170,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                     title: Text('แจ้งเตือน'),
                     onTap: () {
                       Get.back();
-                      // Get.to(() => );
+                      Get.to(() => Notificationpage());
                     },
                   ),
                   ListTile(
@@ -335,9 +337,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                     ),
                                     SizedBox(height: 16),
                                     Text(
-                                      "ยังไม่มีข้อมูล",
+                                      "ไม่มีข้อมูลการจองของวันนี้",
                                       style: TextStyle(
-                                        fontSize: 20,
+                                        fontSize: 18,
                                         fontWeight: FontWeight.w600,
                                         color: Color(0xFF916B44),
                                       ),
@@ -1113,7 +1115,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                             Column(
                               children: [
                                 Text(
-                                  generalData.name,
+                                  dogDetails!.name,
                                   style: TextStyle(
                                     color: primaryBrown,
                                     fontSize: 24,
@@ -1220,14 +1222,15 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       const SizedBox(height: 24),
 
                       // Details
-                      _buildPopupDetailRow('ผู้ใช้', generalData.username),
-                      _buildPopupDetailRow('เบอร์โทร', generalData.phone),
+                      _buildPopupDetailRow('ชื่อ :', generalData.name),
+                      _buildPopupDetailRow('นามสกุล :', generalData.surname),
+                      _buildPopupDetailRow('เบอร์โทร :', generalData.phone),
                       // _buildPopupDetailRow(
                       //     'วัคซีน', reservation.appointmentAid.toString()),
+                      _buildPopupDetailRow('วันที่จอง :',
+                          _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
-                          'วันที่จอง', _formatDateString(reserveData['date'])),
-                      _buildPopupDetailRow(
-                          'เวลาที่จอง', _formatDate(reserveData['date'])),
+                          'เวลาจอง :', _formatDate(reserveData['date'])),
 
                       const SizedBox(height: 32),
 
@@ -1312,7 +1315,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
       String hour = dateTime.hour.toString().padLeft(2, '0');
       String minute = dateTime.minute.toString().padLeft(2, '0');
 
-      return '$hour:$minute น.';
+      return '$hour:$minute';
     } catch (e) {
       log("❌ Error formatting time: $e");
       return 'ไม่สามารถแสดงเวลาได้';

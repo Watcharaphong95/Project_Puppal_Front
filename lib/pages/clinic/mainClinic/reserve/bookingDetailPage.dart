@@ -328,7 +328,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                             _buildInfoRow(
                                                 'วันที่',
                                                 formatThaiDateTime(
-                                                    item.injectionDateOnly)),
+                                                    item.injectionDateOnly!)),
                                             const SizedBox(height: 12),
                                             Center(
                                               child: Column(
@@ -386,7 +386,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                                           BorderRadius.circular(
                                                               16),
                                                       child: Image.network(
-                                                        item.vaccineLabel,
+                                                        item.vaccineLabel!,
                                                         width: 250,
                                                         height: 250,
                                                         fit: BoxFit.cover,

@@ -12,9 +12,9 @@ String clinicinjectionRecordPostToJson(List<ClinicinjectionRecordPost> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ClinicinjectionRecordPost {
-  dynamic oldAppointmentAid;
-  int nextAppointmentAid;
-  String clinicEmail;
+  int? oldAppointmentAid;
+  int? nextAppointmentAid;
+  String? clinicEmail;
   String doctorCareerNo;
   String vaccine;
   DateTime date;

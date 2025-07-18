@@ -326,7 +326,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                             _buildInfoRow(
                                                 'วันที่',
                                                 formatThaiDateTime(
-                                                    item.injectionDateOnly)),
+                                                    item.injectionDateOnly!)),
                                             const SizedBox(height: 12),
                                             Center(
                                               child: Column(
@@ -384,7 +384,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                                           BorderRadius.circular(
                                                               16),
                                                       child: Image.network(
-                                                        item.vaccineLabel,
+                                                        item.vaccineLabel!,
                                                         width: 250,
                                                         height: 250,
                                                         fit: BoxFit.cover,
@@ -497,7 +497,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                       ? const Text('ไม่มีข้อมูลจอง')
                                       : FutureBuilder<GeneralPost?>(
                                           future: getGeneral(
-                                              reserveList[0].clinicEmail),
+                                              reserveList[0].generalEmail),
                                           builder: (context, snapshot) {
                                             if (snapshot.connectionState ==
                                                 ConnectionState.waiting) {
@@ -515,7 +515,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   _buildInfoRow(
-                                                      'ชื่อ', general.username),
+                                                      'ชื่อ', general.name),
                                                   _buildInfoRow('เบอร์โทร',
                                                       general.phone),
                                                   _buildInfoRow('อีเมล',

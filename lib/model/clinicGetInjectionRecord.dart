@@ -1,7 +1,3 @@
-// To parse this JSON data, do
-//
-//     final clinicGetInjectionRecord = clinicGetInjectionRecordFromJson(jsonString);
-
 import 'dart:convert';
 
 ClinicGetInjectionRecord clinicGetInjectionRecordFromJson(String str) =>
@@ -19,7 +15,9 @@ class ClinicGetInjectionRecord {
 
   factory ClinicGetInjectionRecord.fromJson(Map<String, dynamic> json) =>
       ClinicGetInjectionRecord(
-        data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+        data: List<Datum>.from(
+          (json["data"] ?? []).map((x) => Datum.fromJson(x)),
+        ),
       );
 
   Map<String, dynamic> toJson() => {
@@ -28,47 +26,49 @@ class ClinicGetInjectionRecord {
 }
 
 class Datum {
-  int rid;
-  int oldAppointmentAid;
-  int nextAppointmentAid;
-  String clinicEmail;
-  String vaccine;
-  DateTime date;
-  String vaccineLabel;
-  int type;
-  DateTime injectionDateOnly;
-  int aid;
-  int dogId;
-  String generalUserEmail;
+  int? rid;
+  int? oldAppointmentAid;
+  int? nextAppointmentAid;
+  String? clinicEmail;
+  String? vaccine;
+  DateTime? date;
+  String? vaccineLabel;
+  int? type;
+  DateTime? injectionDateOnly;
+  int? aid;
+  int? dogId;
+  String? generalUserEmail;
 
   Datum({
-    required this.rid,
-    required this.oldAppointmentAid,
-    required this.nextAppointmentAid,
-    required this.clinicEmail,
-    required this.vaccine,
-    required this.date,
-    required this.vaccineLabel,
-    required this.type,
-    required this.injectionDateOnly,
-    required this.aid,
-    required this.dogId,
-    required this.generalUserEmail,
+    this.rid,
+    this.oldAppointmentAid,
+    this.nextAppointmentAid,
+    this.clinicEmail,
+    this.vaccine,
+    this.date,
+    this.vaccineLabel,
+    this.type,
+    this.injectionDateOnly,
+    this.aid,
+    this.dogId,
+    this.generalUserEmail,
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-        rid: json["rid"],
-        oldAppointmentAid: json["oldAppointment_aid"],
-        nextAppointmentAid: json["nextAppointment_aid"],
-        clinicEmail: json["clinic_email"],
-        vaccine: json["vaccine"],
-        date: DateTime.parse(json["date"]),
-        vaccineLabel: json["vaccine_label"],
-        type: json["type"],
-        injectionDateOnly: DateTime.parse(json["injection_date_only"]),
-        aid: json["aid"],
-        dogId: json["dogId"],
-        generalUserEmail: json["general_user_email"],
+        rid: json["rid"] as int?,
+        oldAppointmentAid: json["oldAppointment_aid"] as int?,
+        nextAppointmentAid: json["nextAppointment_aid"] as int?,
+        clinicEmail: json["clinic_email"] as String?,
+        vaccine: json["vaccine"] as String?,
+        date: json["date"] != null ? DateTime.tryParse(json["date"]) : null,
+        vaccineLabel: json["vaccine_label"] as String?,
+        type: json["type"] as int?,
+        injectionDateOnly: json["injection_date_only"] != null
+            ? DateTime.tryParse(json["injection_date_only"])
+            : null,
+        aid: json["aid"] as int?,
+        dogId: json["dogId"] as int?,
+        generalUserEmail: json["general_user_email"] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -77,10 +77,10 @@ class Datum {
         "nextAppointment_aid": nextAppointmentAid,
         "clinic_email": clinicEmail,
         "vaccine": vaccine,
-        "date": date.toIso8601String(),
+        "date": date?.toIso8601String(),
         "vaccine_label": vaccineLabel,
         "type": type,
-        "injection_date_only": injectionDateOnly.toIso8601String(),
+        "injection_date_only": injectionDateOnly?.toIso8601String(),
         "aid": aid,
         "dogId": dogId,
         "general_user_email": generalUserEmail,
