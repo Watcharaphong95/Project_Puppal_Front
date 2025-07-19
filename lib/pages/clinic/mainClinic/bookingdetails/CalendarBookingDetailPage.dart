@@ -44,10 +44,17 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
   List<ReserveClinicPost> earlierList = [];
   bool isLoading = true;
   List<ClinicinjectionRecordPost>? vaccineHistory;
+  final PageController _vaccinePageController = PageController();
+  int _currentVaccineIndex = 0;
 
   List<getInjection.Datum>? clinicRecord; // เก็บจาก injection list API
 
-  // List<ClinicinjectionRecordPost>? clinicRecord;
+  List<dynamic> get combinedList {
+    final List<dynamic> combined = [];
+    if (clinicRecord != null) combined.addAll(clinicRecord!);
+    if (vaccineHistory != null) combined.addAll(vaccineHistory!);
+    return combined;
+  }
 
   @override
   void initState() {
@@ -56,6 +63,34 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
       url = config['apiEndPoint'];
       getReserve(widget.docId);
     });
+  }
+
+  @override
+  void dispose() {
+    _vaccinePageController.dispose();
+    super.dispose();
+  }
+
+  void _previousVaccinePage() {
+    if (mounted &&
+        _vaccinePageController.hasClients &&
+        _currentVaccineIndex > 0) {
+      _vaccinePageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _nextVaccinePage() {
+    if (mounted &&
+        _vaccinePageController.hasClients &&
+        _currentVaccineIndex < combinedList.length - 1) {
+      _vaccinePageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -268,18 +303,19 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: const Color(0xFF916B44)
-                                        .withOpacity(0.2)),
+                                  color:
+                                      const Color(0xFF916B44).withOpacity(0.2),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // Header Row
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
-                                        // ใส่ Row ซ้อนอีกชั้นเพื่อรวมไอคอนกับข้อความ
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.all(8),
@@ -337,11 +373,61 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  if (combinedList.isNotEmpty)
+
+                                  // Content Area
+                                  if (combinedList.isNotEmpty) ...[
+                                    // Navigation Controls
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        IconButton(
+                                          onPressed: _currentVaccineIndex > 0
+                                              ? _previousVaccinePage
+                                              : null,
+                                          icon: Icon(
+                                            Icons.arrow_back_ios,
+                                            color: _currentVaccineIndex > 0
+                                                ? const Color(0xFF916B44)
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${_currentVaccineIndex + 1} / ${combinedList.length}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF916B44),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: _currentVaccineIndex <
+                                                  combinedList.length - 1
+                                              ? _nextVaccinePage
+                                              : null,
+                                          icon: Icon(
+                                            Icons.arrow_forward_ios,
+                                            color: _currentVaccineIndex <
+                                                    combinedList.length - 1
+                                                ? const Color(0xFF916B44)
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // PageView for Cards
                                     SizedBox(
-                                      height: 450,
-                                      child: ListView.builder(
-                                        scrollDirection: Axis.horizontal,
+                                      height: 380,
+                                      child: PageView.builder(
+                                        controller: _vaccinePageController,
+                                        onPageChanged: (index) {
+                                          if (mounted) {
+                                            setState(() {
+                                              _currentVaccineIndex = index;
+                                            });
+                                          }
+                                        },
                                         itemCount: combinedList.length,
                                         itemBuilder: (context, index) {
                                           final item = combinedList[index];
@@ -363,8 +449,8 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
 
                                           return Container(
                                             width: 280,
-                                            margin: const EdgeInsets.only(
-                                                right: 16),
+                                            margin: const EdgeInsets.symmetric(
+                                                horizontal: 8),
                                             padding: const EdgeInsets.all(16),
                                             decoration: BoxDecoration(
                                               color: Colors.white,
@@ -417,8 +503,37 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                           );
                                         },
                                       ),
-                                    )
-                                  else
+                                    ),
+
+                                    const SizedBox(height: 12),
+
+                                    // Page Indicators
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: List.generate(
+                                        combinedList.length,
+                                        (index) => AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          height: 8,
+                                          width: _currentVaccineIndex == index
+                                              ? 24
+                                              : 8,
+                                          decoration: BoxDecoration(
+                                            color: _currentVaccineIndex == index
+                                                ? const Color(0xFF916B44)
+                                                : const Color(0xFF916B44)
+                                                    .withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ] else
                                     Expanded(
                                       child: Center(
                                         child: Column(
@@ -444,7 +559,6 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 24),
 
                           /// 👨‍⚕️ ข้อมูลเจ้าของ

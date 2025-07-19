@@ -12,13 +12,11 @@ String clinicSchedulePostToJson(List<ClinicSchedulePost> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ClinicSchedulePost {
-  String clinicEmail;
   String weekdays;
   String openTime;
   String closeTime;
 
   ClinicSchedulePost({
-    required this.clinicEmail,
     required this.weekdays,
     required this.openTime,
     required this.closeTime,
@@ -26,14 +24,12 @@ class ClinicSchedulePost {
 
   factory ClinicSchedulePost.fromJson(Map<String, dynamic> json) =>
       ClinicSchedulePost(
-        clinicEmail: json["clinic_email"],
         weekdays: json["weekdays"],
         openTime: json["open_time"],
         closeTime: json["close_time"],
       );
 
   Map<String, dynamic> toJson() => {
-        "clinic_email": clinicEmail,
         "weekdays": weekdays,
         "open_time": openTime,
         "close_time": closeTime,

@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/ClinicGetSchedule.dart';
+import 'package:puppal_application/model/ClinicGetSpecialSchedulePost.dart';
 import 'package:puppal_application/model/ClinicSchedulePost.dart';
+import 'package:puppal_application/model/clinicSpecialSchedulePost.dart';
 
 class Clinicopeninghours extends StatefulWidget {
   const Clinicopeninghours({super.key});
@@ -16,7 +20,8 @@ class Clinicopeninghours extends StatefulWidget {
   State<Clinicopeninghours> createState() => _ClinicOpeningHoursState();
 }
 
-class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
+class _ClinicOpeningHoursState extends State<Clinicopeninghours>
+    with SingleTickerProviderStateMixin {
   final List<String> weekdays = [
     'Monday',
     'Tuesday',
@@ -27,32 +32,86 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
     'Sunday'
   ];
 
-  List<String> selectedWeekdays = [];
+  final List<String> weekdaysShort = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
 
+  final List<String> weekdaysThai = [
+    'จันทร์',
+    'อังคาร',
+    'พุธ',
+    'พฤหัสบดี',
+    'ศุกร์',
+    'เสาร์',
+    'อาทิตย์'
+  ];
+
+  List<String> selectedWeekdays = [];
   TimeOfDay? openTime;
   TimeOfDay? closeTime;
-
   final List<DateTime> specialHolidays = [];
   String url = '';
   final box = GetStorage();
   List<ClinicGetSchedule> scheduleList = [];
+  List<ClinicGetSpecialSchedulePost> specialScheduleList = [];
 
-  void _pickTime({required bool isOpenTime}) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: isOpenTime
-          ? (openTime ?? TimeOfDay.now())
-          : (closeTime ?? TimeOfDay.now()),
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // Colors
+  static const Color primaryColor = Color(0xFF916B44);
+  static const Color secondaryColor = Color(0xFFDBA871);
+  static const Color tertiaryColor = Color(0xFFE9CBAF);
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
     );
-    if (picked != null) {
-      setState(() {
-        if (isOpenTime) {
-          openTime = picked;
-        } else {
-          closeTime = picked;
-        }
-      });
-    }
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    initialize();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> initialize() async {
+    final config = await Configuration.getConfig();
+    url = config['apiEndPoint'];
+    await getClinicSchedule();
+    await getspecialSchedule();
+  }
+
+  void _showCustomTimePicker({required bool isOpenTime}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => TimePickerBottomSheet(
+        initialTime: isOpenTime ? openTime : closeTime,
+        isOpenTime: isOpenTime,
+        onTimeSelected: (time) {
+          setState(() {
+            if (isOpenTime) {
+              openTime = time;
+            } else {
+              closeTime = time;
+            }
+          });
+        },
+      ),
+    );
   }
 
   void _pickHolidayDate() async {
@@ -61,124 +120,290 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
       initialDate: DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: primaryColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (picked != null && !specialHolidays.contains(picked)) {
-      setState(() => specialHolidays.add(picked));
+    if (picked != null) {
+      final cleanedDate = DateTime(picked.year, picked.month, picked.day);
+      if (!specialHolidays.contains(cleanedDate)) {
+        setState(() => specialHolidays.add(cleanedDate));
+      }
     }
-  }
-
-  // void _submit() {
-  //   final data = {
-  //     "weekdays": selectedWeekdays.toList(),
-  //     "open_time": openTime?.format(context),
-  //     "close_time": closeTime?.format(context),
-  //     "special_holidays":
-  //         specialHolidays.map((d) => d.toIso8601String()).toList(),
-  //   };
-
-  //   // TODO: ส่งข้อมูลไป backend/MySQL
-  //   debugPrint("📤 ส่งข้อมูล: $data");
-  // }
-
-  @override
-  void initState() {
-    super.initState();
-    initialize(); // Call async method without await
-  }
-
-  Future<void> initialize() async {
-    final config = await Configuration.getConfig();
-    url = config['apiEndPoint'];
-    // await getReserve();
-    await getClinicSchedule();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("กำหนดเวลาเปิด-ปิดคลินิก")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: tertiaryColor.withOpacity(0.3),
+      appBar: AppBar(
+        title: const Text(
+          "กำหนดเวลาเปิด-ปิดคลินิก",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Container(
+        color: Colors.white,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWeekdaysSection(),
+                const SizedBox(height: 24),
+                _buildTimeSection(),
+                const SizedBox(height: 24),
+                _buildHolidaySection(),
+                const SizedBox(height: 32),
+                _buildSaveButton(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekdaysSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_today,
+                color: primaryColor,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "เลือกวันเปิดทำการ",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(weekdays.length, (index) {
+              final day = weekdays[index];
+              final dayThai = weekdaysThai[index];
+              final dayShort = weekdaysShort[index];
+              final selected = selectedWeekdays.contains(day);
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (selected) {
+                      selectedWeekdays.remove(day);
+                    } else {
+                      selectedWeekdays.add(day);
+                    }
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: selected ? primaryColor : Colors.white,
+                    border: Border.all(
+                      color: selected
+                          ? primaryColor
+                          : secondaryColor.withOpacity(0.5),
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        dayShort,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: selected ? Colors.white : primaryColor,
+                        ),
+                      ),
+                      Text(
+                        dayThai.substring(0, 2),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: selected
+                              ? Colors.white.withOpacity(0.8)
+                              : primaryColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                color: primaryColor,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "กำหนดเวลาทำการ",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTimeCard(
+                  title: "เวลาเปิด",
+                  time: openTime,
+                  icon: Icons.wb_sunny,
+                  onTap: () => _showCustomTimePicker(isOpenTime: true),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTimeCard(
+                  title: "เวลาปิด",
+                  time: closeTime,
+                  icon: Icons.nightlight_round,
+                  onTap: () => _showCustomTimePicker(isOpenTime: false),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeCard({
+    required String title,
+    required TimeOfDay? time,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              tertiaryColor,
+              tertiaryColor.withOpacity(0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: secondaryColor.withOpacity(0.3),
+          ),
+        ),
         child: Column(
           children: [
-            const Text("เลือกวันเปิดทำการ",
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            Wrap(
-              spacing: 10,
-              children: weekdays.map((day) {
-                final selected = selectedWeekdays.contains(day);
-                return FilterChip(
-                  label: Text(day),
-                  selected: selected,
-                  onSelected: (val) {
-                    setState(() {
-                      if (val) {
-                        selectedWeekdays.add(day);
-                      } else {
-                        selectedWeekdays.remove(day);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+            Icon(
+              icon,
+              color: primaryColor,
+              size: 24,
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: const Text("เวลาเปิด"),
-                    subtitle: Text(openTime?.format(context) ?? "-"),
-                    onTap: () => _pickTime(isOpenTime: true),
-                  ),
-                ),
-                Expanded(
-                  child: ListTile(
-                    title: const Text("เวลาปิด"),
-                    subtitle: Text(closeTime?.format(context) ?? "-"),
-                    onTap: () => _pickTime(isOpenTime: false),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("วันหยุดพิเศษ",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                ElevatedButton.icon(
-                  onPressed: _pickHolidayDate,
-                  icon: const Icon(Icons.date_range),
-                  label: const Text("เพิ่มวันหยุด"),
-                ),
-              ],
-            ),
-            if (specialHolidays.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text("ยังไม่มีวันหยุดพิเศษ",
-                    style: TextStyle(color: Colors.grey)),
-              )
-            else
-              Column(
-                children: specialHolidays.map((d) {
-                  return ListTile(
-                    title: Text("${d.day}/${d.month}/${d.year}"),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () =>
-                          setState(() => specialHolidays.remove(d)),
-                    ),
-                  );
-                }).toList(),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: primaryColor.withOpacity(0.8),
+                fontWeight: FontWeight.w500,
               ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () => updateSchedule(scheduleList[0].sid),
-              child: const Text("บันทึก"),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time?.format(context) ?? "กำหนดเวลา",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
               ),
             ),
           ],
@@ -187,6 +412,211 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
     );
   }
 
+  Widget _buildHolidaySection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_busy,
+                    color: primaryColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "วันหยุดพิเศษ",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: _pickHolidayDate,
+                icon: const Icon(
+                  Icons.add,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  "เพิ่มวันหยุด",
+                  style: TextStyle(fontSize: 14),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: secondaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (specialHolidays.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tertiaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: secondaryColor.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: primaryColor.withOpacity(0.6),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "ยังไม่มีวันหยุดพิเศษ",
+                    style: TextStyle(
+                      color: primaryColor.withOpacity(0.7),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: List.generate(specialHolidays.length, (index) {
+                final d = specialHolidays[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: tertiaryColor.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: secondaryColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.calendar_month,
+                        color: primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      formatThaiDateTime(d),
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                      ),
+                      onPressed: () async {
+                        if (index < specialScheduleList.length) {
+                          final id =
+                              specialScheduleList[index].specialScheduleId;
+                          await deleteSpecialSchedule(id);
+                          setState(() {
+                            specialScheduleList.removeAt(index);
+                            specialHolidays.removeAt(index);
+                          });
+                        } else {
+                          setState(() {
+                            specialHolidays.removeAt(index);
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                );
+              }),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, secondaryColor],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () => updateSchedule(),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.save,
+              color: Colors.white,
+              size: 24,
+            ),
+            SizedBox(width: 8),
+            Text(
+              "บันทึกการตั้งค่า",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Keep all your existing methods (getClinicSchedule, updateSchedule, etc.)
   Future<void> getClinicSchedule() async {
     final clinicEmail = box.read('email');
     log(clinicEmail);
@@ -197,8 +627,6 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
 
       if (scheduleList.isNotEmpty) {
         final schedule = scheduleList.first;
-
-        // ✅ กำหนดค่าให้กับ state UI
         setState(() {
           selectedWeekdays.clear();
           selectedWeekdays.addAll(schedule.weekdays.split(','));
@@ -222,57 +650,499 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours> {
     }
   }
 
-  Future<void> updateSchedule(int id) async {
+  Future<void> updateSchedule() async {
+    showLoadingDialog();
+
+    bool isConfirmed = await confirmDialog(context);
+    if (!isConfirmed) {
+      log("ผู้ใช้ยกเลิกการบันทึก");
+      return;
+    }
     final clinicEmail = box.read('email');
     ClinicSchedulePost req = ClinicSchedulePost(
-        clinicEmail: clinicEmail,
-        weekdays: selectedWeekdays.join(','),
-        openTime:
-            "${openTime!.hour.toString().padLeft(2, '0')}:${openTime!.minute.toString().padLeft(2, '0')}",
-        closeTime:
-            "${closeTime!.hour.toString().padLeft(2, '0')}:${closeTime!.minute.toString().padLeft(2, '0')}");
+      weekdays: selectedWeekdays.join(','),
+      openTime:
+          "${openTime!.hour.toString().padLeft(2, '0')}:${openTime!.minute.toString().padLeft(2, '0')}",
+      closeTime:
+          "${closeTime!.hour.toString().padLeft(2, '0')}:${closeTime!.minute.toString().padLeft(2, '0')}",
+    );
+
     final res = await http.put(
-      Uri.parse("$url/schedule/$id"),
+      Uri.parse("$url/schedule/$clinicEmail"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(req),
     );
 
     if (res.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("บันทึกสำเร็จ")),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: const Text("บันทึกสำเร็จ"),
+      //     backgroundColor: primaryColor,
+      //     behavior: SnackBarBehavior.floating,
+      //     shape: RoundedRectangleBorder(
+      //       borderRadius: BorderRadius.circular(8),
+      //     ),
+      //   ),
+      // );
+
+      if (specialHolidays.isNotEmpty) {
+        await insertSpecialSchedule();
+      }
+      Get.back();
     } else {
       log("❌ บันทึกข้อมูลไม่สำเร็จ: ${res.statusCode}");
     }
   }
 
-  // Future<void> _submit() async {
-  //   final clinicEmail = box.read('email');
+  Future<void> getspecialSchedule() async {
+    final clinicEmail = box.read('email');
+    final res = await http.get(Uri.parse("$url/specialschedule/$clinicEmail"));
 
-  //   final body = {
-  //     "clinic_email": clinicEmail,
-  //     "weekdays": selectedWeekdays.join(','),
-  //     "open_time":
-  //         "${openTime!.hour.toString().padLeft(2, '0')}:${openTime!.minute.toString().padLeft(2, '0')}",
-  //     "close_time":
-  //         "${closeTime!.hour.toString().padLeft(2, '0')}:${closeTime!.minute.toString().padLeft(2, '0')}",
-  //     "special_holidays": specialHolidays
-  //         .map((d) => DateFormat("yyyy-MM-dd").format(d))
-  //         .toList(),
-  //   };
+    if (res.statusCode == 200) {
+      specialScheduleList = clinicGetSpecialSchedulePostFromJson(res.body);
+      specialHolidays.clear();
+      for (var item in specialScheduleList) {
+        final localDate = item.date.toLocal();
+        final cleanedDate =
+            DateTime(localDate.year, localDate.month, localDate.day);
+        specialHolidays.add(cleanedDate);
+        formatThaiDateTime(localDate);
+      }
 
-  //   final res = await http.put(
-  //     Uri.parse("$url/schedule/update"),
-  //     headers: {"Content-Type": "application/json"},
-  //     body: jsonEncode(body),
-  //   );
+      setState(() {});
+    } else {
+      log("❌ ไม่สามารถดึงวันหยุดพิเศษได้: ${res.statusCode}");
+    }
+  }
 
-  //   if (res.statusCode == 200) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("บันทึกสำเร็จ")),
-  //     );
-  //   } else {
-  //     log("❌ บันทึกข้อมูลไม่สำเร็จ: ${res.statusCode}");
-  //   }
-  // }
+  Future<void> insertSpecialSchedule() async {
+    final clinicEmail = box.read('email');
+
+    final existingDates = specialScheduleList.map((e) {
+      final local = e.date.toLocal();
+      return DateTime(local.year, local.month, local.day);
+    }).toSet();
+
+    for (DateTime holiday in specialHolidays) {
+      final cleaned = DateTime(holiday.year, holiday.month, holiday.day);
+      if (!existingDates.contains(cleaned)) {
+        final req = ClinicSpecialSchedulePost(
+          clinicEmail: clinicEmail,
+          date: cleaned,
+        );
+
+        final res = await http.post(
+          Uri.parse("$url/specialschedule"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(req),
+        );
+
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          log("✅ เพิ่มวันหยุดพิเศษสำเร็จ: $cleaned");
+        } else {
+          log("❌ เพิ่มวันหยุดพิเศษล้มเหลว: ${res.statusCode}");
+        }
+      }
+    }
+  }
+
+  Future<void> deleteSpecialSchedule(int id) async {
+    final res = await http.delete(
+      Uri.parse("$url/specialschedule/$id"),
+    );
+
+    if (res.statusCode == 200) {
+      log("✅ ลบวันหยุดพิเศษสำเร็จ: $id");
+      setState(() {});
+    } else {
+      log("❌ ลบวันหยุดพิเศษล้มเหลว: ${res.statusCode}");
+    }
+  }
+
+  String formatThaiDateTime(DateTime date) {
+    final thaiMonths = [
+      '',
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม'
+    ];
+
+    final localDate = date.toLocal();
+    final day = localDate.day;
+    final month = thaiMonths[localDate.month];
+    final year = localDate.year + 543;
+
+    return '$day $month $year';
+  }
+
+  Future<bool> confirmDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.timelapse,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการบันทึก",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการบันทึกข้อมูลการฉีดวัคซีนหรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF916B44),
+                      Color(0xFFDBA871),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+}
+
+// Time Picker Bottom Sheet using time_picker_spinner package
+class TimePickerBottomSheet extends StatefulWidget {
+  final TimeOfDay? initialTime;
+  final bool isOpenTime;
+  final Function(TimeOfDay) onTimeSelected;
+
+  const TimePickerBottomSheet({
+    Key? key,
+    required this.initialTime,
+    required this.isOpenTime,
+    required this.onTimeSelected,
+  }) : super(key: key);
+
+  @override
+  State<TimePickerBottomSheet> createState() => _TimePickerBottomSheetState();
+}
+
+class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
+  late DateTime selectedTime;
+
+  static const Color primaryColor = Color(0xFF916B44);
+  static const Color secondaryColor = Color(0xFFDBA871);
+  static const Color tertiaryColor = Color(0xFFE9CBAF);
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final time = widget.initialTime ?? TimeOfDay.now();
+    selectedTime =
+        DateTime(now.year, now.month, now.day, time.hour, time.minute);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.isOpenTime ? "เลือกเวลาเปิด" : "เลือกเวลาปิด",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Icon(
+                  widget.isOpenTime ? Icons.wb_sunny : Icons.nightlight_round,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+
+          // Time Display
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: tertiaryColor.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: secondaryColor.withOpacity(0.3),
+              ),
+            ),
+            child: Text(
+              "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Time Picker Spinner
+          Expanded(
+            child: TimePickerSpinner(
+              time: selectedTime,
+              is24HourMode: true,
+              normalTextStyle: TextStyle(
+                fontSize: 18,
+                color: primaryColor.withOpacity(0.6),
+              ),
+              highlightedTextStyle: TextStyle(
+                fontSize: 22,
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+              spacing: 40,
+              itemHeight: 60,
+              isForce2Digits: true,
+              minutesInterval: 5,
+              onTimeChange: (time) {
+                setState(() {
+                  selectedTime = time;
+                });
+              },
+            ),
+          ),
+
+          // Buttons
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: primaryColor),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      "ยกเลิก",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onTimeSelected(
+                        TimeOfDay.fromDateTime(selectedTime),
+                      );
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "ตกลง",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
