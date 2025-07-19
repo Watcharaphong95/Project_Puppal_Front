@@ -645,6 +645,7 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
           );
         });
       }
+      await deleteSpecialScheduleExpired();
     } else {
       log("❌ ไม่สามารถดึงข้อมูลตารางเวลาได้: ${res.statusCode}");
     }
@@ -756,6 +757,23 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
       setState(() {});
     } else {
       log("❌ ลบวันหยุดพิเศษล้มเหลว: ${res.statusCode}");
+    }
+  }
+
+  Future<void> deleteSpecialScheduleExpired() async {
+    try {
+      final res = await http.delete(
+        Uri.parse("$url/specialschedule/expired"),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ ลบวันหยุดพิเศษสำเร็จ");
+        setState(() {}); // ถ้ามีการแสดงผล list ก็รีเฟรชได้
+      } else {
+        log("❌ ลบวันหยุดพิเศษล้มเหลว: ${res.statusCode}");
+      }
+    } catch (e) {
+      log("❌ เกิดข้อผิดพลาดขณะลบวันหยุดพิเศษ: $e");
     }
   }
 
