@@ -35,7 +35,7 @@ class AppointmentGetEmail {
 
 class Dog {
   String? reserveId;
-  int? aid;
+  List<int>? aid;
   int status;
   int dogId;
   String name;

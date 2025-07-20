@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -47,6 +48,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
 
   @override
   void initState() {
+    log(box.read('generalImage'));
     init();
     super.initState();
   }
@@ -155,32 +157,33 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                   ),
                 ),
                 ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
+                  leading: Icon(
+                    FontAwesomeIcons.house,
+                    color: Color(0xFF916b44),
+                  ),
+                  title: Text(
+                    'หน้าหลัก',
+                  ),
                   onTap: () {
                     Get.back();
                     Get.to(() => GeneralmainPage());
                   },
                 ),
                 ListTile(
-                  leading: Icon(FontAwesomeIcons.solidBell,
-                      color: Color(0xFF916b44)),
-                  title: Text('การแจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralnotificationPage());
-                  },
-                ),
+                    leading: Icon(FontAwesomeIcons.solidBell,
+                        color: Color(0xFF916b44)),
+                    title: Text('การแจ้งเตือน'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralnotificationPage());
+                    }),
                 ListTile(
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
-                  title: Text(
-                    'สุนัข',
-                    style: TextStyle(
-                      color: Color(0xFF916b44),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  title: Text('สุนัข',
+                      style: TextStyle(
+                        color: Color(0xFF916b44),
+                        fontWeight: FontWeight.bold,
+                      )),
                 ),
                 ListTile(
                   leading:
@@ -192,15 +195,6 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(FontAwesomeIcons.userLarge,
-                      color: Color(0xFF916b44)),
-                  title: Text('โปรไฟล์'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralprofilePage());
-                  },
-                ),
-                ListTile(
                   leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
                   title: Text('คู่มือ'),
                   onTap: () {
@@ -209,9 +203,14 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                  leading:
+                      Icon(FontAwesomeIcons.gear, color: Color(0xFF916b44)),
                   title: Text('ตั้งค่า'),
-                  onTap: () {},
+                  onTap: () {
+                    Get.back();
+                    // it a generalSetting.dart page
+                    Get.to(() => GeneralprofilePage());
+                  },
                 ),
                 ListTile(
                   leading:
@@ -225,6 +224,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                         title: 'สลับไปยังบัญชีคลินิก?',
                         message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
                         onConfirm: () {
+                          box.write('type', 'clinic');
                           box.write(
                               'clinicName', jsonDecode(resClinic.body)['name']);
                           box.write('clinicImage',
@@ -253,7 +253,8 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                     showAlert(
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
+                      onConfirm: () async {
+                        await FirebaseMessaging.instance.deleteToken();
                         box.erase();
                         Get.offAll(() => IndexPage());
                       },
@@ -333,7 +334,26 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
               if (isLoading)
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: screenHeight * 0.2),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFFDBA871),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'กำลังโหลด...',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               else if (filterDogs.isEmpty)
                 Expanded(
@@ -425,11 +445,11 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      'อายุ ${getDogAge(dog.birthday)}',
+                                      'อายุ ${getDogAge(dog.birthday.toString())}',
                                       style: TextStyle(color: Colors.grey[700]),
                                     ),
                                     Text(
-                                      'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday).toLocal())}...',
+                                      'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday.toString()).toLocal())}...',
                                       style: TextStyle(color: Colors.grey[700]),
                                     ),
                                   ],
@@ -507,6 +527,56 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
     } else {
       return '$months เดือน';
     }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void showAlert({

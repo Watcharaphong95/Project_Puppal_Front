@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -141,23 +142,26 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                   ),
                 ),
                 ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
+                  leading: Icon(
+                    FontAwesomeIcons.house,
+                    color: Color(0xFF916b44),
+                  ),
+                  title: Text(
+                    'หน้าหลัก',
+                  ),
                   onTap: () {
                     Get.back();
                     Get.to(() => GeneralmainPage());
                   },
                 ),
                 ListTile(
-                  leading: Icon(FontAwesomeIcons.solidBell,
-                      color: Color(0xFF916b44)),
-                  title: Text('การแจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralnotificationPage());
-                  },
-                ),
+                    leading: Icon(FontAwesomeIcons.solidBell,
+                        color: Color(0xFF916b44)),
+                    title: Text('การแจ้งเตือน'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => GeneralnotificationPage());
+                    }),
                 ListTile(
                   leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
                   title: Text('สุนัข'),
@@ -176,17 +180,6 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(FontAwesomeIcons.userLarge,
-                      color: Color(0xFF916b44)),
-                  title: Text(
-                    'โปรไฟล์',
-                    style: TextStyle(
-                      color: Color(0xFF916b44),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                ListTile(
                   leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
                   title: Text('คู่มือ'),
                   onTap: () {
@@ -195,9 +188,13 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                  title: Text('ตั้งค่า'),
-                  onTap: () {},
+                  leading:
+                      Icon(FontAwesomeIcons.gear, color: Color(0xFF916b44)),
+                  title: Text('ตั้งค่า',
+                      style: TextStyle(
+                        color: Color(0xFF916b44),
+                        fontWeight: FontWeight.bold,
+                      )),
                 ),
                 ListTile(
                   leading:
@@ -211,6 +208,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                         title: 'สลับไปยังบัญชีคลินิก?',
                         message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
                         onConfirm: () {
+                          box.write('type', 'clinic');
                           box.write(
                               'clinicName', jsonDecode(resClinic.body)['name']);
                           box.write('clinicImage',
@@ -239,7 +237,8 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                     showAlert(
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
+                      onConfirm: () async {
+                        await FirebaseMessaging.instance.deleteToken();
                         box.erase();
                         Get.offAll(() => IndexPage());
                       },

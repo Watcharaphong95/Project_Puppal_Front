@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/main.dart';
@@ -41,13 +43,14 @@ class _IndexPageState extends State<IndexPage> {
   @override
   void initState() {
     // box.erase();
-    super.initState();
 
     if (box.read('emailGoogleRegister') != null) {
       log(box.read('emailGoogleRegister'));
       box.remove('emailGoogleRegister');
     }
+    _setupNotifications();
     init();
+    super.initState();
   }
 
   void init() async {
@@ -55,6 +58,9 @@ class _IndexPageState extends State<IndexPage> {
       url = config['apiEndPoint'];
     });
     await checkLogout();
+    if (box.read('email') != null) {
+      await updateFcm();
+    }
     stopRealTime();
     setState(() => isLoading = false);
   }
@@ -201,6 +207,18 @@ class _IndexPageState extends State<IndexPage> {
     );
   }
 
+  Future<void> updateFcm() async {
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    FcmTokenPost token =
+        FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+    var tokenUpdate = await http.put(
+      Uri.parse("$url/user/fcmToken"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: fcmTokenPostToJson(token),
+    );
+  }
+
   void registerButton() {
     Get.to(() => RegistertypePage());
   }
@@ -227,6 +245,8 @@ class _IndexPageState extends State<IndexPage> {
             box.write('type', 'general');
             box.write('generalName', jsonDecode(resGeneral.body)['username']);
             box.write('generalImage', jsonDecode(resGeneral.body)['image']);
+            box.write(
+                'generalUsername', jsonDecode(resGeneral.body)['username']);
             String? fcmToken = await FirebaseMessaging.instance.getToken();
             FcmTokenPost token =
                 FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
@@ -312,6 +332,22 @@ class _IndexPageState extends State<IndexPage> {
 
   void loginButton() {
     Get.to(() => LoginPage());
+  }
+
+  void _setupNotifications() async {
+    await Firebase.initializeApp();
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+
+    NotificationSettings settings =
+        await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    log('🔔 Notification permission: ${settings.authorizationStatus}');
   }
 
   void stopRealTime() {

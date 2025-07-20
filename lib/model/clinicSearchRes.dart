@@ -19,13 +19,17 @@ class ClinicSearchResponse {
   String lat;
   String lng;
   String image;
+  int numPerTime;
+  String? fcmToken;
+  String weekdays;
   String open;
   String close;
-  int numPerTime;
+  List<String> specialDate;
   double distanceKm;
   String distance;
   int special;
   int full;
+  List<String> specialties;
 
   ClinicSearchResponse({
     required this.userEmail,
@@ -35,13 +39,17 @@ class ClinicSearchResponse {
     required this.lat,
     required this.lng,
     required this.image,
+    required this.numPerTime,
+    required this.fcmToken,
+    required this.weekdays,
     required this.open,
     required this.close,
-    required this.numPerTime,
+    required this.specialDate,
     required this.distanceKm,
     required this.distance,
     required this.special,
     required this.full,
+    required this.specialties,
   });
 
   factory ClinicSearchResponse.fromJson(Map<String, dynamic> json) =>
@@ -53,13 +61,17 @@ class ClinicSearchResponse {
         lat: json["lat"],
         lng: json["lng"],
         image: json["image"],
+        numPerTime: json["numPerTime"],
+        fcmToken: json["fcmToken"],
+        weekdays: json["weekdays"],
         open: json["open"],
         close: json["close"],
-        numPerTime: json["numPerTime"],
+        specialDate: List<String>.from(json["special_date"].map((x) => x)),
         distanceKm: json["distanceKm"]?.toDouble(),
         distance: json["distance"],
         special: json["special"],
         full: json["full"],
+        specialties: List<String>.from(json["specialties"].map((x) => x)),
       );
 
   Map<String, dynamic> toJson() => {
@@ -70,12 +82,16 @@ class ClinicSearchResponse {
         "lat": lat,
         "lng": lng,
         "image": image,
+        "numPerTime": numPerTime,
+        "fcmToken": fcmToken,
+        "weekdays": weekdays,
         "open": open,
         "close": close,
-        "numPerTime": numPerTime,
+        "special_date": List<dynamic>.from(specialDate.map((x) => x)),
         "distanceKm": distanceKm,
         "distance": distance,
         "special": special,
         "full": full,
+        "specialties": List<dynamic>.from(specialties.map((x) => x)),
       };
 }

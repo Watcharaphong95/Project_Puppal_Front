@@ -218,10 +218,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> loginButton() async {
-    if (emailCtl.text.trim().isEmpty || passwordCtl.text.trim().isEmpty) {
+    if (emailCtl.text.trim().isEmpty ||
+        passwordCtl.text.trim().isEmpty ||
+        emailCtl.text.contains(' ') ||
+        passwordCtl.text.contains(' ')) {
       Get.snackbar(
         'ข้อผิดพลาด',
-        'กรุณากรอกข้อมูลให้ครบถ้วน',
+        'กรุณากรอกข้อมูลให้ถูกต้อง ห้ามเว้นวรรค',
         snackPosition: SnackPosition.TOP,
         backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,

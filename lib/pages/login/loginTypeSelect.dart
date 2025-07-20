@@ -104,6 +104,7 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
   }
 
   Future<void> clinicType() async {
+    showLoadingDialog();
     var resClinic =
         await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
     log(resClinic.body);
@@ -140,11 +141,13 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
   }
 
   Future<void> userType() async {
+    showLoadingDialog();
     var resGeneral =
         await http.get(Uri.parse("$url/general/name/${box.read('email')}"));
     box.write('type', 'general');
     box.write('generalName', jsonDecode(resGeneral.body)['username']);
     box.write('generalImage', jsonDecode(resGeneral.body)['image']);
+
     String? fcmToken = await FirebaseMessaging.instance.getToken();
     FcmTokenPost token =
         FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
@@ -172,5 +175,55 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
       );
       return;
     }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 }

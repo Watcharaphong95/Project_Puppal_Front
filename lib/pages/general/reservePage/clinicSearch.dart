@@ -8,10 +8,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/clinicSearch.dart';
 import 'package:puppal_application/model/clinicSearchRes.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/model/specialDoctorRes.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicTimeSelect.dart';
 import 'package:readmore/readmore.dart';
@@ -22,7 +24,7 @@ class ClinicsearchPage extends StatefulWidget {
   final String vaccineName;
   final String? reserveId;
   final DateTime date;
-  final int aid;
+  final List<int> aid;
 
   const ClinicsearchPage(
       {super.key,
@@ -43,7 +45,13 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
   List<DogsGetEmail> dog = [];
 
+  List<SpecialDoctorResponse> docSpecial = [];
+
   List<ClinicSearchResponse> clinics = [];
+
+  List<ClinicSearchResponse> filterClinics = [];
+
+  List<String> selectedSpecialtyNames = [];
 
   bool _loadingData = true;
   bool _loadingSearchData = true;
@@ -51,7 +59,11 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
   bool _currentPosition = true;
   bool _isDogInfoExpanded = false;
 
+  bool _hasLatestClinic = false;
+
   String url = '';
+
+  String lastClinic = '';
 
   TextEditingController searchClinicCtl = TextEditingController();
 
@@ -60,8 +72,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     log(widget.dogId.toString());
     log(widget.vaccineName);
     log(widget.date.toString());
-    log(widget.aid.toString());
-    log(widget.reserveId.toString());
+    log('AID: ${widget.aid.toString()}');
+    log('RESERVE: ${widget.reserveId.toString()}');
     init();
     super.initState();
   }
@@ -71,6 +83,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       url = config['apiEndPoint'];
     });
     await getDogData();
+    await getLastestClinic();
+    await getSpecialDoctorData();
     if (_currentPosition) {
       await searchClinicCurrentPosition();
     } else {
@@ -363,22 +377,50 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
               )
             : ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                itemCount: clinics.length,
+                itemCount: filterClinics.length,
                 itemBuilder: (context, index) {
-                  final clinic = clinics[index];
+                  final clinic = filterClinics[index];
                   final isSpecial = clinic.special == 1;
                   final isFull = clinic.full == 1;
                   final isDisabled = isFull && !isSpecial;
 
+                  final hasSpecialties = clinic.specialties != null &&
+                      clinic.specialties.isNotEmpty;
+
+                  final today = DateFormat('yyyy-MM-dd').format(widget.date);
+                  final todayWeekday = DateFormat('EEEE').format(widget.date);
+                  var isClinicOpenToday = true;
+                  var tempWeekdays = clinic.weekdays.split(',');
+                  final isLastClinic =
+                      clinic.userEmail == lastClinic && _hasLatestClinic;
+
+                  if (clinic.specialDate.contains(today) ||
+                      !tempWeekdays.contains(todayWeekday)) {
+                    isClinicOpenToday = false;
+                  }
+
+                  // Determine if clinic is interactable (closed clinics are not clickable)
+                  final isClinicInteractable = isClinicOpenToday && !isDisabled;
+
                   return Container(
                     margin: EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: isDisabled ? Colors.grey.shade200 : Colors.white,
+                      color: !isClinicOpenToday
+                          ? Colors.grey.shade100
+                          : isDisabled
+                              ? Colors.grey.shade200
+                              : Colors.white,
                       borderRadius: BorderRadius.circular(16),
+                      border: !isClinicOpenToday
+                          ? Border.all(color: Colors.red.shade300, width: 1)
+                          : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black
-                              .withOpacity(isDisabled ? 0.04 : 0.08),
+                          color: Colors.black.withOpacity(!isClinicOpenToday
+                              ? 0.02
+                              : isDisabled
+                                  ? 0.04
+                                  : 0.08),
                           blurRadius: 12,
                           spreadRadius: 0,
                           offset: Offset(0, 4),
@@ -389,9 +431,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: isDisabled
-                            ? null
-                            : () {
+                        onTap: isClinicInteractable
+                            ? () {
                                 Get.to(() => ClinictimeselectPage(
                                       email: clinic.userEmail,
                                       dogId: widget.dogId,
@@ -402,7 +443,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       reserveId: widget.reserveId,
                                       special: isSpecial,
                                     ));
-                              },
+                              }
+                            : null,
                         child: Stack(
                           children: [
                             Padding(
@@ -429,10 +471,10 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                               BorderRadius.circular(12),
                                           child: ColorFiltered(
                                             colorFilter: ColorFilter.mode(
-                                              isDisabled
+                                              !isClinicOpenToday || isDisabled
                                                   ? Colors.grey
                                                   : Colors.transparent,
-                                              isDisabled
+                                              !isClinicOpenToday || isDisabled
                                                   ? BlendMode.saturation
                                                   : BlendMode.multiply,
                                             ),
@@ -465,8 +507,42 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                             ),
                                           ),
                                         ),
-                                        // Full overlay
-                                        if (isFull && !isSpecial)
+                                        // Closed overlay
+                                        if (!isClinicOpenToday)
+                                          Positioned.fill(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    Colors.red.withOpacity(0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Center(
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red.shade600,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                  child: Text(
+                                                    'ปิด',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        // Full overlay (existing)
+                                        else if (isFull && !isSpecial)
                                           Positioned.fill(
                                             child: Container(
                                               decoration: BoxDecoration(
@@ -494,9 +570,11 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: isDisabled
-                                                ? Colors.grey.shade600
-                                                : Color(0xFF2C3E50),
+                                            color: !isClinicOpenToday
+                                                ? Colors.grey.shade500
+                                                : isDisabled
+                                                    ? Colors.grey.shade600
+                                                    : Color(0xFF2C3E50),
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
@@ -506,9 +584,11 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: isDisabled
-                                                ? Colors.grey.shade100
-                                                : Colors.blue.shade50,
+                                            color: !isClinicOpenToday
+                                                ? Colors.red.shade50
+                                                : isDisabled
+                                                    ? Colors.grey.shade100
+                                                    : Colors.blue.shade50,
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -517,18 +597,23 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                             children: [
                                               Icon(
                                                 Icons.pin_drop,
-                                                color: isDisabled
-                                                    ? Colors.grey.shade500
-                                                    : Colors.blue.shade600,
+                                                color: !isClinicOpenToday
+                                                    ? Colors.red.shade400
+                                                    : isDisabled
+                                                        ? Colors.grey.shade500
+                                                        : Colors.blue.shade600,
                                                 size: 16,
                                               ),
                                               SizedBox(width: 4),
                                               Text(
                                                 '${clinic.distanceKm.toStringAsFixed(3)} กม.',
                                                 style: TextStyle(
-                                                  color: isDisabled
-                                                      ? Colors.grey.shade500
-                                                      : Colors.blue.shade600,
+                                                  color: !isClinicOpenToday
+                                                      ? Colors.red.shade400
+                                                      : isDisabled
+                                                          ? Colors.grey.shade500
+                                                          : Colors
+                                                              .blue.shade600,
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w500,
                                                 ),
@@ -541,24 +626,180 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           children: [
                                             Icon(
                                               Icons.access_time,
-                                              color: isDisabled
-                                                  ? Colors.grey.shade500
-                                                  : Colors.green.shade600,
+                                              color: !isClinicOpenToday
+                                                  ? Colors.red.shade600
+                                                  : isDisabled
+                                                      ? Colors.grey.shade500
+                                                      : Colors.green.shade600,
                                               size: 16,
                                             ),
                                             SizedBox(width: 4),
                                             Text(
-                                              'เปิด ${clinic.open} - ${clinic.close}',
+                                              isClinicOpenToday
+                                                  ? 'เปิด ${clinic.open.substring(0, 5)} - ${clinic.close.substring(0, 5)}'
+                                                  : 'ปิดวันนี้',
                                               style: TextStyle(
-                                                color: isDisabled
-                                                    ? Colors.grey.shade500
-                                                    : Colors.green.shade600,
+                                                color: !isClinicOpenToday
+                                                    ? Colors.red.shade600
+                                                    : isDisabled
+                                                        ? Colors.grey.shade500
+                                                        : Colors.green.shade600,
                                                 fontSize: 13,
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w600,
                                               ),
-                                            ),
+                                            )
                                           ],
                                         ),
+                                        // Show specialties if available
+                                        if (hasSpecialties) ...[
+                                          SizedBox(height: 4),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(
+                                                Icons.medical_services,
+                                                color: !isClinicOpenToday
+                                                    ? Colors.grey.shade400
+                                                    : isDisabled
+                                                        ? Colors.grey.shade500
+                                                        : Colors
+                                                            .orange.shade600,
+                                                size: 16,
+                                              ),
+                                              SizedBox(width: 4),
+                                              Expanded(
+                                                child: Row(
+                                                  children: clinic.specialties
+                                                      .take(3)
+                                                      .map<Widget>((specialty) {
+                                                    return Container(
+                                                      width:
+                                                          screenWidth * 0.175,
+                                                      margin: EdgeInsets.only(
+                                                          right: 3),
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                        horizontal: 4,
+                                                        vertical: 1,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            !isClinicOpenToday
+                                                                ? Colors.grey
+                                                                    .shade50
+                                                                : isDisabled
+                                                                    ? Colors
+                                                                        .grey
+                                                                        .shade100
+                                                                    : Colors
+                                                                        .orange
+                                                                        .shade50,
+                                                        border: Border.all(
+                                                          color:
+                                                              !isClinicOpenToday
+                                                                  ? Colors.grey
+                                                                      .shade300
+                                                                  : isDisabled
+                                                                      ? Colors
+                                                                          .grey
+                                                                          .shade400
+                                                                      : Colors
+                                                                          .orange
+                                                                          .shade600,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(3),
+                                                      ),
+                                                      child: Text(
+                                                        specialty,
+                                                        style: TextStyle(
+                                                          color:
+                                                              !isClinicOpenToday
+                                                                  ? Colors.grey
+                                                                      .shade400
+                                                                  : isDisabled
+                                                                      ? Colors
+                                                                          .grey
+                                                                          .shade500
+                                                                      : Colors
+                                                                          .orange
+                                                                          .shade600,
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    );
+                                                  }).toList()
+                                                    ..addAll(clinic.specialties
+                                                                .length >
+                                                            3
+                                                        ? [
+                                                            Container(
+                                                              width:
+                                                                  screenWidth *
+                                                                      0.15,
+                                                              margin: EdgeInsets
+                                                                  .only(
+                                                                      right: 3),
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                horizontal: 4,
+                                                                vertical: 1,
+                                                              ),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: !isClinicOpenToday
+                                                                    ? Colors.grey.shade100
+                                                                    : isDisabled
+                                                                        ? Colors.grey.shade200
+                                                                        : Colors.orange.shade100,
+                                                                border:
+                                                                    Border.all(
+                                                                  color: !isClinicOpenToday
+                                                                      ? Colors.grey.shade300
+                                                                      : isDisabled
+                                                                          ? Colors.grey.shade400
+                                                                          : Colors.orange.shade600,
+                                                                  width: 1,
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            3),
+                                                              ),
+                                                              child: Text(
+                                                                '+${clinic.specialties.length - 3}',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: !isClinicOpenToday
+                                                                      ? Colors.grey.shade400
+                                                                      : isDisabled
+                                                                          ? Colors.grey.shade500
+                                                                          : Colors.orange.shade600,
+                                                                  fontSize: 10,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
+                                                            ),
+                                                          ]
+                                                        : []),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -571,7 +812,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: isDisabled
+                                        colors: !isClinicOpenToday || isDisabled
                                             ? [
                                                 Colors.grey.shade400,
                                                 Colors.grey.shade500,
@@ -584,10 +825,11 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: (isDisabled
-                                                  ? Colors.grey.shade400
-                                                  : Color(0xFFDBA871))
-                                              .withOpacity(0.3),
+                                          color:
+                                              (!isClinicOpenToday || isDisabled
+                                                      ? Colors.grey.shade400
+                                                      : Color(0xFFDBA871))
+                                                  .withOpacity(0.3),
                                           blurRadius: 8,
                                           spreadRadius: 0,
                                           offset: Offset(0, 3),
@@ -595,7 +837,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       ],
                                     ),
                                     child: Icon(
-                                      Icons.arrow_forward_ios,
+                                      !isClinicOpenToday
+                                          ? Icons.schedule
+                                          : Icons.arrow_forward_ios,
                                       color: Colors.white,
                                       size: 18,
                                     ),
@@ -604,8 +848,50 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                               ),
                             ),
 
-                            // Special and Full Badges in a row
-                            if (isSpecial && isFull)
+                            // Badges positioning
+                            if (!isClinicOpenToday)
+                              // Closed Badge (takes priority)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade600,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.shade600
+                                            .withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.schedule,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'ปิดวันนี้',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            // Special and Full Badges (when clinic is open)
+                            else if (isSpecial && isFull)
                               Positioned(
                                 top: 8,
                                 right: 8,
@@ -693,7 +979,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                   ],
                                 ),
                               )
-                            // Only Full Badge when not special
+                            // Only Full Badge when not special (and clinic is open)
                             else if (isFull)
                               Positioned(
                                 top: 8,
@@ -734,6 +1020,46 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                   ),
                                 ),
                               ),
+                            if (isLastClinic)
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade600,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.shade600
+                                            .withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.history,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'จอง',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -761,11 +1087,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       child: TextField(
         controller: searchClinicCtl,
         onChanged: (value) {
-          if (_currentPosition) {
-            searchClinicCurrentPosition();
-          } else {
-            searchClinic();
-          }
+          filterClinics = clinics.where((clinic) {
+            return clinic.name.toLowerCase().contains(value.toLowerCase());
+          }).toList();
         },
         decoration: InputDecoration(
           hintText: 'ค้นหาคลินิก',
@@ -794,9 +1118,31 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
               size: 20,
             ),
           ),
-          suffixIcon: searchClinicCtl.text.isNotEmpty
-              ? Container(
-                  margin: EdgeInsets.all(4),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Filter button
+              Container(
+                margin: EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    FontAwesomeIcons.filter,
+                    color: Color(0xFFDBA871),
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    _showFilterBottomSheet(context);
+                  },
+                ),
+              ),
+              // Clear button (only show when text is not empty)
+              if (searchClinicCtl.text.isNotEmpty)
+                Container(
+                  margin: EdgeInsets.only(right: 4),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
@@ -811,19 +1157,316 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                       searchClinicCtl.clear();
                       FocusScope.of(context).unfocus();
                       setState(() {
-                        if (_currentPosition) {
-                          searchClinicCurrentPosition();
-                        } else {
-                          searchClinic();
-                        }
+                        filterClinics = clinics;
                       });
                     },
                   ),
-                )
-              : null,
+                ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+// Filter bottom sheet method
+  void _showFilterBottomSheet(BuildContext context) {
+    // Create a copy of selected names for local state management
+    List<String> tempSelectedNames = List.from(selectedSpecialtyNames);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Title
+                  Text(
+                    'เลือกความเชี่ยวชาญ',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFDBA871),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  // Show selected count
+                  if (tempSelectedNames.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFDBA871).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Color(0xFFDBA871).withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            FontAwesomeIcons.check,
+                            color: Color(0xFFDBA871),
+                            size: 16,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'เลือกแล้ว: ${tempSelectedNames.length} รายการ',
+                            style: TextStyle(
+                              color: Color(0xFFDBA871),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  // Clear all button
+                  Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.only(bottom: 16),
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        setBottomSheetState(() {
+                          tempSelectedNames.clear();
+                          filterClinics = clinics.where((clinic) {
+                            return clinic.name
+                                .toLowerCase()
+                                .contains(searchClinicCtl.text.toLowerCase());
+                          }).toList();
+                          log('clear: ${jsonEncode(filterClinics.map((e) => e.toJson()).toList())}');
+                        });
+                      },
+                      icon: Icon(
+                        Icons.clear_all,
+                        color: Colors.grey.shade600,
+                        size: 18,
+                      ),
+                      label: Text(
+                        'ล้างการเลือกทั้งหมด',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  // Specialty list
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: docSpecial.length,
+                      itemBuilder: (context, index) {
+                        final specialty = docSpecial[index];
+                        final specialtyName = specialty.name ?? 'Unknown';
+                        final isSelected =
+                            tempSelectedNames.contains(specialtyName);
+
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Color(0xFFDBA871).withOpacity(0.05)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected
+                                ? Border.all(
+                                    color: Color(0xFFDBA871).withOpacity(0.3),
+                                    width: 1)
+                                : null,
+                          ),
+                          child: CheckboxListTile(
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              setBottomSheetState(() {
+                                if (value == true) {
+                                  if (!tempSelectedNames
+                                      .contains(specialtyName)) {
+                                    tempSelectedNames.add(specialtyName);
+                                  }
+                                } else {
+                                  tempSelectedNames.remove(specialtyName);
+                                }
+                              });
+                            },
+                            title: Text(
+                              specialtyName,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: isSelected
+                                    ? FontWeight.w500
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? Color(0xFFDBA871)
+                                    : Colors.black87,
+                              ),
+                            ),
+                            secondary: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Color(0xFFDBA871).withOpacity(0.1)
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                FontAwesomeIcons.userDoctor,
+                                color: isSelected
+                                    ? Color(0xFFDBA871)
+                                    : Colors.grey.shade400,
+                                size: 18,
+                              ),
+                            ),
+                            activeColor: Color(0xFFDBA871),
+                            checkColor: Colors.white,
+                            controlAffinity: ListTileControlAffinity.trailing,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // Action buttons
+                  Container(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.grey.shade300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: Text(
+                              'ยกเลิก',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                selectedSpecialtyNames =
+                                    List.from(tempSelectedNames);
+
+                                for (var s in selectedSpecialtyNames) {
+                                  log(s);
+                                }
+
+                                if (selectedSpecialtyNames.isEmpty) {
+                                  filterClinics = clinics.where((clinic) {
+                                    return clinic.name.toLowerCase().contains(
+                                        searchClinicCtl.text.toLowerCase());
+                                  }).toList();
+
+                                  return;
+                                }
+
+                                // log('before: ${jsonEncode(filterClinics.map((e) => e.toJson()).toList())}');
+
+                                filterClinics = clinics.where((clinic) {
+                                  final nameMatch = clinic.name
+                                      .toLowerCase()
+                                      .contains(
+                                          searchClinicCtl.text.toLowerCase());
+
+                                  final clinicSpecs = clinic.specialties
+                                      .map((s) => s.trim().toLowerCase())
+                                      .toList();
+                                  final selectedSpecs = selectedSpecialtyNames
+                                      .map((s) => s.trim().toLowerCase());
+
+                                  final specMatch = selectedSpecs.every(
+                                      (selected) =>
+                                          clinicSpecs.contains(selected));
+
+                                  return nameMatch && specMatch;
+                                }).toList();
+
+                                // log('after: ${jsonEncode(filterClinics.map((e) => e.toJson()).toList())}');
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFDBA871),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'ตกลง',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> getLastestClinic() async {
+    final docRef = FirebaseFirestore.instance
+        .collection('reserve')
+        .where('generalEmail', isEqualTo: box.read('email'))
+        .orderBy('createAt', descending: true)
+        .limit(1);
+
+    final snapshot = await docRef.get();
+
+    if (snapshot.docs.isNotEmpty) {
+      final doc = snapshot.docs.first;
+      final data = doc.data();
+      lastClinic = data['clinicEmail'];
+      log(lastClinic);
+      _hasLatestClinic = true;
+    }
   }
 
   Container dogInfoMinimized() {
@@ -887,7 +1530,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'อายุ ${getDogAge(dog[0].birthday)}',
+                  'อายุ ${getDogAge(DateFormat('yyyy-MM-dd').format(DateFormat('d-MMMM-y', 'th').parse(dog[0].birthday)))}',
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFFDBA871),
@@ -979,7 +1622,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'อายุ ${getDogAge(dog[0].birthday)}',
+                  'อายุ ${getDogAge((DateFormat('yyyy-MM-dd').format(DateFormat('d-MMMM-y', 'th').parse(dog[0].birthday))))}',
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFFDBA871),
@@ -1078,10 +1721,22 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
         .map<ClinicSearchResponse>((e) => ClinicSearchResponse.fromJson(e))
         .toList();
 
+    // log(lastClinic);
+    clinics.sort((a, b) {
+      final an = a.userEmail.toLowerCase().trim();
+      final bn = b.userEmail.toLowerCase().trim();
+      final lc = lastClinic.toLowerCase().trim();
+
+      if (an == lc) return -1;
+      if (bn == lc) return 1;
+      return a.distanceKm.compareTo(b.distanceKm);
+    });
+
     setState(() {
+      filterClinics = clinics;
       _loadingSearchData = false;
     });
-    // log(clinics.toString());
+    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   Future<void> searchClinicCurrentPosition() async {
@@ -1127,11 +1782,21 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     }
 
     // Sort by distance (ascending)
-    clinics.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+    clinics.sort((a, b) {
+      final an = a.userEmail.toLowerCase().trim();
+      final bn = b.userEmail.toLowerCase().trim();
+      final lc = lastClinic.toLowerCase().trim();
+
+      if (an == lc) return -1;
+      if (bn == lc) return 1;
+      return a.distanceKm.compareTo(b.distanceKm);
+    });
 
     setState(() {
+      filterClinics = clinics;
       _loadingSearchData = false;
     });
+    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   String getDogAge(String birthday) {
@@ -1175,6 +1840,20 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
           jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
 
       log(dog[0].name);
+    }
+  }
+
+  Future<void> getSpecialDoctorData() async {
+    var res = await http.get(Uri.parse("$url/clinic/allSpecial"));
+    if (res.statusCode == 200) {
+      var jsonData = json.decode(res.body);
+      docSpecial = jsonData
+          .map<SpecialDoctorResponse>((e) => SpecialDoctorResponse.fromJson(e))
+          .toList();
+
+      log('docSpecial: ${jsonEncode(docSpecial.map((e) => e.toJson()).toList())}');
+    } else {
+      log(res.body);
     }
   }
 }

@@ -186,7 +186,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
         userEmail: box.read('email'),
         name: dogCtl.name.value,
         breed: dogCtl.breed.value,
-        gender: dogCtl.breed.value,
+        gender: dogCtl.gender.value,
         color: dogCtl.color.value,
         defect: dogCtl.defect.value,
         birthday: dogCtl.birthday.value,
