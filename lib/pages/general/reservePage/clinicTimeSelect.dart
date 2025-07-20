@@ -26,7 +26,7 @@ class ClinictimeselectPage extends StatefulWidget {
   final DateTime date;
   final String vaccineName;
   final String? reserveId;
-  final int aid;
+  final List<int> aid;
   final bool special;
 
   const ClinictimeselectPage({
@@ -69,7 +69,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     log(widget.dogId.toString());
     log(widget.email);
     log(widget.date.toString());
-    log(widget.aid.toString());
+    log('AID: ${widget.aid.toString()}');
     log(widget.reserveId.toString());
     init();
     super.initState();
@@ -111,7 +111,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                       fit: StackFit.expand,
                       children: [
                         Image.network(
-                          clinic.image,
+                          clinic.clinic.image,
                           fit: BoxFit.cover,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
@@ -164,7 +164,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                             child: Column(
                               children: [
                                 Text(
-                                  clinic.name,
+                                  clinic.clinic.name,
                                   style: TextStyle(
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
@@ -185,7 +185,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                                             color: Color(0xFFDBA871), size: 20),
                                         SizedBox(height: 4),
                                         Text(
-                                          clinic.phone,
+                                          clinic.clinic.phone,
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey.shade700,
@@ -224,8 +224,8 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
                                     onPressed: () {
-                                      openMap(double.parse(clinic.lat),
-                                          double.parse(clinic.lng));
+                                      openMap(double.parse(clinic.clinic.lat),
+                                          double.parse(clinic.clinic.lng));
                                     },
                                     icon: Icon(Icons.map, size: 20),
                                     label: Text('ดูที่อยู่บนแผนที่'),
@@ -245,6 +245,163 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                             ),
                           ),
 
+                          SizedBox(height: 24),
+
+                          // Doctors Section
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFDBA871).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.medical_services,
+                                    color: Color(0xFFDBA871), size: 24),
+                                SizedBox(width: 8),
+                                Text(
+                                  'สัตวแพทย์',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFDBA871),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          if (clinic.doctors.isNotEmpty)
+                            Container(
+                              height: 140,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: clinic.doctors.length,
+                                itemBuilder: (context, index) {
+                                  final doctor = clinic.doctors[index];
+                                  return Container(
+                                    width: 120,
+                                    margin: EdgeInsets.only(right: 16),
+                                    child: Column(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            _showDoctorSpecialtiesDialog(
+                                                doctor);
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Color(0xFFDBA871),
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: CircleAvatar(
+                                              radius: 35,
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              backgroundImage: doctor
+                                                      .image.isNotEmpty
+                                                  ? NetworkImage(doctor.image)
+                                                  : null,
+                                              child: doctor.image.isEmpty
+                                                  ? Icon(
+                                                      Icons.person,
+                                                      size: 35,
+                                                      color:
+                                                          Colors.grey.shade400,
+                                                    )
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          doctor.name,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade800,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'เลขใบอนุญาต: ${doctor.careerNo}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 4),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: doctor.specialties.isNotEmpty
+                                                ? Color(0xFFDBA871)
+                                                    .withOpacity(0.2)
+                                                : Colors.grey.shade200,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            doctor.specialties.isNotEmpty
+                                                ? '${doctor.specialties.length} ความเชี่ยวชาญ'
+                                                : 'ทั่วไป',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color:
+                                                  doctor.specialties.isNotEmpty
+                                                      ? Color(0xFFDBA871)
+                                                      : Colors.grey.shade600,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          else
+                            Container(
+                              height: 100,
+                              padding: EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      size: 30,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'ไม่มีหมอ',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           SizedBox(height: 24),
 
                           // Date & Time Selection Header
@@ -451,6 +608,150 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     );
   }
 
+  void _showDoctorSpecialtiesDialog(Doctor doctor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.grey.shade200,
+                backgroundImage:
+                    doctor.image.isNotEmpty ? NetworkImage(doctor.image) : null,
+                child: doctor.image.isEmpty
+                    ? Icon(
+                        Icons.person,
+                        size: 25,
+                        color: Colors.grey.shade400,
+                      )
+                    : null,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doctor.name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFDBA871),
+                      ),
+                    ),
+                    Text(
+                      'เลขใบอนุญาต: ${doctor.careerNo}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ความเชี่ยวชาญ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              SizedBox(height: 8),
+              if (doctor.specialties.isEmpty)
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: Colors.grey.shade600, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'ยังไม่มีข้อมูลความเชี่ยวชาญ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  constraints: BoxConstraints(maxHeight: 200),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: doctor.specialties.map((specialty) {
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 8),
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFDBA871).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Color(0xFFDBA871).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_outline,
+                                  color: Color(0xFFDBA871), size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  specialty,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: Color(0xFFDBA871).withOpacity(0.1),
+                foregroundColor: Color(0xFFDBA871),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'ปิด',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget buildTimeButton(String slot, bool isFilled) {
     return InkWell(
       onTap: !isFilled
@@ -534,7 +835,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         }
       }
 
-      if (count >= clinic.numPerTime) {
+      if (count >= clinic.clinic.numPerTime) {
         // Show error
         showAlertNoClose(
             title: 'ไม่สามารถส่งคำขอได้',
@@ -558,7 +859,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         }
       } else {
         log('reserverId LEGIT');
-        if (widget.aid == 0) {
+        if (widget.aid[0] == 0) {
           data = {
             'generalEmail': box.read('email'),
             'clinicEmail': widget.email,
@@ -570,11 +871,12 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
             'createAt': DateTime.now()
           };
         } else {
+          log('TEST AID: ${widget.aid.join(',')}');
           data = {
             'generalEmail': box.read('email'),
             'clinicEmail': widget.email,
             'dogDogId': widget.dogId.toString(),
-            'appointmentAid': widget.aid.toString(),
+            'appointmentAid': widget.aid.join(','),
             'status': 1,
             'date': combined.toString(),
             'type': 0,
@@ -582,14 +884,38 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           };
         }
         await db.collection('reserve').add(data);
+        showAlertNoClose(
+            title: 'ส่งคำขอเรียบร้อยแล้ว',
+            message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
+            onConfirm: () {
+              Get.off(() => GeneralmainPage());
+            });
       }
+      var notifyData = {
+        "clinicEmail": widget.email,
+        "generalEmail": box.read('email'),
+        "userName": box.read('generalName'),
+        "date": DateFormat('d MMMM y เวลา HH:mm', 'th')
+            .format(DateTime.parse(widget.date.toString()).toLocal())
+      };
+
+      var resNotifyClinic = await http.post(
+        Uri.parse("$url/reserve/notify/clinic-request"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode(notifyData),
+      );
       Get.back();
-      showAlertNoClose(
-          title: 'ส่งคำขอเรียบร้อยแล้ว',
-          message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
-          onConfirm: () {
-            Get.off(() => GeneralmainPage());
-          });
+      // if (resNotifyClinic.statusCode == 200) {
+      //   showAlertNoClose(
+      //       title: 'ส่งคำขอเรียบร้อยแล้ว',
+      //       message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
+      //       onConfirm: () {
+      //         Get.off(() => GeneralmainPage());
+      //       });
+      // } else {
+      //   showAlertNoClose(
+      //       title: 'ไม่สามารถส่งคำขอได้', message: 'กรุณาลองใหม่อีกครั้ง');
+      // }
     } catch (e) {
       Get.back();
       log(e.toString());
@@ -652,12 +978,31 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         }
         await db.collection('reserve').add(data);
 
-        showAlertNoClose(
-            title: 'ส่งคำขอพิเศษเรียบร้อยแล้ว',
-            message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
-            onConfirm: () {
-              Get.off(() => GeneralmainPage());
-            });
+        var notifyData = {
+          "clinicEmail": widget.email,
+          "generalEmail": box.read('email'),
+          "userName": box.read('generalName'),
+          "date": DateFormat('d MMMM y', 'th')
+              .format(DateTime.parse(widget.date.toString()).toLocal())
+        };
+
+        var resNotifyClinic = await http.post(
+          Uri.parse("$url/reserve/notify/clinic-request"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: jsonEncode(notifyData),
+        );
+        Get.back();
+        if (resNotifyClinic.statusCode == 200) {
+          showAlertNoClose(
+              title: 'ส่งคำขอเรียบร้อยแล้ว',
+              message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
+              onConfirm: () {
+                Get.off(() => GeneralmainPage());
+              });
+        } else {
+          showAlertNoClose(
+              title: 'ไม่สามารถส่งคำขอได้', message: 'กรุณาลองใหม่อีกครั้ง');
+        }
       }
     } catch (e) {
       showAlertNoClose(
@@ -665,35 +1010,6 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           message:
               'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
     }
-
-    // ClinicSlotReq req = ClinicSlotReq(
-    //     generalEmail: box.read('email'),
-    //     clinicEmail: widget.email,
-    //     dogDogId: widget.dogId.toString(),
-    //     appointmentAid: widget.aid.toString(),
-    //     date: combined.toString(),
-    //     status: 1,
-    //     type: 1);
-
-    // var res = await http.post(
-    //   Uri.parse("$url/reserve/addRequest"),
-    //   headers: {"Content-Type": "application/json; charset=utf-8"},
-    //   body: clinicSlotReqToJson(req),
-    // );
-    // Get.back();
-    // if (res.statusCode == 201) {
-    //   showAlertNoClose(
-    //       title: 'ส่งคำขอพิเศษเรียบร้อยแล้ว',
-    //       message: 'กรุณารอทางคลินิกตอบรับคำขอขของคุณ',
-    //       onConfirm: () {
-    //         Get.off(() => GeneralmainPage());
-    //       });
-    // } else {
-    //   showAlertNoClose(
-    //       title: 'ไม่สามารถส่งคำขอได้',
-    //       message:
-    //           'คุณสามารถส่งคำขอได้เพียง 1 ครั้งต่อสุนัข 1 ตัว กรุณายกเลิกคำขอเก่าก่อนหากคุณต้องการส่งคำขอจองไปยังคลินิกใหม่');
-    // }
   }
 
   Future<void> openMap(double lat, double lng) async {
@@ -712,24 +1028,9 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     if (res.statusCode == 200) {
       clinic = ClinicDataSingleResponse.fromJson(jsonDecode(res.body));
 
-      log(clinic.name);
+      log(clinic.clinic.name);
     }
   }
-
-  // Future<void> checkSpecial() async {
-  //   ReserveSpecialCheck req = ReserveSpecialCheck(
-  //       generalEmail: box.read('email'),
-  //       clinicEmail: widget.email,
-  //       date: widget.date.toString());
-
-  //   var resSpecialCheck = await http.post(
-  //     Uri.parse("$url/reserve/checkSpecial"),
-  //     headers: {"Content-Type": "application/json; charset=utf-8"},
-  //     body: reserveSpecialCheckToJson(req),
-  //   );
-
-  //   special = jsonDecode(resSpecialCheck.body) as bool;
-  // }
 
   Future<void> getClinicTimeSlot() async {
     ClinicSlotPost req =

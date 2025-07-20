@@ -5,7 +5,9 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
+import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogAvatar.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogInjectionRecord.dart';
 
 class RegisterdogPage extends StatefulWidget {
@@ -435,7 +437,6 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
                       height: screenHeight * 0.055,
                       child: TextField(
                         controller: defectCtl,
-                        keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -605,7 +606,8 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
           )),
       onConfirm: (date) {
         setState(() {
-          String formattedDate = "${date.day}-${date.month}-${date.year}";
+          String formattedDate =
+              "${date.day}-${DateFormat.MMMM('th').format(date)}-${date.year}";
           birthdayCtl.text = formattedDate;
         });
       },
@@ -645,7 +647,7 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
     dogCtl.disease.value = diseaseCtl.text;
     dogCtl.sterilization.value = sterilizationCtl.text;
 
-    Get.to(() => RegisterdoginjectionrecordPage());
+    Get.to(() => RegisterdogavatarPage());
   }
 
   void _showSelectBreed() async {

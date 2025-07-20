@@ -236,15 +236,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(FontAwesomeIcons.userLarge,
-                        color: Color(0xFF916b44)),
-                    title: Text('โปรไฟล์'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => GeneralprofilePage());
-                    },
-                  ),
-                  ListTile(
                     leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
                     title: Text('คู่มือ'),
                     onTap: () {
@@ -253,10 +244,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                    leading:
+                        Icon(FontAwesomeIcons.gear, color: Color(0xFF916b44)),
                     title: Text('ตั้งค่า'),
                     onTap: () {
-                      Get.to(() => TestfirestorePage());
+                      Get.back();
+                      // it a generalSetting.dart page
+                      Get.to(() => GeneralprofilePage());
                     },
                   ),
                   ListTile(
@@ -314,7 +308,26 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           ),
         ),
         body: _loadingData
-            ? Center(child: CircularProgressIndicator())
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              )
             : SingleChildScrollView(
                 child: Container(
                   height: screenHeight * 0.9,
@@ -386,7 +399,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                     children: events.map((event) {
                                       Color dotColor;
 
-                                      // Example logic based on event.status
                                       switch ((event as Dog).status) {
                                         case 0:
                                           dotColor = Colors.red;
@@ -416,6 +428,28 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                       );
                                     }).toList(),
                                   );
+                                },
+
+                                /// 👇 Grey out past dates
+                                defaultBuilder: (context, day, focusedDay) {
+                                  final isPast = day.isBefore(
+                                      DateTime.now().subtract(Duration(
+                                    hours: DateTime.now().hour,
+                                    minutes: DateTime.now().minute,
+                                    seconds: DateTime.now().second,
+                                  )));
+
+                                  if (isPast) {
+                                    return Center(
+                                      child: Text(
+                                        '${day.day}',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade400),
+                                      ),
+                                    );
+                                  }
+
+                                  return null; // default rendering
                                 },
                               ),
                             ),
@@ -453,21 +487,24 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                             elevation: 2,
                                             child: InkWell(
                                               onTap: () {
-                                                e.status != 0
-                                                    ? showReserveInfoAlert(
-                                                        context, e)
-                                                    : Get.to(() =>
-                                                        ClinicsearchPage(
-                                                          dogId: e.dogId,
-                                                          vaccineName: e
-                                                              .vaccines
-                                                              .join(', '),
-                                                          date: _selectedDay,
-                                                          aid: e.aid,
-                                                          reserveId:
-                                                              e.reserveId,
-                                                        ));
-                                                // log(e.dogId.toString());
+                                                if (DateTime.now()
+                                                    .isAfter(_selectedDay)) {
+                                                  return;
+                                                }
+
+                                                if (e.status != 0) {
+                                                  showReserveInfoAlert(
+                                                      context, e);
+                                                } else {
+                                                  Get.to(() => ClinicsearchPage(
+                                                        dogId: e.dogId,
+                                                        vaccineName: e.vaccines
+                                                            .join(', '),
+                                                        date: _selectedDay,
+                                                        aid: e.aid,
+                                                        reserveId: e.reserveId,
+                                                      ));
+                                                }
                                               },
                                               child: ListTile(
                                                 title: Column(
@@ -507,6 +544,23 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                     onTap: () {
                                       Get.to(() => DogselectPage(
                                             date: _selectedDay,
+                                            dogData: Map.fromEntries(
+                                              eventMap.entries
+                                                  // 1. Keep only dates before now
+                                                  .where((entry) => entry.key
+                                                      .isBefore(DateTime.now()))
+                                                  // 2. Map to new entries with filtered dog lists (only status == 0)
+                                                  .map((entry) => MapEntry(
+                                                        entry.key,
+                                                        entry.value
+                                                            .where((dog) =>
+                                                                dog.status == 0)
+                                                            .toList(),
+                                                      ))
+                                                  // 3. Keep only entries where filtered list is not empty
+                                                  .where((entry) =>
+                                                      entry.value.isNotEmpty),
+                                            ),
                                           ));
                                     },
                                     child: ListTile(
@@ -541,141 +595,163 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Row dogInfoCard(e) {
-    return Row(
-      children: [
-        if (e.status == 0)
-          Container(
-            width: screenWidth * 0.02,
-            height: screenHeight * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(50),
-            ),
-          )
-        else if (e.status == 1)
-          Container(
-            width: screenWidth * 0.02,
-            height: screenHeight * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.yellow.shade600,
-              borderRadius: BorderRadius.circular(50),
-            ),
-          )
-        else if (e.status == 2)
-          Container(
-            width: screenWidth * 0.02,
-            height: screenHeight * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.lightBlueAccent,
-              borderRadius: BorderRadius.circular(50),
-            ),
-          )
-        else if (e.status == 3)
-          Container(
-            width: screenWidth * 0.02,
-            height: screenHeight * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.lightGreen.shade400,
-              borderRadius: BorderRadius.circular(50),
-            ),
-          )
-        else
-          SizedBox.shrink(),
-        SizedBox(
-          width: 10,
-        ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            e.image,
-            width: screenWidth * 0.2,
-            height: screenHeight * 0.1,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) {
-                return child;
-              }
-              return Shimmer.fromColors(
-                baseColor: Colors.grey.shade300,
-                highlightColor: Colors.grey.shade100,
-                child: Container(
-                  width: screenWidth * 0.2,
-                  height: screenHeight * 0.1,
-                  color: Colors.white,
-                ),
-              );
-            },
-          ),
-        ),
-        SizedBox(
-          width: 10,
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget dogInfoCard(e) {
+    bool isDisabled = DateTime.now().isAfter(_selectedDay);
+
+    return Opacity(
+      opacity: isDisabled ? 0.5 : 1.0,
+      child: IgnorePointer(
+        ignoring: isDisabled,
+        child: Row(
           children: [
-            SizedBox(
-              width: screenWidth * 0.55,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    e.status != 0
-                        ? 'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}'
-                        : '',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
+            if (e.status == 0)
+              Container(
+                width: screenWidth * 0.02,
+                height: screenHeight * 0.1,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              )
+            else if (e.status == 1)
+              Container(
+                width: screenWidth * 0.02,
+                height: screenHeight * 0.1,
+                decoration: BoxDecoration(
+                  color: Colors.yellow.shade600,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              )
+            else if (e.status == 2)
+              Container(
+                width: screenWidth * 0.02,
+                height: screenHeight * 0.1,
+                decoration: BoxDecoration(
+                  color: Colors.lightBlueAccent,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              )
+            else if (e.status == 3)
+              Container(
+                width: screenWidth * 0.02,
+                height: screenHeight * 0.1,
+                decoration: BoxDecoration(
+                  color: Colors.lightGreen.shade400,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              )
+            else
+              SizedBox.shrink(),
+            SizedBox(width: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                e.image,
+                width: screenWidth * 0.2,
+                height: screenHeight * 0.1,
+                fit: BoxFit.cover,
+                color: isDisabled
+                    ? Colors.grey
+                    : null, // optional: greyscale image
+                colorBlendMode: isDisabled ? BlendMode.saturation : null,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(
+                      width: screenWidth * 0.2,
+                      height: screenHeight * 0.1,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
+            SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  e.name,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                SizedBox(
+                  width: screenWidth * 0.55,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        e.status != 0
+                            ? 'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}'
+                            : '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDisabled ? Colors.grey : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  'อายุ ${getDogAge(e.birthday)}',
-                  style: TextStyle(color: Colors.grey, fontSize: 15),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      e.name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDisabled ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                    Text(
+                      'อายุ ${getDogAge(e.birthday)}',
+                      style: TextStyle(
+                        color: isDisabled ? Colors.grey : Colors.grey,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                if (e.vaccines != null &&
+                    e.vaccines.isNotEmpty &&
+                    e.vaccines
+                        .any((vaccine) => vaccine.toString().trim().isNotEmpty))
+                  SizedBox(
+                    width: screenWidth * 0.5,
+                    child: Text(
+                      'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: isDisabled ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  width: screenWidth * 0.55,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        width: screenWidth * 0.225,
+                        child: Text(
+                          e.status != 0 ? 'คลินิก: ${e.clinicName}' : '',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            color:
+                                isDisabled ? Colors.grey : Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(
-              height: 5,
-            ),
-            if (e.vaccines != null &&
-                e.vaccines.isNotEmpty &&
-                e.vaccines
-                    .any((vaccine) => vaccine.toString().trim().isNotEmpty))
-              SizedBox(
-                width: screenWidth * 0.5,
-                child: Text(
-                  'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-            SizedBox(
-              width: screenWidth * 0.55,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  SizedBox(
-                    width: screenWidth * 0.225,
-                    child: Text(
-                      e.status != 0 ? 'คลินิก: ${e.clinicName}' : '',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(color: Colors.grey.shade700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
-      ],
+      ),
     );
   }
 
@@ -1209,19 +1285,37 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
     final groupedAppointments = groupByDate(appointments);
 
-    List<int> listDogId = []; // Use Set to avoid duplicates
+    List<int> listDogId = [];
     List<int?> listAid = [];
+    List<List<int?>> listMutipleAid = [];
     List<String> listClinicEmail = [];
 
     groupedAppointments.forEach((date, list) {
       for (var app in list) {
         listDogId.add(int.parse(app.dogId));
 
-        listAid.add(int.tryParse(app.appointmentAid));
+        if (app.appointmentAid != null) {
+          final innerList = app.appointmentAid!
+              .split(',')
+              .map((e) => int.tryParse(e.trim()))
+              .whereType<int>()
+              .toList();
+
+          if (innerList.isNotEmpty) {
+            listMutipleAid.add(innerList);
+          }
+        }
+
+        listAid.addAll(app.appointmentAid
+            .split(',')
+            .map((e) => int.tryParse(e.trim()))
+            .whereType<int>());
 
         listClinicEmail.add(app.clinicEmail);
       }
     });
+
+    log(listAid.toString());
 
     final resAppointment = await http.post(
       Uri.parse("$url/appointment/dataList"),
@@ -1260,10 +1354,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     required List<dynamic> appointments,
     required List<dynamic> clinics,
   }) {
-    // Initialize grouped appointments by date
+    // Grouped map by date
     final Map<DateTime, List<Dog>> grouped = {};
 
-    // Convert dynamic date to DateTime (truncate to day)
+    // Helper to truncate datetime to date only
     DateTime toDate(dynamic date,
         {required String source, required String id}) {
       if (date is DateTime) {
@@ -1275,10 +1369,11 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           return DateTime(dt.year, dt.month, dt.day);
         }
       }
-      return DateTime(2000, 1, 1); // Fallback date
+      log('Invalid date format from $source id=$id');
+      return DateTime(2000, 1, 1); // fallback
     }
 
-    // Find a key in grouped within 1 day of target date
+    // Find existing date key within 1 day difference
     DateTime? findCloseDateKey(DateTime target) {
       for (var key in grouped.keys) {
         if (key.difference(target).inDays.abs() <= 1) {
@@ -1290,7 +1385,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       return null;
     }
 
-    // Add dog to grouped appointments
+    // Add or merge dog in grouped map
     void addDogToGroup(DateTime date, Dog dog) {
       final closeKey = findCloseDateKey(date);
       final groupKey = closeKey ?? date;
@@ -1299,26 +1394,65 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         final keysToRemove = grouped.keys
             .where((k) => k.difference(groupKey).inDays.abs() <= 1)
             .toList();
+
         final mergedDogs = <Dog>[];
         for (var key in keysToRemove) {
           mergedDogs.addAll(grouped[key]!);
           grouped.remove(key);
         }
-        mergedDogs.add(dog);
+
+        final existingIndex =
+            mergedDogs.indexWhere((d) => d.dogId == dog.dogId);
+        if (existingIndex != -1) {
+          final existingDog = mergedDogs[existingIndex];
+
+          // Merge vaccines
+          existingDog.vaccines = {
+            ...existingDog.vaccines.where((v) => v.trim().isNotEmpty),
+            ...dog.vaccines.where((v) => v.trim().isNotEmpty),
+          }.toList();
+
+          // Merge aids
+          existingDog.aid ??= [];
+          dog.aid ??= [];
+          existingDog.aid!.addAll(dog.aid!);
+          existingDog.aid = existingDog.aid!.toSet().toList();
+        } else {
+          mergedDogs.add(dog);
+        }
+
         grouped[groupKey] = mergedDogs;
       } else {
-        grouped.putIfAbsent(groupKey, () => []).add(dog);
+        final existingIndex =
+            grouped[groupKey]?.indexWhere((d) => d.dogId == dog.dogId) ?? -1;
+
+        if (existingIndex != -1) {
+          final existingDog = grouped[groupKey]![existingIndex];
+
+          // Merge vaccines
+          existingDog.vaccines = {
+            ...existingDog.vaccines.where((v) => v.trim().isNotEmpty),
+            ...dog.vaccines.where((v) => v.trim().isNotEmpty),
+          }.toList();
+
+          // Merge aids
+          existingDog.aid ??= [];
+          dog.aid ??= [];
+          existingDog.aid!.addAll(dog.aid!);
+          existingDog.aid = existingDog.aid!.toSet().toList();
+        } else {
+          grouped.putIfAbsent(groupKey, () => []).add(dog);
+        }
       }
     }
 
-    // Create lookup maps for O(1) access
+    // Create lookup maps for fast access
     final dogMap = {for (var d in dogs) d['dogId'] as int: d};
     final appointmentMap = {for (var a in appointments) a['aid'] as int: a};
     final clinicMap = {for (var c in clinics) c['user_email'] as String: c};
 
-    // Process Firestore data
+    // Process Firestore reserve data
     for (final fs in firestoreData) {
-      // Parse dogId
       int? dogId;
       try {
         dogId = int.parse(fs.dogId);
@@ -1327,39 +1461,55 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         continue;
       }
 
-      // Get dog, appointment, and clinic data
       final dogData = dogMap[dogId];
       if (dogData == null) {
         log('⚠️ Missing dogData for dogId=$dogId (docId=${fs.docId})');
       }
+
       int? aid;
+
       Map<String, dynamic>? appointmentData;
+
       if (fs.appointmentAid != null) {
         aid = int.tryParse(fs.appointmentAid);
         appointmentData = aid != null ? appointmentMap[aid] : null;
       }
+      log('Firestore docId=${fs.docId} aid=$aid appointmentData=$appointmentData');
+
       final clinicData = clinicMap[fs.clinicEmail];
 
-      // Ensure date is a valid DateTime for formatting
       final dateTime = fs.date is DateTime
           ? fs.date as DateTime
           : DateTime.tryParse(fs.date as String);
-      if (dateTime == null) {
-        continue;
+      if (dateTime == null) continue;
+
+      final List<int> aids = parseAids(fs.appointmentAid);
+
+      List<String> vaccines = [];
+      List<int> allAids = [];
+
+      for (final aid in aids) {
+        final appointmentData = appointmentMap[aid];
+        if (appointmentData != null) {
+          final vaccine = (appointmentData['vaccine'] as String?)?.trim();
+          if (vaccine != null && vaccine.isNotEmpty) {
+            vaccines.add(vaccine);
+          }
+        }
+        allAids.add(aid);
       }
 
-      // Create Dog object
+      if (vaccines.isEmpty) vaccines = [''];
+
       final dog = Dog(
         reserveId: fs.docId,
-        aid: aid,
+        aid: allAids,
         status: fs.status,
         dogId: dogData != null ? dogData['dogId'] as int : dogId,
         name: dogData != null ? dogData['name'] as String : 'Unknown Dog',
         image: dogData != null ? dogData['image'] as String : '',
         birthday: dogData != null ? dogData['birthday'] as String : '',
-        vaccines: aid != null && appointmentData != null
-            ? [appointmentData['vaccine'] as String]
-            : [''],
+        vaccines: vaccines,
         time: DateFormat('HH:mm').format(dateTime),
         clinicName: clinicData != null ? clinicData['name'] as String : '',
         clinicImage: clinicData != null ? clinicData['image'] as String : '',
@@ -1368,17 +1518,20 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         clinicLng: clinicData != null ? clinicData['lng'] as String : '',
       );
 
-      // Group by date
       final date = toDate(fs.date, source: 'firestoreData', id: fs.docId);
       addDogToGroup(date, dog);
     }
 
-    // Process non-Firestore appointments with status=0
-    final firestoreAidSet = firestoreData
-        .map((fs) => int.tryParse(fs.appointmentAid))
-        .whereType<int>()
-        .toSet();
+    final firestoreAidSet = <int>{};
 
+    // Prepare set of Firestore appointment IDs
+
+    for (final fs in firestoreData) {
+      final aids = parseAids(fs.appointmentAid);
+      firestoreAidSet.addAll(aids);
+    }
+
+    // Process normal appointments (non-Firestore)
     for (final appointment in appointments) {
       final aid = appointment['aid'] as int?;
       if (aid != null && firestoreAidSet.contains(aid)) continue;
@@ -1392,20 +1545,17 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         continue;
       }
 
-      // Safely handle clinicEmail
       final clinicEmail = appointment['clinicEmail'] as String?;
       final clinicData = clinicEmail != null ? clinicMap[clinicEmail] : null;
 
-      // Validate date
-      if (appointment['date'] is! DateTime && appointment['date'] is! String) {
-        log('Invalid date type: ${appointment['date'].runtimeType} for aid: $aid');
-        continue;
-      }
+      final dateTime = appointment['date'] is String
+          ? DateTime.tryParse(appointment['date'])
+          : appointment['date'];
+      if (dateTime == null) continue;
 
-      // Create Dog object
       final dog = Dog(
         reserveId: null,
-        aid: aid,
+        aid: aid != null ? [aid] : [],
         status: status,
         dogId: dogData['dogId'] as int,
         name: dogData['name'] as String,
@@ -1422,15 +1572,23 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         clinicLng: clinicData != null ? clinicData['lng'] as String : '',
       );
 
-      // Group by date
       final date = toDate(appointment['date'],
           source: 'appointments', id: aid?.toString() ?? 'null');
       addDogToGroup(date, dog);
     }
 
-    // Convert to AppointmentGetEmail list
+    // Convert grouped to list of AppointmentGetEmail
     return grouped.entries
         .map((e) => AppointmentGetEmail(date: e.key, dogs: e.value))
+        .toList();
+  }
+
+  List<int> parseAids(String? aidString) {
+    if (aidString == null || aidString.trim().isEmpty) return [];
+    return aidString
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
         .toList();
   }
 

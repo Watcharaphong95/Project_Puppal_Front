@@ -10,6 +10,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
 import 'package:puppal_application/model/reserveDogList.dart';
 import 'package:puppal_application/model/reserveDogListPostReq.dart';
@@ -18,8 +19,13 @@ import 'package:shimmer/shimmer.dart';
 
 class DogselectPage extends StatefulWidget {
   final DateTime date;
+  final Map<DateTime, List<Dog>> dogData;
 
-  const DogselectPage({super.key, required this.date});
+  const DogselectPage({
+    super.key,
+    required this.date,
+    required this.dogData,
+  });
 
   @override
   State<DogselectPage> createState() => _DogselectPageState();
@@ -34,7 +40,7 @@ class _DogselectPageState extends State<DogselectPage> {
 
   String url = '';
 
-  List<ReserveDoglist> dogs = [];
+  List<ReserveDoglist> allDogs = [];
   List<ReserveDoglist> filterDogs = [];
 
   TextEditingController searchDogCtl = TextEditingController();
@@ -42,6 +48,7 @@ class _DogselectPageState extends State<DogselectPage> {
   @override
   void initState() {
     log(widget.date.toString());
+    log(widget.dogData.toString());
     init();
     super.initState();
   }
@@ -51,6 +58,7 @@ class _DogselectPageState extends State<DogselectPage> {
       url = config['apiEndPoint'];
     });
     await getDogData();
+    await addDogData(widget.dogData);
     setState(() => isLoading = false);
   }
 
@@ -139,9 +147,9 @@ class _DogselectPageState extends State<DogselectPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     if (value.isEmpty) {
-                                      filterDogs = dogs;
+                                      filterDogs = allDogs;
                                     } else {
-                                      filterDogs = dogs.where((dog) {
+                                      filterDogs = allDogs.where((dog) {
                                         return dog.name
                                             .toLowerCase()
                                             .contains(value.toLowerCase());
@@ -186,7 +194,7 @@ class _DogselectPageState extends State<DogselectPage> {
                                               setState(() {
                                                 filterDogs =
                                                     List<ReserveDoglist>.from(
-                                                        dogs);
+                                                        allDogs);
                                               });
                                             },
                                           ),
@@ -317,17 +325,22 @@ class _DogselectPageState extends State<DogselectPage> {
       itemCount: filterDogs.length,
       itemBuilder: (context, index) {
         final dog = filterDogs[index];
-        // glksdopgjkrsiojgoir
         final isBooked = dog.status == 0;
+        final isPast = dog.status == 2;
 
         return Container(
           margin: EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isPast ? Color(0xFFFFF8E1) : Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: isPast
+                ? Border.all(color: Color(0xFFDBA871), width: 1.5)
+                : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: isPast
+                    ? Color(0xFFDBA871).withOpacity(0.15)
+                    : Colors.black.withOpacity(0.08),
                 blurRadius: 10,
                 offset: Offset(0, 2),
               ),
@@ -338,15 +351,25 @@ class _DogselectPageState extends State<DogselectPage> {
             child: InkWell(
               onTap: isBooked
                   ? null
-                  : () {
-                      Get.to(() => ClinicsearchPage(
-                            dogId: dog.dogId,
-                            vaccineName: '',
-                            date: widget.date,
-                            aid: 0,
-                            reserveId: null,
-                          ));
-                    },
+                  : isPast
+                      ? () {
+                          Get.to(() => ClinicsearchPage(
+                                dogId: dog.dogId,
+                                vaccineName: dog.vaccine,
+                                date: widget.date,
+                                aid: dog.aid,
+                                reserveId: dog.reserveId,
+                              ));
+                        }
+                      : () {
+                          Get.to(() => ClinicsearchPage(
+                                dogId: dog.dogId,
+                                vaccineName: '',
+                                date: widget.date,
+                                aid: [0],
+                                reserveId: null,
+                              ));
+                        },
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -385,6 +408,29 @@ class _DogselectPageState extends State<DogselectPage> {
                             ),
                           ),
                         ),
+
+                        // Priority Badge for Past Dates
+                        if (isPast)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFDBA871),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'ด่วน',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
 
                         // Booking Status Overlay
                         if (isBooked)
@@ -432,29 +478,88 @@ class _DogselectPageState extends State<DogselectPage> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: isBooked
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade800,
+                              color: isPast
+                                  ? Color(0xFFDBA871)
+                                  : isBooked
+                                      ? Colors.grey.shade600
+                                      : Colors.grey.shade800,
                             ),
                           ),
-                          SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.cake,
-                                size: 16,
-                                color: Colors.grey.shade500,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'อายุ ${getDogAge(dog.birthday)}',
+                          // Priority message for past dates
+                          if (isPast)
+                            Container(
+                              margin: EdgeInsets.only(top: 1, bottom: 1),
+                              child: Text(
+                                'วันนัดเดิม ${DateFormat('d MMM y', 'th').format(DateTime.parse(dog.date!).toLocal())}',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                  color: Color(0xFFDBA871),
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          if (isPast)
+                            Container(
+                              margin: EdgeInsets.only(top: 1, bottom: 1),
+                              child: Text(
+                                'ควรจองโดยเร็ว',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFFDBA871),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          SizedBox(height: 6),
+                          isPast
+                              ? Row(
+                                  children: [
+                                    Icon(
+                                      Icons.cake,
+                                      size: 16,
+                                      color: isPast
+                                          ? Color(0xFFDBA871)
+                                          : Colors.grey.shade500,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'อายุ ${getDogAge(dog.birthday)}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isPast
+                                            ? Color(0xFFB8956B)
+                                            : Colors.grey.shade600,
+                                        fontWeight: isPast
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Icon(
+                                      Icons.cake,
+                                      size: 16,
+                                      color: isPast
+                                          ? Color(0xFFDBA871)
+                                          : Colors.grey.shade500,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'อายุ ${getDogAge(dog.birthday)}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isPast
+                                            ? Color(0xFFB8956B)
+                                            : Colors.grey.shade600,
+                                        fontWeight: isPast
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                           SizedBox(height: 4),
                           Row(
                             children: [
@@ -481,7 +586,27 @@ class _DogselectPageState extends State<DogselectPage> {
                     ),
 
                     // Action Button
-                    if (!isBooked)
+                    if (!isBooked && isPast)
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.priority_high,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      )
+                    else if (!isBooked)
                       Container(
                         padding: EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -524,22 +649,98 @@ class _DogselectPageState extends State<DogselectPage> {
     );
   }
 
-  Future<void> getDogData() async {
-    ReserveDoglistReq req = ReserveDoglistReq(
-        email: box.read('email'), date: widget.date.toString());
+  Future<void> addDogData(Map<DateTime, List<Dog>> dogData) async {
+    List<ReserveDoglist> toAdd = [];
 
-    var res = await http.post(
-      Uri.parse("$url/reserve/doglist"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: reserveDoglistReqToJson(req),
+    dogData.forEach((date, dogs) {
+      for (var dog in dogs) {
+        // Find matching dog in filterDogs by dogId
+        var existingEntries =
+            filterDogs.where((f) => f.dogId == dog.dogId).toList();
+
+        // If no matching dog info in filterDogs, skip or handle accordingly
+        if (existingEntries.isEmpty) {
+          // No dog info to copy, skip adding or handle error
+          continue;
+        }
+
+        // Check if any existing entry has the same date
+        var matchedByDate =
+            existingEntries.where((f) => f.date == date.toString()).toList();
+
+        if (matchedByDate.isNotEmpty) {
+          // Update existing entries with same date
+          for (var f in matchedByDate) {
+            f.status = 2;
+            f.aid = dog.aid ?? [0];
+            f.vaccine = dog.vaccines.join(',');
+            f.reserveId = dog.reserveId;
+          }
+        } else {
+          // No entry for this dogId + date -> add new entry copying from filterDogs info
+
+          // Just take the first matched dog info to copy
+          var templateDog = existingEntries.first;
+
+          toAdd.add(ReserveDoglist(
+              dogId: templateDog.dogId,
+              userEmail: templateDog.userEmail,
+              name: templateDog.name,
+              breed: templateDog.breed,
+              gender: templateDog.gender,
+              color: templateDog.color,
+              defect: templateDog.defect,
+              birthday: templateDog.birthday,
+              congentialDisease: templateDog.congentialDisease,
+              sterilization: templateDog.sterilization,
+              hair: templateDog.hair,
+              image: templateDog.image,
+              aid: dog.aid ?? [0],
+              date: date.toString(),
+              status: 2,
+              vaccine: dog.vaccines.join(','),
+              reserveId: dog.reserveId));
+        }
+      }
+    });
+
+    // Add all new entries after iteration
+    filterDogs.addAll(toAdd);
+
+    // Optional: For all dogs in filterDogs, if status != 2, set status = 1
+    for (var f in filterDogs) {
+      if (f.status != 2) {
+        f.status = 1;
+      }
+    }
+
+    filterDogs.sort((a, b) {
+      DateTime parseDate(String? dateStr) {
+        if (dateStr == null || dateStr.isEmpty) {
+          // fallback date when null or empty, e.g. widget.date or some default
+          return widget.date;
+        }
+        return DateTime.tryParse(dateStr) ?? (widget.date);
+      }
+
+      final dateA = parseDate(a.date);
+      final dateB = parseDate(b.date);
+
+      return dateA.compareTo(dateB); // ascending
+    });
+  }
+
+  Future<void> getDogData() async {
+    var res = await http.get(
+      Uri.parse("$url/dog/${box.read('email')}"),
     );
 
     if (res.statusCode == 200) {
       var jsonData = json.decode(res.body);
-      dogs = jsonData
+      allDogs = jsonData
           .map<ReserveDoglist>((e) => ReserveDoglist.fromJson(e))
           .toList();
-      filterDogs = List<ReserveDoglist>.from(dogs);
+      filterDogs = List<ReserveDoglist>.from(allDogs);
     }
 
     final snapshot = await FirebaseFirestore.instance
@@ -551,7 +752,7 @@ class _DogselectPageState extends State<DogselectPage> {
         .map((doc) => ReserveAppointmentFireStore.fromJson(doc.data(), doc.id))
         .toList();
 
-    updateDogStatusByDate(dogs, appointments, widget.date);
+    updateDogStatusByDate(allDogs, appointments, widget.date);
   }
 
   void updateDogStatusByDate(List<ReserveDoglist> dogs,

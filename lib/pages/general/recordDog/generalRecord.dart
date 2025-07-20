@@ -71,7 +71,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     }
     dogData = dogs[selectedIndex!];
     dogId = dogData.dogId;
-    dogBirthDay = dogData.birthday;
+    dogBirthDay = dogData.birthday.toString();
     await getDogRecordData();
     setState(() {
       isLoading = false;
@@ -92,187 +92,27 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
         centerTitle: true,
         backgroundColor: Color(0xFF916B44),
       ),
-      drawer: Drawer(
-        child: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/indexBg.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(2, 2),
-                ),
-              ],
-            ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          box.read('generalImage'),
-                          width: screenWidth * 0.2,
-                          height: screenWidth * 0.2,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                width: screenWidth * 0.2,
-                                height: screenWidth * 0.2,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        box.read('generalName') ?? "ผู้ใช้งาน",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.house, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralmainPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.solidBell,
-                      color: Color(0xFF916b44)),
-                  title: Text('การแจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralnotificationPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
-                  title: Text('สุนัข'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneraldogPage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.syringe, color: Color(0xFF916b44)),
-                  title: Text(
-                    'ประวัติการฉีดยา',
-                    style: TextStyle(
-                      color: Color(0xFF916b44),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(FontAwesomeIcons.userLarge,
-                      color: Color(0xFF916b44)),
-                  title: Text('โปรไฟล์'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralprofilePage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
-                  title: Text('คู่มือ'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => GeneralguidePage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                  title: Text('ตั้งค่า'),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading:
-                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                  title: Text('สลับโหมด'),
-                  onTap: () async {
-                    var resClinic = await http.get(
-                        Uri.parse("$url/clinic/name/${box.read('email')}"));
-                    if (resClinic.statusCode == 200) {
-                      showAlert(
-                        title: 'สลับไปยังบัญชีคลินิก?',
-                        message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
-                        onConfirm: () {
-                          box.write(
-                              'clinicName', jsonDecode(resClinic.body)['name']);
-                          box.write('clinicImage',
-                              jsonDecode(resClinic.body)['image']);
-                          log('Name ${box.read('clinicName')}');
-                          Get.offAll(() => ClinicmainPage());
-                        },
-                      );
-                    } else {
-                      showAlert(
-                        title: 'คุณยังไม่มีบัญชีคลินิก!',
-                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
-                        onConfirm: () {
-                          Get.back();
-                          Get.to(() => RegisterclinicgooglePage());
-                        },
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(FontAwesomeIcons.doorOpen, color: Colors.redAccent),
-                  title: Text('ออกจากระบบ'),
-                  onTap: () {
-                    showAlert(
-                      title: 'ออกจากระบบ?',
-                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
-                        box.erase();
-                        Get.offAll(() => IndexPage());
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลด...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : Container(
               height: screenHeight * 0.89,
               decoration: BoxDecoration(
@@ -332,7 +172,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                     selectedIndex = index;
                                     dogData = dog;
                                     dogId = dog.dogId;
-                                    dogBirthDay = dog.birthday;
+                                    dogBirthDay = dog.birthday.toString();
                                   });
                                   await getDogRecordData();
                                   setState(() {
@@ -384,14 +224,28 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                               return Container(
                                                 color: Colors.grey.shade200,
                                                 child: Center(
-                                                  child:
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
                                                       CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                            Color>(
-                                                      Color(0xFFDBA871),
-                                                    ),
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Color(0xFFDBA871),
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 16),
+                                                      Text(
+                                                        'กำลังโหลด...',
+                                                        style: TextStyle(
+                                                          color: Colors
+                                                              .grey.shade600,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               );
@@ -520,14 +374,14 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                         CircularProgressIndicator(
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Color(0xFF4299E1),
+                                            Color(0xFFDBA871),
                                           ),
                                         ),
                                         SizedBox(height: 16),
                                         Text(
-                                          'กำลังโหลดข้อมูล...',
+                                          'กำลังโหลด...',
                                           style: TextStyle(
-                                            color: Color(0xFF718096),
+                                            color: Colors.grey.shade600,
                                             fontSize: 16,
                                           ),
                                         ),
@@ -666,125 +520,332 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       context: context,
       barrierDismissible: true,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 12,
+        backgroundColor: Colors.transparent,
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width * 0.92,
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: Offset(0, 10),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header with close button
+              // Enhanced Header with gradient and dog info
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Color(0xFFDBA871).withOpacity(0.2),
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFDBA871),
+                      Color(0xFF916B44),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
-                    Text(
-                      'ข้อมูลประวัติการฉีดวัคซีน',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF916B44),
-                      ),
+                    // Header row with close button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ประวัติการฉีดวัคซีน',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'ข้อมูลการฉีดวัคซีนสำหรับสุนัข',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: Icon(Icons.close, color: Colors.white),
+                            padding: EdgeInsets.all(8),
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.close,
-                          color: Color(0xFF916B44).withOpacity(0.7)),
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
+                    SizedBox(height: 20),
+
+                    // Dog Profile Section
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Dog Image
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: Image.network(
+                                record.dogImage ?? '',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.white.withOpacity(0.2),
+                                    child: Icon(
+                                      Icons.pets,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+
+                          // Dog Info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  record.dogName ?? 'ไม่ระบุชื่อ',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${record.dogBreed ?? 'ไม่ระบุสายพันธุ์'} • ${record.dogGender ?? 'ไม่ระบุเพศ'}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'สี: ${record.dogColor ?? 'ไม่ระบุ'}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Content
+              // Enhanced Content with better spacing and organization
               Flexible(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Clinic Information
-                      _buildInfoCard(
-                        title: 'คลินิกที่ฉีดวัคซีน',
-                        content: record.clinicName,
-                        icon: Icons.local_hospital,
+                      // Current Vaccination Section
+                      _buildSectionHeader(
+                          'การฉีดวัคซีนครั้งปัจจุบัน', Icons.medical_services),
+                      SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildEnhancedInfoCard(
+                              title: 'ชนิดวัคซีน',
+                              content: record.injectionVaccine ?? 'ไม่ระบุ',
+                              icon: Icons.vaccines,
+                              color: Color(0xFF4CAF50),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _buildEnhancedInfoCard(
+                              title: 'วันที่ฉีด',
+                              content: _formatDate(
+                                  DateTime.parse(record.injectionDate)),
+                              icon: Icons.calendar_today,
+                              color: Color(0xFF2196F3),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 24),
 
-                      // Vaccine Information
-                      _buildInfoCard(
-                        title: 'ชนิดวัคซีน',
-                        content: record.injectionVaccine,
-                        icon: Icons.medical_services,
-                      ),
-                      SizedBox(height: 16),
+                      // Clinic Information Section
+                      _buildSectionHeader('ข้อมูลคลินิก', Icons.local_hospital),
+                      SizedBox(height: 12),
 
-                      // Vaccination Date (if available)
-                      _buildInfoCard(
-                        title: 'วันที่ฉีดวัคซีน',
-                        content:
-                            _formatDate(DateTime.parse(record.injectionDate)),
-                        icon: Icons.calendar_today,
-                      ),
-                      SizedBox(height: 16),
+                      _buildClinicCard(record),
+                      SizedBox(height: 24),
 
-                      SizedBox(height: 16),
+                      // Next Vaccination Section
+                      _buildSectionHeader(
+                          'การฉีดวัคซีนครั้งถัดไป', Icons.schedule),
+                      SizedBox(height: 12),
 
-                      // Vaccine Information
-                      _buildInfoCard(
-                        title: 'ชนิดวัคซีนครั้งถัดไป',
-                        content: record.appointmentVaccine,
-                        icon: Icons.medical_services,
-                      ),
-                      SizedBox(height: 16),
-
-                      _buildInfoCard(
-                        title: 'วันที่ครบกำหนดฉีดครั้งถัดไป',
-                        content:
-                            _formatDate(DateTime.parse(record.appointmentDate)),
-                        icon: Icons.schedule,
-                      ),
-                      SizedBox(height: 16),
-
-                      // Vaccine Label Image
-                      if (record.vaccineLabel.isNotEmpty == true) ...[
-                        Text(
-                          'รูปภาพฉลากวัคซีน',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF916B44),
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFFFF9800).withOpacity(0.1),
+                              Color(0xFFFF5722).withOpacity(0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFFF9800).withOpacity(0.3),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFF9800).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.schedule,
+                                    color: Color(0xFFFF9800),
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        record.nextVaccine ?? 'ไม่ระบุวัคซีน',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFFFF9800),
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        record.nextDate != null
+                                            ? 'ครบกำหนด: ${_formatDate(DateTime.parse(record.nextDate!))}'
+                                            : '',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFFF9800).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: Color(0xFFFF9800),
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'กรุณาจดจำวันนัดหมายครั้งถัดไป',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFFFF9800),
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Vaccine Label Image
+                      if (record.vaccineLabel != null &&
+                          record.vaccineLabel!.isNotEmpty) ...[
+                        _buildSectionHeader('ฉลากวัคซีน', Icons.photo),
+                        SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: Color(0xFFDBA871).withOpacity(0.3),
                             ),
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.network(
-                              record.vaccineLabel,
+                              record.vaccineLabel!,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  height: 150,
+                                  height: 200,
                                   child: Center(
                                     child: Column(
                                       mainAxisAlignment:
@@ -809,7 +870,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                   (context, child, loadingProgress) {
                                 if (loadingProgress == null) return child;
                                 return Container(
-                                  height: 150,
+                                  height: 200,
                                   child: Center(
                                     child: CircularProgressIndicator(
                                       value:
@@ -833,14 +894,14 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                 ),
               ),
 
-              // Bottom button
+              // Enhanced Bottom Section
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Color(0xFFDBA871).withOpacity(0.1),
+                  color: Colors.grey[50],
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
                 ),
                 child: Row(
@@ -851,14 +912,18 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF916B44),
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                          padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          elevation: 2,
                         ),
                         child: Text(
                           'ปิด',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -872,51 +937,81 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     );
   }
 
-// Helper widget for info cards
-  Widget _buildInfoCard({
+// Enhanced section header widget
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Color(0xFFDBA871).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: Color(0xFF916B44),
+            size: 20,
+          ),
+        ),
+        SizedBox(width: 12),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF916B44),
+          ),
+        ),
+      ],
+    );
+  }
+
+// Enhanced info card with color coding
+  Widget _buildEnhancedInfoCard({
     required String title,
     required String content,
     required IconData icon,
+    required Color color,
   }) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFDBA871).withOpacity(0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Color(0xFFDBA871).withOpacity(0.3),
+          color: color.withOpacity(0.3),
         ),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: Color(0xFF916B44),
-            size: 24,
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF916B44),
+                    color: color,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  content,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -924,9 +1019,154 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     );
   }
 
-// Helper function to format dates
+// Enhanced clinic card
+  Widget _buildClinicCard(DogsRecordIdGet record) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Color(0xFFDBA871).withOpacity(0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Color(0xFFDBA871).withOpacity(0.3),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(23),
+                  child: Image.network(
+                    record.clinicImage ?? '',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Color(0xFFDBA871).withOpacity(0.1),
+                        child: Icon(
+                          Icons.local_hospital,
+                          color: Color(0xFF916B44),
+                          size: 24,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      record.clinicName ?? 'ไม่ระบุชื่อคลินิก',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF916B44),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'แพทย์: ${record.doctorName ?? ''} ${record.doctorSurname ?? ''}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Divider(color: Color(0xFFDBA871).withOpacity(0.3)),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Icons.phone,
+                color: Color(0xFF916B44),
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Text(
+                record.phone ?? 'ไม่ระบุเบอร์โทร',
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on,
+                color: Color(0xFF916B44),
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  record.address ?? 'ไม่ระบุที่อยู่',
+                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                color: Color(0xFF916B44),
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'เปิด: ${record.open.substring(0, 5) ?? 'ไม่ระบุ'} - ปิด: ${record.close.substring(0, 5) ?? 'ไม่ระบุ'}',
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// Date formatting helper
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    const List<String> months = [
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม'
+    ];
+
+    return '${date.day} ${months[date.month - 1]} ${date.year + 543}';
   }
 
   Future<void> getDogData() async {
@@ -940,7 +1180,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
   }
 
   Future<void> getDogRecordData() async {
-    var res = await http.get(Uri.parse("$url/injectionRecord/id/$dogId"));
+    var res = await http.get(Uri.parse("$url/injectionRecord/dogId/$dogId"));
     if (res.statusCode == 200) {
       var jsonData = json.decode(res.body) as List<dynamic>;
       dogRecord = jsonData
