@@ -12,34 +12,47 @@ String clinicinjectionRecordPostToJson(List<ClinicinjectionRecordPost> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class ClinicinjectionRecordPost {
-  int reserveId;
-  int appointmentAid;
+  int? oldAppointmentAid;
+  int? nextAppointmentAid;
+  String? clinicEmail;
+  String doctorCareerNo;
   String vaccine;
   DateTime date;
   String vaccineLabel;
+  int type;
 
   ClinicinjectionRecordPost({
-    required this.reserveId,
-    required this.appointmentAid,
+    required this.oldAppointmentAid,
+    required this.nextAppointmentAid,
+    required this.clinicEmail,
+    required this.doctorCareerNo,
     required this.vaccine,
     required this.date,
     required this.vaccineLabel,
+    required this.type,
   });
 
   factory ClinicinjectionRecordPost.fromJson(Map<String, dynamic> json) =>
       ClinicinjectionRecordPost(
-        reserveId: json["reserveID"],
-        appointmentAid: json["appointment_aid"],
+        oldAppointmentAid: json["oldAppointmentAid"],
+        nextAppointmentAid: json["nextAppointmentAid"],
+        clinicEmail: json["clinicEmail"],
+        doctorCareerNo: json["doctorCareerNo"],
         vaccine: json["vaccine"],
         date: DateTime.parse(json["date"]),
         vaccineLabel: json["vaccine_label"],
+        type: json["type"],
       );
 
   Map<String, dynamic> toJson() => {
-        "reserveID": reserveId,
-        "appointment_aid": appointmentAid,
+        "oldAppointmentAid": oldAppointmentAid,
+        "nextAppointmentAid": nextAppointmentAid,
+        "clinicEmail": clinicEmail,
+        "doctorCareerNo": doctorCareerNo,
         "vaccine": vaccine,
-        "date": date.toIso8601String(),
+        "date":
+            "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
         "vaccine_label": vaccineLabel,
+        "type": type,
       };
 }

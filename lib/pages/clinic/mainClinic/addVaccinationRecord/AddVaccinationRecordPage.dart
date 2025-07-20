@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,17 +10,20 @@ import 'package:intl/date_time_patterns.dart';
 import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/main.dart';
+import 'package:puppal_application/model/appointmentClinic.dart';
 import 'package:puppal_application/model/appointmentPost.dart';
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
+import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddVaccinationRecordPage extends StatefulWidget {
-  final int reserveId;
-  const AddVaccinationRecordPage({super.key, required this.reserveId});
+  final String docId;
+  const AddVaccinationRecordPage({super.key, required this.docId});
 
   @override
   State<AddVaccinationRecordPage> createState() =>
@@ -29,7 +33,8 @@ class AddVaccinationRecordPage extends StatefulWidget {
 class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   final _formKey = GlobalKey<FormState>();
   String url = '';
-  List<Reservebooking> reserveList = [];
+  List<ReserveClinicFirebase> reserveList = [];
+  List<DoctorPost> doctorList = [];
   static const Color primaryColor = Color(0xFF916B44);
   static const Color secondaryColor = Color(0xFFDBA871);
   static const Color lightColor = Color(0xFFE9CBAF);
@@ -40,6 +45,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   TextEditingController vaccineController = TextEditingController();
   TextEditingController dateController = TextEditingController();
   TextEditingController nextDateController = TextEditingController();
+  DoctorPost? selectedDoctor;
+  TextEditingController doctorController = TextEditingController();
 
   DateTime? vaccinationDate;
   DateTime? nextAppointmentDate;
@@ -60,7 +67,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
 
-    await getReserve(widget.reserveId.toString());
+    await getReserve(widget.docId);
 
     setState(() {
       isLoading = false;
@@ -307,16 +314,13 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                   icon: Icons.qr_code,
                   child: SizedBox(
                     width: double.infinity,
-                    height: 180, // กำหนดความสูงของปุ่มรูปเต็ม (ปรับได้)
+                    height: 180,
                     child: ElevatedButton(
-                      onPressed: () {
-                        _pickImage();
-                      },
+                      onPressed: _pickImage,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: lightColor.withOpacity(0.5),
                         foregroundColor: Colors.black87,
-                        padding: EdgeInsets
-                            .zero, // ลบ padding เพื่อให้รูปเต็มพื้นที่
+                        padding: EdgeInsets.zero,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -324,8 +328,14 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: _imageFile == null
-                            ? Container(
+                        child: (_imageFile != null && _imageFile!.existsSync())
+                            ? Image.file(
+                                _imageFile!,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
                                 color: lightColor.withOpacity(0.3),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -333,17 +343,17 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                                   size: 48,
                                   color: Color(0xFF916B44),
                                 ),
-                              )
-                            : Image.file(
-                                _imageFile!,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
                               ),
                       ),
                     ),
                   ),
                 ),
+                _buildFormCard(
+                  title: "เลือกสัตวแพทย์",
+                  icon: Icons.person_outline,
+                  child: buildDoctorDropdown(),
+                ),
+
                 const SizedBox(height: 16),
                 _buildFormCard(
                   title: "วันที่ฉีดวัคซีน",
@@ -436,8 +446,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () {
-                      injectionAdd();
+                    onPressed: () async {
+                      await injectionAdd();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -456,7 +466,6 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
               ],
             ),
@@ -584,16 +593,87 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     return 'วันที่ $day $month $year';
   }
 
-  Future<void> getReserve(String reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reserveList = reservebookingFromJson(res.body);
+  Future<void> getReserve(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
 
-      for (var data in reserveList) {
-        log(data.reserveId.toString());
-        if (data != null) {
-          vaccineController.text = data.appointmentName ?? '';
-          dateController.text = formatThaiDateTime(data.date);
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
+
+        final dynamic dogDogIdRaw = data?['dogDogId'];
+
+        if (data?['date'] != null) {
+          final String dateStr = data?['date'];
+          final DateTime? parsedDate = DateTime.tryParse(dateStr);
+
+          if (parsedDate != null && dateController.text.trim().isEmpty) {
+            dateController.text = formatThaiDateTime(parsedDate);
+          }
+        }
+        final aid =
+            data?['appointmentAid']?.toString(); // 👈 ใช้ aid ที่ API ต้องการ
+        final email = data?['generalEmail']?.toString();
+
+        if (aid != null &&
+            email != null &&
+            aid.isNotEmpty &&
+            email.isNotEmpty) {
+          await getvaccine(aid, email);
+          // await getdoctor(email);
+        } else {
+          log('⚠️ Missing aid or generalEmail for vaccine fetch');
+        }
+
+        for (var data in reserveList) {
+          log(data.docId.toString());
+          if (data != null) {
+            // vaccineController.text = data.appointme ?? '';
+            dateController.text = formatThaiDateTime(data.date);
+            vaccineController.addListener(() {
+              vaccineChanged = true;
+            });
+
+            dateController.addListener(() {
+              dateChanged = true;
+            });
+          } else {
+            vaccineController.text = '';
+          }
+        }
+
+        if (doc.exists) {
+          final data = doc.data()!;
+          log('✅ Data for docId=$docId: $data');
+
+          // ล้างข้อมูลเก่าก่อน
+          reserveList.clear();
+
+          // เพิ่มข้อมูลเข้า reserveList ทันที
+          reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
+
+          // ✅ จากนี้ค่อยใช้ reserveList[0]
+          final String? aidStr = reserveList[0].appointmentAid;
+          final String? email = reserveList[0].generalEmail;
+
+          if (aidStr != null &&
+              email != null &&
+              aidStr.isNotEmpty &&
+              email.isNotEmpty) {
+            await getvaccine(aidStr, email);
+          } else {
+            log('⚠️ Missing aid or generalEmail for vaccine fetch');
+          }
+
+          // และใช้ reserveList[0] ต่อได้
+          final firstReserve = reserveList[0];
+          if (firstReserve.date != null && dateController.text.trim().isEmpty) {
+            dateController.text = formatThaiDateTime(firstReserve.date);
+          }
+
           vaccineController.addListener(() {
             vaccineChanged = true;
           });
@@ -601,34 +681,180 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
           dateController.addListener(() {
             dateChanged = true;
           });
-        } else {
-          vaccineController.text = '';
+          // log('📌 reserveList[0].appointmentAid: ${reserveList[0].appointmentAid}');
+
+          setState(() {
+            isLoading = false;
+          });
         }
+      } else {
+        log('❌ No document found for docId=$docId');
+        setState(() {
+          isLoading = false;
+        });
       }
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  AppointmentClinic appointmentClinicFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is Map && jsonData['data'] != null) {
+      return AppointmentClinic.fromJson(
+        Map<String, dynamic>.from(jsonData),
+      );
+    }
+    throw Exception("Invalid JSON format");
+  }
+
+  Future<AppointmentClinic?> getvaccine(
+      String? aids, String? generalEmail) async {
+    if (aids == null ||
+        aids.trim().isEmpty ||
+        generalEmail == null ||
+        generalEmail.trim().isEmpty) {
+      log("❌ Invalid input: aids or email is null/empty");
+      return null;
+    }
+
+    log("📥 aids: $aids, email: $generalEmail");
+
+    try {
+      final urlStr = "$url/appointment/latestdate/$aids/$generalEmail";
+      final res = await http.get(Uri.parse(urlStr));
+
+      if (res.statusCode == 200) {
+        // log('📦 API response body: ${res.body}');
+
+        final appointment = appointmentClinicFromJson(res.body);
+
+        if (appointment.data.isNotEmpty) {
+          final vaccinesStr = appointment.data.first.vaccines ?? '';
+          if (vaccineController.text.trim().isEmpty && vaccinesStr.isNotEmpty) {
+            vaccineController.text = vaccinesStr;
+          }
+        }
+
+        return appointment;
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
+      json.decode(str).map((x) => DoctorPost.fromJson(x)));
+
+  Widget buildDoctorDropdown() {
+    if (reserveList.isEmpty) {
+      return Text("กำลังโหลดข้อมูลการจอง...");
+    }
+    final email = reserveList[0].clinicEmail;
+    if (email == null || email.isEmpty) {
+      return Text("ไม่มีอีเมลสำหรับดึงรายชื่อสัตวแพทย์");
+    }
+
+    return FutureBuilder<List<DoctorPost>>(
+      future: getdoctorList(email),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!.isEmpty) {
+          return Text("ไม่พบรายชื่อสัตวแพทย์");
+        }
+
+        final doctors = snapshot.data!;
+        return DropdownButtonFormField<String>(
+          value: selectedDoctor?.careerNo,
+          items: doctors.map((doctor) {
+            return DropdownMenuItem<String>(
+              value: doctor.careerNo,
+              child: Text(doctor.name ?? 'ไม่ระบุชื่อ'),
+            );
+          }).toList(),
+          onChanged: (String? newId) {
+            if (newId != null) {
+              setState(() {
+                selectedDoctor =
+                    doctors.firstWhere((doc) => doc.careerNo == newId);
+              });
+            }
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: lightColor.withOpacity(0.5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: primaryColor, width: 2),
+            ),
+          ),
+          validator: (value) => value == null ? 'กรุณาเลือกสัตวแพทย์' : null,
+        );
+      },
+    );
+  }
+
+  Future<List<DoctorPost>> getdoctorList(String clinicEmail) async {
+    log("📥 clinicEmail: $clinicEmail");
+
+    final doctor = await getdoctor(clinicEmail);
+    if (doctor != null) {
+      return [doctor];
     } else {
-      log("Failed to load: ${res.statusCode}");
+      return [];
+    }
+  }
+
+  Future<DoctorPost?> getdoctor(String clinicEmail) async {
+    log("📥 clinicEmail: $clinicEmail");
+    try {
+      var res =
+          await http.get(Uri.parse("$url/doctor/searchemail/$clinicEmail"));
+      if (res.statusCode == 200) {
+        final List<DoctorPost> doctorList = doctorPostFromJson(res.body);
+        if (doctorList.isNotEmpty) {
+          return doctorList.first;
+        }
+        return null; // กรณีไม่มีข้อมูล
+      } else {
+        log("❌ Failed to load doctor: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching doctor info: $e");
+      return null;
     }
   }
 
   Future<void> injectionAdd() async {
-    // ✅ ตรวจสอบว่ากรอกข้อมูลครบ
-    // if (_formKey.currentState!.validate() &&
-    //     vaccineChanged &&
-    //     dateChanged &&
-    //     nextDateController.text.isNotEmpty &&
-    //     vaccinationDate != null) {
-    //   showTopNotification(
-    //     context,
-    //     'กรุณากรอกข้อมูลให้ครบถ้วน',
-    //     isSuccess: false,
-    //   );
-    //   return;
-    // }
-    if (vaccineChanged ||
-        dateChanged ||
+    // เช็คว่า reserveList มีข้อมูลไหม
+    if (reserveList.isEmpty) {
+      log("⚠️ reserveList is empty");
+      showTopNotification(
+        context,
+        'ไม่สามารถดำเนินการได้: ไม่พบข้อมูลการจอง',
+        isSuccess: false,
+      );
+      return;
+    }
+
+    // เช็คว่าข้อมูลครบ (วัคซีน, วันที่, รูปภาพ, วันที่นัดถัดไป)
+    if (vaccineController.text.trim().isEmpty ||
+        dateController.text.trim().isEmpty ||
         _imageFile == null ||
         nextDateController.text.trim().isEmpty) {
       Get.snackbar(
@@ -646,14 +872,17 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       return;
     }
 
-    // ✅ ถามยืนยันจากผู้ใช้
+    // log ตรวจสอบค่า vaccine ก่อนส่ง
+    log("📌 vaccineController.text ก่อนส่ง: ${vaccineController.text}");
+
+    // ถามยืนยันจากผู้ใช้
     bool isConfirmed = await confirmDialog(context);
     if (!isConfirmed) {
       log("ผู้ใช้ยกเลิกการบันทึก");
       return;
     }
 
-    // ✅ ดึงรูปภาพ
+    // อัปโหลดรูปภาพและรับ URL
     final imageUrl = await confirmAvatarButton();
     log("imageUrl ก่อนส่ง: $imageUrl");
 
@@ -666,114 +895,187 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       );
       return;
     }
+
     DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
         .parse(nextDateController.text);
-    DateTime parsedDate =
+    DateTime nextDate =
         DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
 
+    final String dogIdStr = reserveList[0].dogDogId;
+    final int dogId = int.tryParse(dogIdStr) ?? 0;
+
     AppointmentPost appReq = AppointmentPost(
-      dogId: reserveList[0].dogDogId,
+      dogId: dogId,
       generalUserEmail: reserveList[0].generalEmail,
       vaccine: vaccineController.text,
-      date: parsedDate,
+      date: nextDate,
     );
 
+    await InsertionjectionRecord(appReq, imageUrl);
+  }
+
+  Future<void> InsertionjectionRecord(
+      AppointmentPost appReq, String imageUrl) async {
     try {
+      // ✅ แสดง loading ก่อนส่ง
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'กำลังเตรียมข้อมูล...',
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // ✅ log ข้อมูลก่อนส่ง appointment
+      final appointmentJson = appReq.toJson();
+      log("📤 กำลังส่ง appointment: ${jsonEncode(appointmentJson)}");
+
+      // ✅ POST ไปที่ API /appointment
       var res = await http.post(
         Uri.parse("$url/appointment/"),
         headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: jsonEncode(appReq.toJson()),
+        body: jsonEncode(appointmentJson),
       );
 
+      // ✅ ปิด loading
+      Navigator.of(context).pop();
+
+      // ✅ ตรวจสอบผลลัพธ์
       if (res.statusCode == 200 || res.statusCode == 201) {
         final Map<String, dynamic> appData = jsonDecode(res.body);
+        log("📥 ตอบกลับจาก appointment: ${res.body}");
+
         int aid = appData['insertId'];
+        log("✅ บันทึก appointment สำเร็จ aid = $aid");
+
+        // ✅ แปลงวันที่ฉีดจริง (old date)
+        DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
+            .parse(dateController.text);
+        DateTime oldDate =
+            DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
+
+        final String? aidStr = reserveList[0].appointmentAid;
+        final List<String> aidsStr =
+            (aidStr != null && aidStr.isNotEmpty) ? aidStr.split(',') : [];
+        final List<int> aids = aidsStr
+            .map((e) => int.tryParse(e.trim()) ?? 0)
+            .where((id) => id != 0)
+            .toList();
+        final int oldAid = aids.isNotEmpty ? aids.first : 0;
+
+        // 1. ดึงวัคซีนล่าสุดจาก appointment ที่โหลดมา
+        final appointment = appointmentClinicFromJson(res.body);
+        String latestVaccine = '';
+        if (appointment.data.isNotEmpty) {
+          latestVaccine = appointment.data.first.vaccines ?? '';
+
+          // กรอกลง TextField (ถ้า controller ยังว่าง)
+          if (vaccineController.text.trim().isEmpty &&
+              latestVaccine.isNotEmpty) {
+            vaccineController.text = latestVaccine;
+          }
+        }
 
         ClinicinjectionRecordPost injReq = ClinicinjectionRecordPost(
-          reserveId: reserveList[0].reserveId,
-          vaccine: vaccineController.text,
-          date: parsedDate,
+          oldAppointmentAid: oldAid == 0 ? null : oldAid,
+          nextAppointmentAid: aid,
+          clinicEmail: reserveList[0].clinicEmail,
+          doctorCareerNo: selectedDoctor?.careerNo ?? '',
+          vaccine: latestVaccine,
+          date: oldDate,
           vaccineLabel: imageUrl,
-          appointmentAid: aid,
+          type: reserveList[0].type,
         );
 
+        final jsonBody = clinicinjectionRecordPostToJson([injReq]);
+        log("📦 JSON ที่จะส่ง clinicinjectionRecord: $jsonBody");
+
         var injRes = await http.post(
-          Uri.parse("$url/clinicinjectionRecord/"),
+          Uri.parse("$url/clinicinjectionRecord"),
           headers: {"Content-Type": "application/json; charset=utf-8"},
           body: jsonEncode(injReq.toJson()),
         );
-        showTopNotification(
-          context,
-          'บันทึกข้อมูลการฉีดวัคซีนเรียบร้อย ✨',
-          isSuccess: true,
-        );
 
-        // ✅ แสดง loading และเปลี่ยนหน้า
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'กำลังเตรียมข้อมูล...',
-                    style: TextStyle(
-                      color: Color(0xFF916B44),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        await Future.delayed(const Duration(seconds: 1));
-        Navigator.of(context).pop(); // ปิด loading
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => ClinicmainPage()),
-        );
+        if (injRes.statusCode == 200 || injRes.statusCode == 201) {
+          log('✅ บันทึก clinicinjectionRecord สำเร็จ');
+          await updatestatus(reserveList[0].docId, 3);
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => ClinicmainPage()));
+        } else {
+          log("❌ clinicinjectionRecord ล้มเหลว: ${injRes.statusCode} ${injRes.body}");
+          showTopNotification(
+            context,
+            'บันทึกข้อมูลวัคซีนไม่สำเร็จ กรุณาลองใหม่',
+            isSuccess: false,
+          );
+        }
       } else {
-        log("บันทึกข้อมูลไม่สำเร็จ รหัสสถานะ: ${res.statusCode}");
-        log("ข้อความตอบกลับ: ${res.body}");
-
+        // ❌ ถ้า appointment ไม่สำเร็จ
+        log("❌ บันทึก appointment ไม่สำเร็จ: ${res.statusCode}");
+        log("❌ ตอบกลับ: ${res.body}");
         showTopNotification(
           context,
-          'บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
+          'บันทึกการนัดหมายล้มเหลว กรุณาลองใหม่',
           isSuccess: false,
         );
       }
-
-      // ⏳ เพิ่มการนัดรอบถัดไป (ภายหลังจากบันทึกสำเร็จ)
-      // appointmentAdd();
-      updatestatus(reserveList[0].reserveId, 3);
     } catch (e) {
-      log("เกิดข้อผิดพลาดในการบันทึก: $e");
+      Navigator.of(context).pop(); // ปิด dialog ถ้ายังเปิดอยู่
+      log("❌ Exception: $e");
       showTopNotification(
         context,
         'เกิดข้อผิดพลาดในการเชื่อมต่อ',
         isSuccess: false,
       );
+    }
+  }
+
+  Future<void> updatestatus(String docId, int status) async {
+    if (status == 3) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .update({
+          'status': status,
+        });
+
+        log('✅ Updated status to $status for docId=$docId');
+      } catch (e) {
+        log('❌ Failed to update status: $e');
+      }
+    } else {
+      log('⚠️ Status not allowed to update: $status');
     }
   }
 
@@ -930,55 +1232,58 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         false;
   }
 
-  Future<void> appointmentAdd() async {
-    DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
-        .parse(nextDateController.text);
-    DateTime parsedDate =
-        DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
+  // Future<void> appointmentAdd() async {
+  //   DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
+  //       .parse(nextDateController.text);
+  //   DateTime parsedDate =
+  //       DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
 
-    String formattedDate = DateFormat('yyyy-MM-dd').format(parsedDate);
-    // log(parsedThai.toString());
-    // log(formattedDate);
-    AppointmentPost req = AppointmentPost(
-        dogId: reserveList[0].dogDogId,
-        generalUserEmail: reserveList[0].generalEmail,
-        vaccine: vaccineController.text,
-        date: parsedDate);
+  //   String formattedDate = DateFormat('yyyy-MM-dd').format(parsedDate);
+  //   // log(parsedThai.toString());
+  //   // log(formattedDate);
+  //   final String dogIdStr = reserveList[0].dogDogId;
+  //   final int dogId =
+  //       int.tryParse(dogIdStr) ?? 0; // แปลง ถ้าแปลงไม่ได้ใช้ 0 แทน
+  //   AppointmentPost req = AppointmentPost(
+  //       dogId: dogId,
+  //       general_user_email: reserveList[0].generalEmail,
+  //       vaccine: vaccineController.text,
+  //       date: parsedDate);
 
-    try {
-      var res = await http.post(
-        Uri.parse("$url/appointment/"),
-        headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: jsonEncode(req.toJson()),
-      );
+  //   try {
+  //     var res = await http.post(
+  //       Uri.parse("$url/appointment/"),
+  //       headers: {"Content-Type": "application/json; charset=utf-8"},
+  //       body: jsonEncode(req.toJson()),
+  //     );
 
-      if (res.statusCode == 201) {
-        log("บันทึกข้อมูลการฉีดวัคซีนเรียบร้อย");
-      } else {
-        log("บันทึกข้อมูลไม่สำเร็จ รหัสสถานะ: ${res.statusCode}");
-        log("ข้อความตอบกลับ: ${res.body}");
-      }
-    } catch (e) {
-      log("เกิดข้อผิดพลาดในการบันทึก: $e");
-    }
-  }
+  //     if (res.statusCode == 201) {
+  //       log("บันทึกข้อมูลการฉีดวัคซีนเรียบร้อย");
+  //     } else {
+  //       log("บันทึกข้อมูลไม่สำเร็จ รหัสสถานะ: ${res.statusCode}");
+  //       log("ข้อความตอบกลับ: ${res.body}");
+  //     }
+  //   } catch (e) {
+  //     log("เกิดข้อผิดพลาดในการบันทึก: $e");
+  //   }
+  // }
 
-  Future<void> updatestatus(int reserveID, int status) async {
-    if (status == 3) {
-      ReserveUpdateStatusPost req =
-          ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-      var res = await http.put(
-        Uri.parse("$url/reserve/$reserveID"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(req.toJson()),
-      );
-      if (res.statusCode == 200) {
-        log("Update data clinic success");
-      } else {
-        log("Failed to update doctor info: ${res.statusCode}");
-      }
-    }
-  }
+  // Future<void> updatestatus(int reserveID, int status) async {
+  //   if (status == 3) {
+  //     ReserveUpdateStatusPost req =
+  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
+  //     var res = await http.put(
+  //       Uri.parse("$url/reserve/$reserveID"),
+  //       headers: {"Content-Type": "application/json"},
+  //       body: json.encode(req.toJson()),
+  //     );
+  //     if (res.statusCode == 200) {
+  //       log("Update data clinic success");
+  //     } else {
+  //       log("Failed to update doctor info: ${res.statusCode}");
+  //     }
+  //   }
+  // }
 
   Future<String> confirmAvatarButton() async {
     await Supabase.instance.client.auth.signInWithPassword(

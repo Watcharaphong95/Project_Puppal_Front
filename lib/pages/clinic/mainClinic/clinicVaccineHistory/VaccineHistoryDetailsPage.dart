@@ -1,18 +1,27 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentClinic.dart';
+import 'package:puppal_application/model/clinicGetInjectionRecord.dart';
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
+import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
+import 'package:puppal_application/model/injectionRecordPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
+import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/model/clinicGetInjectionRecord.dart'
+    as getInjection;
 
 class Vaccinehistorydetailspage extends StatefulWidget {
-  final int reserveId;
-  const Vaccinehistorydetailspage({super.key, required this.reserveId});
+  final String docId;
+  const Vaccinehistorydetailspage({super.key, required this.docId});
 
   @override
   State<Vaccinehistorydetailspage> createState() =>
@@ -25,18 +34,57 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
   late double screenHeight;
   bool isNormalSelected = true;
   final box = GetStorage();
-  List<Reservebooking> reserveList = [];
-  List<ClinicinjectionRecordPost> injectionList = [];
-  List<ReserveClinicPost> todayList = [];
-  List<ReserveClinicPost> yesterdayList = [];
-  List<ReserveClinicPost> earlierList = [];
+  List<ReserveClinicFirebase> reserveList = [];
+  List<DogDetailsPost> dogList = [];
+  List<ClinicGetInjectionRecord> injectionList = [];
+  List<GeneralPost> generalList = [];
   bool isLoading = true;
+  List<ClinicinjectionRecordPost>? vaccineHistory;
+  final PageController _vaccinePageController = PageController();
+  int _currentVaccineIndex = 0;
+  List<getInjection.Datum>? clinicRecord;
+
+  List<dynamic> get combinedList {
+    final List<dynamic> combined = [];
+    if (clinicRecord != null) combined.addAll(clinicRecord!);
+    if (vaccineHistory != null) combined.addAll(vaccineHistory!);
+    return combined;
+  }
+
+  @override
+  void dispose() {
+    _vaccinePageController.dispose();
+    super.dispose();
+  }
+
+  void _previousVaccinePage() {
+    if (mounted &&
+        _vaccinePageController.hasClients &&
+        _currentVaccineIndex > 0) {
+      _vaccinePageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _nextVaccinePage() {
+    if (mounted &&
+        _vaccinePageController.hasClients &&
+        _currentVaccineIndex < combinedList.length - 1) {
+      _vaccinePageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve(widget.reserveId.toString());
+      getReserve(widget.docId);
     });
   }
 
@@ -44,29 +92,21 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
+    final combinedList = [...(clinicRecord ?? []), ...(vaccineHistory ?? [])];
     return Scaffold(
         appBar: AppBar(
           title: const Text('ประวัติการฉีดวัคซีน'),
           centerTitle: true,
           // backgroundColor: const Color(0xFF916B44),
         ),
-        body: Container(
-          // decoration: BoxDecoration(
-          //   gradient: LinearGradient(
-          //     begin: Alignment.topLeft,
-          //     end: Alignment.bottomRight,
-          //     colors: [
-          //       const Color(0xFFE9CBAF).withOpacity(0.3),
-          //       const Color(0xFFDBA871).withOpacity(0.1),
-          //     ],
-          //   ),
-          // ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+        body: SingleChildScrollView(
+            child: Container(
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: reserveList.map((reserve) {
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: dogList.map((dog) {
                 return Container(
+                  width: screenWidth * 0.88,
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE9CBAF)
@@ -120,12 +160,12 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ],
                                   ),
                                   padding: const EdgeInsets.all(4),
-                                  child: reserve.image.isNotEmpty
+                                  child: dog.image.isNotEmpty
                                       ? ClipRRect(
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           child: Image.network(
-                                            reserve.image,
+                                            dog.image,
                                             width: 200,
                                             height: 150,
                                             fit: BoxFit.cover,
@@ -177,7 +217,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ],
                                   ),
                                   child: Text(
-                                    reserve.name,
+                                    dog.name,
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -201,7 +241,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     ),
                                   ),
                                   child: Text(
-                                    'พันธุ์: ${reserve.breed}   เพศ: ${reserve.gender}',
+                                    'พันธุ์: ${dog.breed}   เพศ: ${dog.gender}',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF916B44),
@@ -229,197 +269,293 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
 
                           /// 🧾 รายการข้อมูลสำคัญ
                           _buildInfoRow(
-                              'วันเกิด', formatThaiDateTime(reserve.birthday)),
-                          _buildInfoRow('สี', reserve.color),
-                          _buildInfoRow('ตำหนิ', reserve.defect),
-                          _buildInfoRow(
-                              'โรคประจำตัว', reserve.congentialDisease),
+                              'วันเกิด', formatThaiDateTime(dog.birthday)),
+                          _buildInfoRow('สี', dog.color),
+                          _buildInfoRow('ตำหนิ', dog.defect),
+                          _buildInfoRow('โรคประจำตัว', dog.congentialDisease),
                           _buildInfoRow(
                             'การทำหมัน',
-                            (reserve.sterilization.toString() == '1' ||
-                                    reserve.sterilization
+                            (dog.sterilization.toString() == '1' ||
+                                    dog.sterilization
                                             .toString()
                                             .toLowerCase() ==
                                         'true')
                                 ? 'ทำหมันแล้ว'
                                 : 'ยังไม่ทำหมัน',
                           ),
-                          _buildInfoRow('ลักษณะขน', reserve.hair),
+                          _buildInfoRow('ลักษณะขน', dog.hair),
                           const SizedBox(height: 20),
 
                           /// 💉 ประวัติการฉีดยา
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFF916B44).withOpacity(0.05),
-                                  const Color(0xFFDBA871).withOpacity(0.05),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFF916B44).withOpacity(0.2),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF916B44),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.vaccines,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'ประวัติการฉีดยา',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF916B44),
-                                      ),
-                                    ),
+                          SizedBox(
+                            height: 550,
+                            width: double.infinity,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF916B44).withOpacity(0.05),
+                                    const Color(0xFFDBA871).withOpacity(0.05),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                if (injectionList.isNotEmpty)
-                                  ...injectionList.map((item) => Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 16),
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF916B44)
-                                                  .withOpacity(0.1),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      const Color(0xFF916B44).withOpacity(0.2),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Header Row
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF916B44),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
-                                          ],
+                                            child: const Icon(
+                                              Icons.history,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'ประวัติการฉีดยา',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF916B44),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (clinicRecord != null &&
+                                          clinicRecord!.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.swipe_left,
+                                                  size: 16,
+                                                  color: Color(0xFF916B44)),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${(clinicRecord?.length ?? 0) + (vaccineHistory?.length ?? 0)} รายการ',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF916B44),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // Content Area
+                                  if (combinedList.isNotEmpty) ...[
+                                    // Navigation Controls
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        IconButton(
+                                          onPressed: _currentVaccineIndex > 0
+                                              ? _previousVaccinePage
+                                              : null,
+                                          icon: Icon(
+                                            Icons.arrow_back_ios,
+                                            color: _currentVaccineIndex > 0
+                                                ? const Color(0xFF916B44)
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${_currentVaccineIndex + 1} / ${combinedList.length}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF916B44),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: _currentVaccineIndex <
+                                                  combinedList.length - 1
+                                              ? _nextVaccinePage
+                                              : null,
+                                          icon: Icon(
+                                            Icons.arrow_forward_ios,
+                                            color: _currentVaccineIndex <
+                                                    combinedList.length - 1
+                                                ? const Color(0xFF916B44)
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // PageView for Cards
+                                    SizedBox(
+                                      height: 380,
+                                      child: PageView.builder(
+                                        controller: _vaccinePageController,
+                                        onPageChanged: (index) {
+                                          if (mounted) {
+                                            setState(() {
+                                              _currentVaccineIndex = index;
+                                            });
+                                          }
+                                        },
+                                        itemCount: combinedList.length,
+                                        itemBuilder: (context, index) {
+                                          final item = combinedList[index];
+
+                                          final vaccine =
+                                              item is ClinicinjectionRecordPost
+                                                  ? item.vaccine
+                                                  : (item as getInjection.Datum)
+                                                      .vaccine;
+
+                                          final date =
+                                              item is ClinicinjectionRecordPost
+                                                  ? item.date
+                                                  : (item as getInjection.Datum)
+                                                      .date;
+
+                                          final label =
+                                              item is ClinicinjectionRecordPost
+                                                  ? item.vaccineLabel
+                                                  : (item as getInjection.Datum)
+                                                      .vaccineLabel;
+
+                                          return Container(
+                                            width: 280,
+                                            margin: const EdgeInsets.symmetric(
+                                                horizontal: 8),
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF916B44)
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildInfoRow('วัคซีน',
+                                                    vaccine ?? 'ไม่ระบุวัคซีน'),
+                                                _buildInfoRow('วันที่',
+                                                    formatThaiDateTime(date!)),
+                                                const SizedBox(height: 12),
+                                                Center(
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                    child: Image.network(
+                                                      label ?? '',
+                                                      width: 200,
+                                                      height: 200,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context,
+                                                          error, stackTrace) {
+                                                        return Container(
+                                                          width: 200,
+                                                          height: 200,
+                                                          color:
+                                                              Colors.grey[200],
+                                                          child: const Icon(Icons
+                                                              .image_not_supported),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 12),
+
+                                    // Page Indicators
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: List.generate(
+                                        combinedList.length,
+                                        (index) => AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          height: 8,
+                                          width: _currentVaccineIndex == index
+                                              ? 24
+                                              : 8,
+                                          decoration: BoxDecoration(
+                                            color: _currentVaccineIndex == index
+                                                ? const Color(0xFF916B44)
+                                                : const Color(0xFF916B44)
+                                                    .withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ] else
+                                    Expanded(
+                                      child: Center(
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            _buildInfoRow(
-                                                'วัคซีน', item.vaccine),
-                                            _buildInfoRow('วันที่',
-                                                formatThaiDateTime(item.date)),
-                                            const SizedBox(height: 12),
-                                            Center(
-                                              child: Column(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 8,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      gradient: LinearGradient(
-                                                        colors: [
-                                                          const Color(
-                                                                  0xFF916B44)
-                                                              .withOpacity(0.1),
-                                                          const Color(
-                                                                  0xFFDBA871)
-                                                              .withOpacity(0.1),
-                                                        ],
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
-                                                    ),
-                                                    child: const Text(
-                                                      "ชื่อวัคซีน/หมายเลขชุดผลิต",
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color:
-                                                            Color(0xFF916B44),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 12),
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              16),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: const Color(
-                                                                  0xFF916B44)
-                                                              .withOpacity(0.2),
-                                                          blurRadius: 12,
-                                                          offset: const Offset(
-                                                              0, 4),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              16),
-                                                      child: Image.network(
-                                                        injectionList[0]
-                                                            .vaccineLabel,
-                                                        width: 250,
-                                                        height: 250,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: const [
+                                            Icon(Icons.vaccines_outlined,
+                                                size: 48, color: Colors.grey),
+                                            SizedBox(height: 12),
+                                            Text(
+                                              'ไม่มีข้อมูลประวัติการฉีดยา',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                                fontStyle: FontStyle.italic,
+                                                fontSize: 16,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ))
-                                else
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.grey[300]!,
                                       ),
                                     ),
-                                    child: const Center(
-                                      child: Text(
-                                        'ไม่มีข้อมูลประวัติการฉีดยา',
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            height: 2,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  const Color(0xFF916B44).withOpacity(0.3),
-                                  Colors.transparent,
                                 ],
                               ),
                             ),
@@ -449,7 +585,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFDBA871),
+                                        color: const Color(0xFF916B44),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
@@ -484,18 +620,52 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                       ),
                                     ],
                                   ),
-                                  child: Column(
-                                    children: [
-                                      _buildInfoRow('ชื่อ', reserve.username),
-                                      _buildInfoRow('เบอร์โทร', reserve.phone),
-                                      _buildInfoRow(
-                                          'อีเมล', reserve.generalEmail),
-                                    ],
-                                  ),
+                                  child: (reserveList.isEmpty)
+                                      ? const Text('ไม่มีข้อมูลจอง')
+                                      : FutureBuilder<GeneralPost?>(
+                                          future: getGeneral(
+                                              reserveList[0].generalEmail),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const CircularProgressIndicator();
+                                            } else if (snapshot.hasError) {
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            } else if (!snapshot.hasData) {
+                                              return const Text(
+                                                  'No data found');
+                                            } else if (snapshot.data == null ||
+                                                snapshot
+                                                    .data!.username.isEmpty) {
+                                              return const Text(
+                                                  'ไม่มีข้อมูลเจ้าของ');
+                                            } else {
+                                              final general = snapshot.data!;
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  _buildInfoRow(
+                                                      'ชื่อ', general.name),
+                                                  _buildInfoRow('นามสกุล',
+                                                      general.surname),
+                                                  _buildInfoRow('เบอร์โทร',
+                                                      general.phone),
+                                                  _buildInfoRow('อีเมล',
+                                                      general.userEmail),
+                                                ],
+                                              );
+                                            }
+                                          },
+                                        ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 30),
+
+                          const SizedBox(height: 30),
                         ],
                       ),
                     ),
@@ -504,7 +674,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
               }).toList(),
             ),
           ),
-        ));
+        )));
   }
 
   Widget _buildInfoRow(String label, String? value) {
@@ -714,43 +884,181 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
     );
   }
 
-  Future<void> getReserve(String reserveID) async {
-    var res = await http.get(Uri.parse("$url/reserve/search_id/$reserveID"));
-    if (res.statusCode == 200) {
-      reserveList = reservebookingFromJson(res.body);
-      for (var data in reserveList) {
-        log(data.reserveId.toString());
+  Future<void> getReserve(String docId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('reserve')
+          .doc(docId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
+
+        if (data != null) {
+          // ล้าง reserveList ก่อนถ้าต้องการโหลดใหม่
+          reserveList.clear();
+
+          // สร้าง model จากข้อมูลและเพิ่มเข้า list
+          reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
+
+          final dynamic dogDogIdRaw = data['dogDogId'];
+          final String? email = data['generalEmail'];
+          final String? date = data['date'];
+
+          // แปลง dogDogId เป็น int
+          final int? dogDogId = dogDogIdRaw is int
+              ? dogDogIdRaw
+              : int.tryParse(dogDogIdRaw?.toString() ?? '');
+
+          if (dogDogId != null && email != null && email.isNotEmpty) {
+            await getdog(dogDogId);
+            await getGeneral(email);
+            final latestRecords = await getInjectionList(dogDogId, date!);
+            final oldRecords = await gethistoryvaccine(dogDogId, email);
+
+            setState(() {
+              clinicRecord = latestRecords;
+              vaccineHistory = oldRecords;
+            });
+          } else {
+            log('⚠️ dogDogId หรือ email ไม่ถูกต้องหรือว่าง');
+          }
+        }
+      } else {
+        log('❌ No document found for docId=$docId');
       }
-      getinjection(reserveID);
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      log("Failed to load: ${res.statusCode}");
+    } catch (e) {
+      log('❌ Error while fetching document: $e');
     }
   }
 
   List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
       String str) {
-    final decoded = json.decode(str);
-    final List<dynamic> dataList = decoded['data'];
-    return dataList.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
+    final jsonData = json.decode(str);
+    final list = jsonData['data'] as List;
+    return list.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
   }
 
-  Future<void> getinjection(String reserveID) async {
-    final res =
-        await http.get(Uri.parse("$url/clinicinjectionRecord/$reserveID"));
-
-    if (res.statusCode == 200) {
-      injectionList = clinicinjectionRecordPostFromJson(res.body);
-      for (var data in injectionList) {
-        log(data.reserveId.toString());
+  Future<List<ClinicinjectionRecordPost>?> gethistoryvaccine(
+      int dogId, String generalEmail) async {
+    try {
+      final res = await http.get(
+          Uri.parse("$url/clinicinjectionRecord/history/$dogId/$generalEmail"));
+      if (res.statusCode == 200) {
+        print('API response body: ${res.body}');
+        return clinicinjectionRecordPostFromJson(res.body);
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
       }
-      setState(() {
-        isLoading = false;
-      });
-    } else {
-      log("Failed to load: ${res.statusCode}");
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
     }
   }
+
+  Future<void> getdog(int dogId) async {
+    try {
+      log("🐶 Getting dog info for ID: $dogId");
+      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      if (res.statusCode == 200) {
+        dogList = dogDetailsPostFromJson(res.body);
+        setState(() {});
+      } else {
+        log("❌ Failed to load dog: ${res.statusCode}");
+      }
+    } catch (e) {
+      log("❌ Exception while fetching dog info: $e");
+    }
+  }
+
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
+    try {
+      final res = await http.get(Uri.parse("$url/general/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        final generalPost = generalPostFromJson(res.body);
+        log("✅ Loaded successfully: ${res.statusCode}");
+        return generalPost;
+      } else {
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
+    }
+  }
+
+  AppointmentClinic appointmentClinicFromJson(String str) {
+    final jsonData = json.decode(str);
+    if (jsonData is Map && jsonData['data'] != null) {
+      return AppointmentClinic.fromJson(
+        Map<String, dynamic>.from(jsonData),
+      );
+    }
+    throw Exception("Invalid JSON format");
+  }
+
+  Future<AppointmentClinic?> getvaccine(
+      String aids, String generalEmail) async {
+    try {
+      final res = await http
+          .get(Uri.parse("$url/appointment/latestdate/$aids/$generalEmail"));
+
+      if (res.statusCode == 200) {
+        print('API response body: ${res.body}');
+        return appointmentClinicFromJson(res.body);
+      } else {
+        log("❌ Failed to load vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  Future<List<getInjection.Datum>?> getInjectionList(
+      int dogId, String date) async {
+    try {
+      final res =
+          await http.get(Uri.parse("$url/clinicinjectionRecord/$dogId/$date"));
+      if (res.statusCode == 200) {
+        final recordResponse = clinicGetInjectionRecordFromJson(res.body);
+        return recordResponse.data; // คืนค่า List<Datum>
+      } else {
+        log("❌ Failed to load injection list: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  // List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
+  //     String str) {
+  //   final decoded = json.decode(str);
+  //   final List<dynamic> dataList = decoded['data'];
+  //   return dataList.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
+  // }
+
+  // Future<void> getinjection(String reserveID) async {
+  //   final res =
+  //       await http.get(Uri.parse("$url/clinicinjectionRecord/$reserveID"));
+
+  //   if (res.statusCode == 200) {
+  //     injectionList = clinicinjectionRecordPostFromJson(res.body);
+  //     for (var data in injectionList) {
+  //       log(data.reserveId.toString());
+  //     }
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   } else {
+  //     log("Failed to load: ${res.statusCode}");
+  //   }
+  // }
 }

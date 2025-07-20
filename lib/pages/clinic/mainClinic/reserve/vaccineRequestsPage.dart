@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -45,13 +46,16 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   String url = '';
   List<GeneralPost> generalList = [];
   List<DogDetailsPost> dogList = [];
-  List<Reservebooking> reservebookingList = [];
+  // List<Reservebooking> reservebookingList = [];
   List<ReserveClinicFirebase> todayList = [];
   List<ReserveClinicFirebase> yesterdayList = [];
   List<ReserveClinicFirebase> earlierList = [];
   var db = FirebaseFirestore.instance;
   List<String> messages = [];
   bool isLoading = true;
+  bool _isPressed = false;
+
+  StreamSubscription? _reserveListener;
   final Color primaryBrown = const Color(0xFF916B44);
   final Color secondaryBrown = const Color(0xFFDBA871);
   final Color lightBrown = const Color(0xFFE9CBAF);
@@ -62,7 +66,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
       // getReserve();
-      fetchReserveData();
+      // fetchReserveData();
+      startRealtimeGet();
       _init();
     });
   }
@@ -232,172 +237,185 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             ),
           ),
         ),
-        body: Column(children: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE9CBAF).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isNormalSelected = true;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isNormalSelected
-                            ? const Color(0xFF916B44)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: isNormalSelected
-                            ? [
-                                BoxShadow(
-                                  color:
-                                      const Color(0xFF916B44).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : [],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'การจองปกติ',
-                        style: TextStyle(
-                          color: isNormalSelected
-                              ? Colors.white
-                              : const Color(0xFF916B44),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
+        body: Column(
+          children: [
+            // Toggle buttons (existing code)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isNormalSelected = false;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isNormalSelected
-                            ? Colors.transparent
-                            : const Color(0xFF916B44),
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: !isNormalSelected
-                            ? [
-                                BoxShadow(
-                                  color:
-                                      const Color(0xFF916B44).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : [],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'คำขอพิเศษ',
-                        style: TextStyle(
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isNormalSelected = true;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
                           color: isNormalSelected
                               ? const Color(0xFF916B44)
-                              : Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: isNormalSelected
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF916B44)
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : [],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'การจองปกติ',
+                          style: TextStyle(
+                            color: isNormalSelected
+                                ? Colors.white
+                                : const Color(0xFF916B44),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              if (todayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('วันนี้'),
-              ...todayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (yesterdayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('เมื่อวาน'),
-              ...yesterdayList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (earlierList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .isNotEmpty)
-                _buildDateHeader('ก่อนหน้านี้'),
-              ...earlierList
-                  .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                  .map((data) => _buildRequestCard(
-                        data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
-                        data.generalEmail ?? '-',
-                        formatshowTime(data.date.toString()),
-                        data.docId,
-                      )),
-              if (todayList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty &&
-                  yesterdayList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty &&
-                  earlierList
-                      .where((data) => data.type == (isNormalSelected ? 0 : 1))
-                      .isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(FontAwesomeIcons.syringe,
-                            color: Color(0xFF916B44)),
-                        Text(
-                          'ไม่มีคำขอจองฉีดวัคซีน',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isNormalSelected = false;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isNormalSelected
+                              ? Colors.transparent
+                              : const Color(0xFF916B44),
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: !isNormalSelected
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF916B44)
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : [],
                         ),
-                      ],
+                        alignment: Alignment.center,
+                        child: Text(
+                          'คำขอพิเศษ',
+                          style: TextStyle(
+                            color: isNormalSelected
+                                ? const Color(0xFF916B44)
+                                : Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-        ]));
+                ],
+              ),
+            ),
+
+            // Content with empty state handling
+            Expanded(
+              child: _buildBookingContent(),
+            ),
+          ],
+        ));
+  }
+
+// Helper method to build content with empty state
+  Widget _buildBookingContent() {
+    final filteredTodayList = todayList
+        .where((data) =>
+            data.type == (isNormalSelected ? 0 : 1) && data.status == 1)
+        .toList();
+
+    final filteredYesterdayList = yesterdayList
+        .where((data) =>
+            data.type == (isNormalSelected ? 0 : 1) && data.status == 1)
+        .toList();
+
+    final filteredEarlierList = earlierList
+        .where((data) =>
+            data.type == (isNormalSelected ? 0 : 1) && data.status == 1)
+        .toList();
+
+    // Check if all lists are empty
+    final hasNoBookings = filteredTodayList.isEmpty &&
+        filteredYesterdayList.isEmpty &&
+        filteredEarlierList.isEmpty;
+
+    if (hasNoBookings) {
+      return _buildEmptyState();
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Today's bookings
+          if (filteredTodayList.isNotEmpty) ...[
+            _buildDateHeader('วันนี้'),
+            ...filteredTodayList.map((data) => _buildRequestCard(
+                  data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                  data.generalEmail ?? '-',
+                  formatshowTime(data.date.toString()),
+                  data.docId,
+                )),
+          ],
+
+          // Yesterday's bookings
+          if (filteredYesterdayList.isNotEmpty) ...[
+            _buildDateHeader('เมื่อวาน'),
+            ...filteredYesterdayList.map((data) => _buildRequestCard(
+                  data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                  data.generalEmail ?? '-',
+                  formatshowTime(data.date.toString()),
+                  data.docId,
+                )),
+          ],
+
+          // Earlier bookings
+          if (filteredEarlierList.isNotEmpty) ...[
+            _buildDateHeader('ก่อนหน้านี้'),
+            ...filteredEarlierList.map((data) => _buildRequestCard(
+                  data.status == 1 ? 'รอตอบรับ' : 'เสร็จสิ้น',
+                  data.generalEmail ?? '-',
+                  formatshowTime(data.date.toString()),
+                  data.docId,
+                )),
+          ],
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
   }
 
   Widget _buildDateHeader(String title) {
@@ -408,6 +426,49 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         child: Text(
           title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE9CBAF).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.calendar_today_outlined,
+                size: 48,
+                color: const Color(0xFF916B44).withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'ไม่มีข้อมูลการจอง${isNormalSelected ? 'ปกติ' : 'พิเศษ'}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF916B44),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ยังไม่มีการจองฉีดวัคซีนในช่วงเวลานี้',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -425,156 +486,297 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   //   });
   // }
 
-  Future<void> fetchReserveData() async {
-    final snapshot = await FirebaseFirestore.instance
+  void startRealtimeGet() {
+    stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
+
+    _reserveListener = FirebaseFirestore.instance
         .collection('reserve')
         .where('clinicEmail', isEqualTo: box.read("email"))
-        .get();
+        .snapshots()
+        .listen((snapshot) async {
+      try {
+        List<ReserveClinicFirebase> allData = snapshot.docs
+            .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
+            .where((e) => e.status != 3)
+            .toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
 
-    List<ReserveClinicFirebase> allData = snapshot.docs.map((doc) {
-      return ReserveClinicFirebase.fromJson(doc.data(), doc.id);
-    }).toList();
+        // เคลียร์ลิสต์เก่า
+        todayList.clear();
+        yesterdayList.clear();
+        earlierList.clear();
 
-    allData.sort((a, b) => b.date.compareTo(a.date));
+        for (var item in allData) {
+          final date = item.date.toLocal();
+          if (isToday(date)) {
+            todayList.add(item);
+          } else if (isYesterday(date)) {
+            yesterdayList.add(item);
+          } else {
+            earlierList.add(item);
+          }
+        }
 
-    todayList.clear();
-    yesterdayList.clear();
-    earlierList.clear();
+        setState(() {}); // อัปเดต UI
 
-    for (var item in allData) {
-      final date = item.date.toLocal();
-      if (isToday(date)) {
-        todayList.add(item);
-      } else if (isYesterday(date)) {
-        yesterdayList.add(item);
-      } else {
-        earlierList.add(item);
+        // ดึงข้อมูล reserveBook และ general จากรายการแรกที่มี
+        if (todayList.isNotEmpty) {
+          await getReserveBook(todayList[0].docId);
+          await getGeneral(todayList[0].generalEmail);
+        } else if (yesterdayList.isNotEmpty) {
+          await getReserveBook(yesterdayList[0].docId);
+          await getGeneral(yesterdayList[0].generalEmail);
+        } else if (earlierList.isNotEmpty) {
+          await getReserveBook(earlierList[0].docId);
+          await getGeneral(earlierList[0].generalEmail);
+        } else {
+          log("ℹ️ No reserve data found.");
+        }
+      } catch (e) {
+        log("❌ Error in realtime listener: $e");
       }
-    }
-
-    todayList.sort((a, b) => b.date.compareTo(a.date));
-    yesterdayList.sort((a, b) => b.date.compareTo(a.date));
-    earlierList.sort((a, b) => b.date.compareTo(a.date));
-
-    setState(() {
-      // อัปเดต state
-      todayList = todayList;
-      yesterdayList = yesterdayList;
-      earlierList = earlierList;
     });
-
-    // ดึง reserveBook จาก doc แรกที่เจอ
-    if (todayList.isNotEmpty) {
-      await getReserveBook(todayList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else if (yesterdayList.isNotEmpty) {
-      await getReserveBook(yesterdayList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else if (earlierList.isNotEmpty) {
-      await getReserveBook(earlierList[0].docId);
-      await getGeneral(todayList[0].generalEmail);
-    } else {
-      log("ℹ️ No reserve data to fetch reserveBook.");
-    }
   }
 
+  void stopRealTime() {
+    _reserveListener?.cancel();
+  }
+
+  // Enhanced _buildRequestCard with minimal design
   Widget _buildRequestCard(
-      String status, String name, String time, String docid) {
-    return GestureDetector(
-      onTap: () async {
-        log("📋 กำลังดึงข้อมูล docid: $docid");
-
-        final reserveData = await getReserveBook(docid);
-
-        if (reserveData != null) {
-          final generalEmail = reserveData['generalEmail'];
-          final dogDogIdRaw = reserveData['dogDogId'];
-          final dogDogId = dogDogIdRaw is int
-              ? dogDogIdRaw
-              : int.tryParse(dogDogIdRaw.toString()) ??
-                  0; // หรือ handle กรณีแปลงไม่ได้
-
-          final dogDetails = await getdog(dogDogId); // ได้ DogDetailsPost?
-
-          if (generalEmail != null && generalEmail.isNotEmpty) {
-            await getGeneral(generalEmail);
-          }
-
-          _showAppointmentPopup(
-              context, reserveData, dogDetails, reserveData['docId']);
-        } else {
-          log("⚠️ ไม่มีข้อมูลการจองใน reserveData");
+    String status,
+    String fallbackName,
+    String time,
+    String docId,
+  ) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: getReserveBook(docId),
+      builder: (context, reserveSnap) {
+        if (reserveSnap.connectionState == ConnectionState.waiting) {
+          return _buildLoadingCard();
         }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-          ],
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(9.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        status,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          text: 'คุณ ',
-                          children: [
-                            TextSpan(
-                              text: name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const TextSpan(text: ' ได้จองเวลากับคลินิกของคุณ'),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        time,
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
+        if (!reserveSnap.hasData || reserveSnap.data == null) {
+          return _buildErrorCard();
+        }
+
+        final reserve = reserveSnap.data!;
+        final indicatorColor = status == 'รอตอบรับ'
+            ? const Color(0xFFDBA871)
+            : const Color(0xFF916B44);
+        final email = reserve['generalEmail'] as String? ?? '';
+        return FutureBuilder<String>(
+          future: email.isNotEmpty ? getGeneralName(email) : Future.value(''),
+          builder: (context, nameSnap) {
+            Widget nameText;
+
+            if (nameSnap.connectionState == ConnectionState.waiting) {
+              nameText = const Text(
+                'กำลังโหลดชื่อ...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
                 ),
-              ),
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.horizontal(right: Radius.circular(12)),
-                child: GestureDetector(
-                  onTap: () {
-                    _openBookingDetail(docid);
+              );
+            } else if (nameSnap.hasError) {
+              nameText = const Text(
+                'โหลดชื่อผิดพลาด',
+                style: TextStyle(color: Colors.red, fontSize: 14),
+              );
+            } else {
+              final name = nameSnap.data?.trim();
+              nameText = Text(
+                name != null && name.isNotEmpty ? name : 'ไม่มีชื่อ',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: name != null && name.isNotEmpty
+                      ? const Color(0xFF916B44)
+                      : Colors.grey[600],
+                  fontStyle: name != null && name.isNotEmpty
+                      ? FontStyle.normal
+                      : FontStyle.italic,
+                ),
+              );
+            }
+            return StatefulBuilder(
+              builder: (context, setState) {
+                bool pressed = false;
+
+                return GestureDetector(
+                  onTapDown: (_) => setState(() => pressed = true),
+                  onTapUp: (_) => setState(() => pressed = false),
+                  onTapCancel: () => setState(() => pressed = false),
+                  onTap: () async {
+                    final reserveData = await getReserveBook(docId);
+                    if (reserveData != null) {
+                      final generalEmail = reserveData['generalEmail'];
+                      final dogDogIdRaw = reserveData['dogDogId'];
+                      final dogDogId = dogDogIdRaw is int
+                          ? dogDogIdRaw
+                          : int.tryParse(dogDogIdRaw.toString()) ?? 0;
+
+                      final dogDetails = await getdog(dogDogId);
+
+                      if (generalEmail != null && generalEmail.isNotEmpty) {
+                        await getGeneral(generalEmail);
+                      }
+
+                      _showAppointmentPopup(
+                        context,
+                        reserveData,
+                        dogDetails,
+                        reserveData[
+                            'docId'], // ← ใช้ได้ เพราะ reserveData != null แล้ว
+                      );
+                    } else {
+                      log("⚠️ ไม่พบข้อมูล reserve สำหรับ docId: $docId");
+                      // อาจแสดง dialog หรือ snackbar เตือนผู้ใช้ก็ได้
+                    }
                   },
-                  child: Container(
-                    color: const Color(0xFFFFB703),
-                    width: 60,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.arrow_forward, color: Colors.white),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    margin: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: pressed
+                          ? const LinearGradient(
+                              colors: [Color(0xFF5E3D23), Color(0xFF916B44)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: pressed ? null : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF916B44).withOpacity(0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // indicator bar
+                          Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: indicatorColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // content
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: indicatorColor.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      color: indicatorColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      color: Color(0xFF2D2D2D),
+                                      fontSize: 14,
+                                      height: 1.4,
+                                    ),
+                                    children: [
+                                      const TextSpan(text: 'คุณ '),
+                                      TextSpan(
+                                        text: nameText is Text
+                                            ? (nameText as Text).data
+                                            : 'ไม่ระบุ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF916B44),
+                                        ),
+                                      ),
+                                      const TextSpan(
+                                          text: ' ได้จองเวลากับคลินิกของคุณ'),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.schedule_outlined,
+                                        size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      time,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          // arrow button
+                          GestureDetector(
+                            onTap: () => _openBookingDetail(docId),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      const Color(0xFFDBA871).withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(Icons.arrow_forward_ios,
+                                  size: 16, color: Color(0xFF916B44)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildErrorCard() {
+    return const Center(
+      child: Text('ไม่พบข้อมูล'),
     );
   }
 
@@ -671,7 +873,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                       const SizedBox(height: 24),
 
-                      // Owner Image and Info - แสดงรูปภาพและข้อมูลเจ้าของ
                       Padding(
                         padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                         child: Row(
@@ -823,8 +1024,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             child: _buildPopupActionButton(
                               label: 'ยืนยันการจอง',
                               onPressed: () {
-                                Navigator.pop(context);
                                 _showAcceptDialog(docId);
+                                Navigator.pop(context);
                               },
                               isPrimary: true,
                             ),
@@ -852,12 +1053,12 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           'status': status,
         });
 
-        log('✅ Updated status to $status for docId=$docId');
+        log('Updated status to $status for docId=$docId');
       } catch (e) {
         log('❌ Failed to update status: $e');
       }
     } else {
-      log('⚠️ Status not allowed to update: $status');
+      log('Status not allowed to update: $status');
     }
   }
 
@@ -925,24 +1126,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  // Future<void> acceptrequest(int reserveID, int status) async {
-  //   if (status == 2 || status == 0) {
-  //     _showAcceptDialog();
-  //     ReserveUpdateStatusPost req =
-  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-  //     var res = await http.put(
-  //       Uri.parse("$url/reserve/$reserveID"),
-  //       headers: {"Content-Type": "application/json"},
-  //       body: json.encode(req.toJson()),
-  //     );
-  //     if (res.statusCode == 200) {
-  //       log("Update data clinic success");
-  //     } else {
-  //       log("Failed to update doctor info: ${res.statusCode}");
-  //     }
-  //   }
-  // }
-
   void _showAcceptDialog(String docId) {
     showDialog(
       context: context,
@@ -999,14 +1182,15 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      // ปิด Alert ก่อน
+                      // ปิด confirm dialog
                       Navigator.pop(context);
 
-                      // เปิด loading
+                      // แสดง loading dialog ด้วย rootNavigator
                       showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (BuildContext context) {
+                        useRootNavigator: true,
+                        builder: (BuildContext loadingContext) {
                           return const Center(
                             child: CircularProgressIndicator(
                                 color: Color(0xFF916B44)),
@@ -1014,15 +1198,31 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         },
                       );
 
-                      await Future.delayed(const Duration(seconds: 3));
+                      try {
+                        // รอการบันทึกข้อมูล
+                        await acceptrequest(docId, 2);
 
-                      Navigator.of(context, rootNavigator: true).pop();
+                        // รีโหลดข้อมูล (ถ้ามี)
+                        await _init();
 
-                      Navigator.pop(context, true);
+                        // ปิด loading dialog โดยใช้ rootNavigator ด้วย
+                        Navigator.of(context, rootNavigator: true).pop();
 
-                      acceptrequest(docId, 2);
-                      // _acceptReservation();
-                      _init();
+                        // แจ้งผลสำเร็จ
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("ยืนยันการจองสำเร็จ")),
+                        );
+
+                        // กลับหน้าก่อน หรือส่งค่ากลับ
+                        Navigator.pop(context, true);
+                      } catch (e) {
+                        // ปิด loading dialog ถ้ามี error
+                        Navigator.of(context, rootNavigator: true).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF916B44),
@@ -1191,6 +1391,19 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     }
   }
 
+  Future<String> getGeneralName(String email) async {
+    try {
+      final res = await http.get(Uri.parse("$url/general/$email"));
+      if (res.statusCode == 200) {
+        final list = generalPostFromJson(res.body); // <= list<GeneralPost>
+        if (list.isNotEmpty) return list[0].name;
+      }
+    } catch (e) {
+      log('getGeneralName error: $e');
+    }
+    return ''; // ไม่เจอชื่อ
+  }
+
   Future<void> getGeneral(String generalEmail) async {
     try {
       var res = await http.get(Uri.parse("$url/general/$generalEmail"));
@@ -1198,9 +1411,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         generalList = generalPostFromJson(res.body);
 
         if (generalList.isNotEmpty) {
-          log(generalList[0].name);
-          log(generalList[0].phone);
-          log(generalList[0].image);
+          // log(generalList[0].name);
+          // log(generalList[0].phone);
+          // log(generalList[0].image);
         } else {
           log("⚠️ generalList is empty");
         }
@@ -1208,9 +1421,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         setState(() {
           isLoading = false;
         });
-        log("✅ Loaded successfully: ${res.statusCode}");
+        // log("Loaded successfully: ${res.statusCode}");
       } else {
-        log("❌ Failed to load: ${res.statusCode}");
+        log("Failed to load: ${res.statusCode}");
       }
     } catch (e) {
       log("Error: $e");
@@ -1227,7 +1440,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
       if (doc.exists) {
         final data = doc.data();
         if (data != null) {
-          data['docId'] = doc.id; // ✅ เพิ่มบรรทัดนี้เพื่อฝัง docId ใน Map
+          data['docId'] = doc.id;
           return data;
         }
       } else {
@@ -1267,7 +1480,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return 'เวลา $hour:$minute วันที่ $day $month $year';
   }
 
-  // Helper function สำหรับจัดการวันที่ - ใช้ฟังก์ชัน formatThaiDateTime ที่มีอยู่
   String _formatDateString(dynamic dateValue) {
     try {
       if (dateValue == null) return 'ไม่ระบุ';
@@ -1290,7 +1502,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     }
   }
 
-// ฟังก์ชัน _formatDate และ formatThaiDateTime ที่มีอยู่แล้ว
   String _formatDate(dynamic dateValue) {
     try {
       if (dateValue == null) return 'ไม่ระบุ';
