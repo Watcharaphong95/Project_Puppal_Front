@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
@@ -62,6 +64,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   List<ReserveClinicFirebase> events = [];
   List<ReserveClinicFirebase> reservebookingListAll = [];
   StreamSubscription? _reserveListener;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -70,10 +73,17 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   }
 
   Future<void> initialize() async {
+    if (_isDisposed) return;
+
     final config = await Configuration.getConfig();
+    if (_isDisposed) return;
+
     url = config['apiEndPoint'];
-    // await getReserve();
+
+    if (_isDisposed) return;
     startRealtimeGet();
+
+    if (_isDisposed) return;
     box.write('type', 'clinic');
   }
 
@@ -81,840 +91,695 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-        appBar: AppBar(),
-        drawer: Drawer(
+      appBar: AppBar(),
+      drawer: Drawer(
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/indexBg.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
           child: Container(
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
+              color: Colors.white.withOpacity(0.85),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: Offset(2, 2),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    offset: Offset(2, 2),
+              ],
+            ),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF916b44),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(30),
+                    ),
                   ),
-                ],
-              ),
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ClipOval(
+                        child: Image.network(
+                          box.read('clinicImage'),
+                          width: screenWidth * 0.2,
+                          height: screenWidth * 0.2,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: screenWidth * 0.2,
+                                height: screenWidth * 0.2,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ClipOval(
-                          child: Image.network(
-                            box.read('clinicImage'),
-                            width: screenWidth * 0.2,
-                            height: screenWidth * 0.2,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: screenWidth * 0.2,
-                                  height: screenWidth * 0.2,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          ),
+                      SizedBox(height: 10),
+                      Text(
+                        box.read('clinicName') ?? "ผู้ใช้งาน",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        SizedBox(height: 10),
-                        Text(
-                          box.read('clinicName') ?? "ผู้ใช้งาน",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  ListTile(
-                    leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                    title: Text('หน้าหลัก'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.system_security_update,
-                        color: Color(0xFF916b44)),
-                    title: Text('คำขอฉีดยา'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => VaccineRequestsPage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.notifications, color: Color(0xFF916b44)),
-                    title: Text('แจ้งเตือน'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Notificationpage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('ประวัติการฉีดยา'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Vaccinehistorypage());
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.supervised_user_circle,
-                        color: Color(0xFF916b44)),
-                    title: Text('หมอประจำคลินิก'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Cliniclistdoctors());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('เวลาปิด-เปิด'),
-                    onTap: () => Get.to(() => Clinicopeninghours()),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                    title: Text('ตั้งค่า'),
-                    onTap: () => Get.to(() => Clinicsetting()),
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                    title: Text('สลับโหมด'),
-                    onTap: () async {
-                      var resGeneral = await http.get(
-                          Uri.parse("$url/general/name/${box.read('email')}"));
-                      if (resGeneral.statusCode == 200) {
-                        showAlert(
-                          title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
-                          message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
-                          onConfirm: () {
-                            box.write('type', 'general');
-                            box.write('generalName',
-                                jsonDecode(resGeneral.body)['username']);
-                            box.write('generalImage',
-                                jsonDecode(resGeneral.body)['image']);
-                            log('Name ${box.read('generalName')}');
-                            Get.offAll(() => GeneralmainPage());
-                          },
-                        );
-                      } else {
-                        showAlert(
-                          title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
-                          message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-                          onConfirm: () {
-                            Get.back();
-                            Get.to(() => RegisterusergooglePage());
-                          },
-                        );
-                      }
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.logout, color: Colors.redAccent),
-                    title: Text('ออกจากระบบ'),
-                    onTap: () {
+                ),
+                ListTile(
+                  leading: Icon(Icons.home, color: Color(0xFF916b44)),
+                  title: Text('หน้าหลัก'),
+                ),
+                ListTile(
+                  leading: Icon(Icons.system_security_update,
+                      color: Color(0xFF916b44)),
+                  title: Text('คำขอฉีดยา'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => VaccineRequestsPage());
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.notifications, color: Color(0xFF916b44)),
+                  title: Text('แจ้งเตือน'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Notificationpage());
+                  },
+                ),
+                ListTile(
+                  leading:
+                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                  title: Text('ประวัติการฉีดยา'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Vaccinehistorypage());
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.supervised_user_circle,
+                      color: Color(0xFF916b44)),
+                  title: Text('หมอประจำคลินิก'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Cliniclistdoctors());
+                  },
+                ),
+                ListTile(
+                  leading:
+                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                  title: Text('เวลาปิด-เปิด'),
+                  onTap: () => Get.to(() => Clinicopeninghours()),
+                ),
+                ListTile(
+                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                  title: Text('ตั้งค่า'),
+                  onTap: () => Get.to(() => Clinicsetting()),
+                ),
+                ListTile(
+                  leading:
+                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+                  title: Text('สลับโหมด'),
+                  onTap: () async {
+                    var resGeneral = await http.get(
+                        Uri.parse("$url/general/name/${box.read('email')}"));
+                    if (resGeneral.statusCode == 200) {
                       showAlert(
-                        title: 'ออกจากระบบ?',
-                        message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                        title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+                        message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
                         onConfirm: () {
-                          box.erase();
-                          Get.offAll(() => IndexPage());
+                          box.write('type', 'general');
+                          box.write('generalName',
+                              jsonDecode(resGeneral.body)['username']);
+                          box.write('generalImage',
+                              jsonDecode(resGeneral.body)['image']);
+                          log('Name ${box.read('generalName')}');
+                          Get.offAll(() => GeneralmainPage());
                         },
                       );
-                    },
-                  ),
-                ],
-              ),
+                    } else {
+                      showAlert(
+                        title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+                        onConfirm: () {
+                          Get.back();
+                          Get.to(() => RegisterusergooglePage());
+                        },
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.logout, color: Colors.redAccent),
+                  title: Text('ออกจากระบบ'),
+                  onTap: () {
+                    showAlert(
+                      title: 'ออกจากระบบ?',
+                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                      onConfirm: () {
+                        box.erase();
+                        Get.offAll(() => IndexPage());
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
-        body: Container(
-          child: isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
-                    strokeWidth: 3,
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Calendar Section with Modern Card Design
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: buildCalendar(
-                        focusedDay: _focusedDay,
-                        selectedDay: _selectedDay,
-                        onDaySelected: (selected, focused) {
-                          setState(() {
-                            _focusedDay = focused;
-                            _selectedDay = selected;
-                            events = List.from(reservebookingListAll);
-                            isLoading = false;
-                          });
-                        },
-                        onPageChanged: (focused) {
-                          setState(() {
-                            _focusedDay = focused;
-                          });
-                        },
-                        eventLoader: getEventsForDay,
-                      ),
+      ),
+      body: Stack(
+        children: [
+          Container(
+            child: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
+                      strokeWidth: 3,
                     ),
-
-                    // Section Header
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF916B44),
-                              borderRadius: BorderRadius.circular(2),
+                  )
+                : Column(
+                    children: [
+                      // Calendar Section with Modern Card Design
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: buildCalendar(
+                          focusedDay: _focusedDay,
+                          selectedDay: _selectedDay,
+                          onDaySelected: (selected, focused) {
+                            setState(() {
+                              _focusedDay = focused;
+                              _selectedDay = selected;
+                              // events = List.from(reservebookingListAll);
+                              events = reservebookingListAll
+                                  .where((e) =>
+                                      e.status == 2 &&
+                                      normalizeDate(e.date!) ==
+                                          normalizeDate(selected))
+                                  .toList();
+                              isLoading = false;
+                            });
+                          },
+                          onPageChanged: (focused) {
+                            setState(() {
+                              _focusedDay = focused;
+                            });
+                          },
+                          eventLoader: getEventsForDay,
+                        ),
+                      ),
+                      if (isLoading)
+                        Container(
+                          color: Colors.black.withOpacity(0.3),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF916B44)),
+                              strokeWidth: 3,
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Text(
-                            "การจองวันนี้",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF916B44),
+                        ),
+                      // Section Header
+                      Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF916B44),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 12),
+                            Text(
+                              "การจองวันนี้",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF916B44),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Events List
-                    Expanded(
-                        child: events.isEmpty
-                            ? Container(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Color(0xFFE9CBAF).withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(40),
+                      // Events List
+                      Expanded(
+                          child: events.isEmpty
+                              ? Container(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.3),
+                                          borderRadius:
+                                              BorderRadius.circular(40),
+                                        ),
+                                        child: Icon(
+                                          Icons.calendar_today_outlined,
+                                          size: 40,
+                                          color: Color(0xFF916B44),
+                                        ),
                                       ),
-                                      child: Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 40,
-                                        color: Color(0xFF916B44),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        "ไม่มีข้อมูลการจองของวันนี้",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF916B44),
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    Text(
-                                      "ไม่มีข้อมูลการจองของวันนี้",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF916B44),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        "โปรดเลือกวันที่เพื่อดูข้อมูล",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF916B44)
+                                              .withOpacity(0.6),
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      "โปรดเลือกวันที่เพื่อดูข้อมูล",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color:
-                                            Color(0xFF916B44).withOpacity(0.6),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                                itemCount: events.length,
-                                itemBuilder: (context, index) {
-                                  final item = events[index];
-                                  if (item.status != 2) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Container(
-                                    margin: EdgeInsets.only(bottom: 16),
-                                    child: InkWell(
-                                      onTap: () async {
-                                        final reserveData =
-                                            await getReserveBook(item.docId);
-                                        final generalEmail =
-                                            reserveData?['generalEmail'];
-
-                                        if (reserveData != null) {
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  itemCount: events.length,
+                                  itemBuilder: (context, index) {
+                                    final item = events[index];
+                                    if (item.status != 2) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Container(
+                                      margin: EdgeInsets.only(bottom: 16),
+                                      child: InkWell(
+                                        onTap: () async {
+                                          final reserveData =
+                                              await getReserveBook(item.docId);
                                           final generalEmail =
-                                              reserveData['generalEmail'];
-                                          final dogDogIdRaw =
-                                              reserveData['dogDogId'];
+                                              reserveData?['generalEmail'];
 
-                                          if (generalEmail != null &&
-                                              generalEmail.isNotEmpty) {
-                                            final dogDogId = dogDogIdRaw is int
-                                                ? dogDogIdRaw
-                                                : int.tryParse(dogDogIdRaw
-                                                        .toString()) ??
-                                                    0;
-                                            final dogDetails =
-                                                await getdog(dogDogId);
-                                            final generalData =
-                                                await getGeneral(generalEmail);
-                                            if (generalData != null) {
-                                              final docIdStr =
-                                                  reserveData['docId']
-                                                      .toString();
+                                          if (reserveData != null) {
+                                            final generalEmail =
+                                                reserveData['generalEmail'];
+                                            final dogDogIdRaw =
+                                                reserveData['dogDogId'];
 
-                                              _showAppointmentPopup(
-                                                context,
-                                                reserveData,
-                                                dogDetails,
-                                                docIdStr,
-                                                generalData,
-                                              );
+                                            if (generalEmail != null &&
+                                                generalEmail.isNotEmpty) {
+                                              final dogDogId =
+                                                  dogDogIdRaw is int
+                                                      ? dogDogIdRaw
+                                                      : int.tryParse(dogDogIdRaw
+                                                              .toString()) ??
+                                                          0;
+                                              final dogDetails =
+                                                  await getdog(dogDogId);
+                                              final generalData =
+                                                  await getGeneral(
+                                                      generalEmail);
+                                              if (generalData != null) {
+                                                final docIdStr =
+                                                    reserveData['docId']
+                                                        .toString();
+
+                                                _showAppointmentPopup(
+                                                  context,
+                                                  reserveData,
+                                                  dogDetails,
+                                                  docIdStr,
+                                                  generalData,
+                                                );
+                                              }
                                             }
                                           }
-                                        }
-                                      },
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          // gradient: LinearGradient(
-                                          //   begin: Alignment.topLeft,
-                                          //   end: Alignment.bottomRight,
-                                          //   colors: [
-                                          //     Colors.white,
-                                          //     Color(0xFFE9CBAF)
-                                          //         .withOpacity(0.05),
-                                          //   ],
-                                          // ),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          boxShadow: [
-                                            BoxShadow(
+                                        },
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            // gradient: LinearGradient(
+                                            //   begin: Alignment.topLeft,
+                                            //   end: Alignment.bottomRight,
+                                            //   colors: [
+                                            //     Colors.white,
+                                            //     Color(0xFFE9CBAF)
+                                            //         .withOpacity(0.05),
+                                            //   ],
+                                            // ),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Color(0xFF916B44)
+                                                    .withOpacity(0.08),
+                                                blurRadius: 16,
+                                                offset: Offset(0, 6),
+                                                spreadRadius: 0,
+                                              ),
+                                              BoxShadow(
+                                                color: Color(0xFF916B44)
+                                                    .withOpacity(0.04),
+                                                blurRadius: 6,
+                                                offset: Offset(0, 2),
+                                                spreadRadius: 0,
+                                              ),
+                                            ],
+                                            border: Border.all(
                                               color: Color(0xFF916B44)
-                                                  .withOpacity(0.08),
-                                              blurRadius: 16,
-                                              offset: Offset(0, 6),
-                                              spreadRadius: 0,
+                                                  .withOpacity(0.2),
+                                              width: 1.5,
                                             ),
-                                            BoxShadow(
-                                              color: Color(0xFF916B44)
-                                                  .withOpacity(0.04),
-                                              blurRadius: 6,
-                                              offset: Offset(0, 2),
-                                              spreadRadius: 0,
-                                            ),
-                                          ],
-                                          border: Border.all(
-                                            color: Color(0xFFE9CBAF)
-                                                .withOpacity(0.2),
-                                            width: 1.5,
                                           ),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(20),
-                                          child: Row(
-                                            children: [
-                                              // Enhanced Profile Image with Gradient Border
-                                              Container(
-                                                padding: EdgeInsets.all(3),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      Color(0xFF916B44),
-                                                      Color(0xFFDBA871),
-                                                    ],
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Container(
-                                                  width: 64,
-                                                  height: 64,
+                                          child: Padding(
+                                            padding: EdgeInsets.all(20),
+                                            child: Row(
+                                              children: [
+                                                // Enhanced Profile Image with Gradient Border
+                                                Container(
+                                                  padding: EdgeInsets.all(3),
                                                   decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Color(0xFF916B44),
+                                                        Color(0xFFDBA871),
+                                                      ],
+                                                    ),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            17),
-                                                    color: Colors.white,
+                                                            20),
                                                   ),
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            17),
-                                                    child: FutureBuilder<
-                                                        DogDetailsPost?>(
-                                                      future: getdog(
-                                                        item.dogDogId is int
-                                                            ? item.dogDogId
-                                                                as int
-                                                            : int.tryParse(item
-                                                                    .dogDogId
-                                                                    .toString()) ??
-                                                                0,
-                                                      ),
-                                                      builder:
-                                                          (context, snapshot) {
-                                                        if (snapshot
-                                                                .connectionState ==
-                                                            ConnectionState
-                                                                .waiting) {
-                                                          return Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              gradient:
-                                                                  LinearGradient(
-                                                                begin: Alignment
-                                                                    .topLeft,
-                                                                end: Alignment
-                                                                    .bottomRight,
-                                                                colors: [
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.3),
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.1),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            child: Center(
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                                valueColor:
-                                                                    AlwaysStoppedAnimation<
-                                                                        Color>(
-                                                                  Color(
-                                                                      0xFF916B44),
+                                                  child: Container(
+                                                    width: 64,
+                                                    height: 64,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              17),
+                                                      color: Colors.white,
+                                                    ),
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              17),
+                                                      child: FutureBuilder<
+                                                          DogDetailsPost?>(
+                                                        future: getdog(
+                                                          item.dogDogId is int
+                                                              ? item.dogDogId
+                                                                  as int
+                                                              : int.tryParse(item
+                                                                      .dogDogId
+                                                                      .toString()) ??
+                                                                  0,
+                                                        ),
+                                                        builder: (context,
+                                                            snapshot) {
+                                                          if (snapshot
+                                                                  .connectionState ==
+                                                              ConnectionState
+                                                                  .waiting) {
+                                                            return Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                gradient:
+                                                                    LinearGradient(
+                                                                  begin: Alignment
+                                                                      .topLeft,
+                                                                  end: Alignment
+                                                                      .bottomRight,
+                                                                  colors: [
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.3),
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.1),
+                                                                  ],
                                                                 ),
                                                               ),
-                                                            ),
-                                                          );
-                                                        }
-                                                        if (!snapshot.hasData ||
-                                                            snapshot.data ==
-                                                                null ||
-                                                            snapshot.data!
-                                                                    .image ==
-                                                                null) {
-                                                          return Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              gradient:
-                                                                  LinearGradient(
-                                                                begin: Alignment
-                                                                    .topLeft,
-                                                                end: Alignment
-                                                                    .bottomRight,
-                                                                colors: [
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.3),
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.1),
-                                                                ],
+                                                              child: Center(
+                                                                child:
+                                                                    CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  valueColor:
+                                                                      AlwaysStoppedAnimation<
+                                                                          Color>(
+                                                                    Color(
+                                                                        0xFF916B44),
+                                                                  ),
+                                                                ),
                                                               ),
-                                                            ),
-                                                            child: Icon(
-                                                              Icons.pets,
-                                                              size: 32,
-                                                              color: Color(
-                                                                  0xFF916B44),
-                                                            ),
-                                                          );
-                                                        }
+                                                            );
+                                                          }
+                                                          if (!snapshot
+                                                                  .hasData ||
+                                                              snapshot.data ==
+                                                                  null ||
+                                                              snapshot.data!
+                                                                      .image ==
+                                                                  null) {
+                                                            return Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                gradient:
+                                                                    LinearGradient(
+                                                                  begin: Alignment
+                                                                      .topLeft,
+                                                                  end: Alignment
+                                                                      .bottomRight,
+                                                                  colors: [
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.3),
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.1),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons.pets,
+                                                                size: 32,
+                                                                color: Color(
+                                                                    0xFF916B44),
+                                                              ),
+                                                            );
+                                                          }
 
-                                                        final dogImageUrl =
-                                                            snapshot
-                                                                .data!.image!;
-                                                        return Image.network(
-                                                          dogImageUrl,
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (context,
-                                                                  error,
-                                                                  stackTrace) =>
-                                                              Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              gradient:
-                                                                  LinearGradient(
-                                                                begin: Alignment
-                                                                    .topLeft,
-                                                                end: Alignment
-                                                                    .bottomRight,
-                                                                colors: [
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.3),
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.1),
-                                                                ],
+                                                          final dogImageUrl =
+                                                              snapshot
+                                                                  .data!.image!;
+                                                          return Image.network(
+                                                            dogImageUrl,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (context,
+                                                                    error,
+                                                                    stackTrace) =>
+                                                                Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                gradient:
+                                                                    LinearGradient(
+                                                                  begin: Alignment
+                                                                      .topLeft,
+                                                                  end: Alignment
+                                                                      .bottomRight,
+                                                                  colors: [
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.3),
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.1),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons
+                                                                    .broken_image,
+                                                                size: 32,
+                                                                color: Color(
+                                                                    0xFF916B44),
                                                               ),
                                                             ),
-                                                            child: Icon(
-                                                              Icons
-                                                                  .broken_image,
-                                                              size: 32,
-                                                              color: Color(
-                                                                  0xFF916B44),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
+                                                          );
+                                                        },
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              SizedBox(width: 8),
+                                                SizedBox(width: 8),
 
-                                              Expanded(
-                                                child: Stack(
-                                                  children: [
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        // ชื่อผู้จอง
-                                                        FutureBuilder<
-                                                            GeneralPost?>(
-                                                          future: getGeneral(
-                                                              item.generalEmail),
-                                                          builder: (context,
-                                                              snapshot) {
-                                                            if (snapshot
-                                                                    .connectionState ==
-                                                                ConnectionState
-                                                                    .waiting) {
-                                                              return Container(
-                                                                height: 20,
-                                                                width: 100,
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  gradient:
-                                                                      LinearGradient(
-                                                                    colors: [
-                                                                      Color(0xFFE9CBAF)
-                                                                          .withOpacity(
-                                                                              0.3),
-                                                                      Color(0xFFE9CBAF)
-                                                                          .withOpacity(
-                                                                              0.1),
-                                                                    ],
-                                                                  ),
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              10),
-                                                                ),
-                                                              );
-                                                            } else if (snapshot
-                                                                .hasError) {
-                                                              return Text(
-                                                                'เกิดข้อผิดพลาด',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  color: Colors
-                                                                      .red,
-                                                                ),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                              );
-                                                            } else if (!snapshot
-                                                                    .hasData ||
-                                                                snapshot.data ==
-                                                                    null) {
-                                                              return Text(
-                                                                'ไม่ระบุชื่อ',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  color: Color(
-                                                                      0xFF916B44),
-                                                                ),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                              );
-                                                            } else {
-                                                              final general =
-                                                                  snapshot
-                                                                      .data!;
-                                                              return Text.rich(
-                                                                TextSpan(
-                                                                  children: [
-                                                                    TextSpan(
-                                                                      text:
-                                                                          'คุณ ',
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.w500,
-                                                                        color: Color(0xFF916B44)
-                                                                            .withOpacity(0.8),
-                                                                      ),
+                                                Expanded(
+                                                  child: Stack(
+                                                    children: [
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          // ชื่อผู้จอง
+                                                          FutureBuilder<
+                                                              GeneralPost?>(
+                                                            future: getGeneral(
+                                                                item.generalEmail),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return Container(
+                                                                  height: 20,
+                                                                  width: 100,
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    gradient:
+                                                                        LinearGradient(
+                                                                      colors: [
+                                                                        Color(0xFFE9CBAF)
+                                                                            .withOpacity(0.3),
+                                                                        Color(0xFFE9CBAF)
+                                                                            .withOpacity(0.1),
+                                                                      ],
                                                                     ),
-                                                                    TextSpan(
-                                                                      text: general
-                                                                              .name ??
-                                                                          'ไม่ระบุชื่อ',
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.w700,
-                                                                        color: Color(
-                                                                            0xFF916B44),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 15,
-                                                                  height: 1.2,
-                                                                ),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                maxLines: 1,
-                                                              );
-                                                            }
-                                                          },
-                                                        ),
-
-                                                        // SizedBox(height: 12),
-
-                                                        // กล่องข้อมูลวัคซีน
-                                                        Container(
-                                                          margin: EdgeInsets.only(
-                                                              top:
-                                                                  6), // ระยะห่างจากชื่อด้านบน
-                                                          padding: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal:
-                                                                      12,
-                                                                  vertical: 6),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Color(
-                                                                    0xFFE9CBAF)
-                                                                .withOpacity(
-                                                                    0.06),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                            border: Border.all(
-                                                              color: Color(
-                                                                      0xFFE9CBAF)
-                                                                  .withOpacity(
-                                                                      0.2),
-                                                              width: 1,
-                                                            ),
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Container(
-                                                                width: 8,
-                                                                height: 8,
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  gradient:
-                                                                      LinearGradient(
-                                                                    colors: [
-                                                                      Color(
-                                                                          0xFF916B44),
-                                                                      Color(
-                                                                          0xFFDBA871),
-                                                                    ],
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            10),
                                                                   ),
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              4),
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                  width: 8),
-                                                              Expanded(
-                                                                child: (item.appointmentAid ==
-                                                                        null)
-                                                                    ? Text(
-                                                                        'ไม่มีข้อมูลวัคซีน',
+                                                                );
+                                                              } else if (snapshot
+                                                                  .hasError) {
+                                                                return Text(
+                                                                  'เกิดข้อผิดพลาด',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    color: Colors
+                                                                        .red,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                );
+                                                              } else if (!snapshot
+                                                                      .hasData ||
+                                                                  snapshot.data ==
+                                                                      null) {
+                                                                return Text(
+                                                                  'ไม่ระบุชื่อ',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    color: Color(
+                                                                        0xFF916B44),
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                );
+                                                              } else {
+                                                                final general =
+                                                                    snapshot
+                                                                        .data!;
+                                                                return Text
+                                                                    .rich(
+                                                                  TextSpan(
+                                                                    children: [
+                                                                      TextSpan(
+                                                                        text:
+                                                                            'คุณ ',
                                                                         style:
                                                                             TextStyle(
-                                                                          fontSize:
-                                                                              13,
                                                                           fontWeight:
                                                                               FontWeight.w500,
                                                                           color:
-                                                                              Color(0xFF916B44).withOpacity(0.6),
-                                                                          fontStyle:
-                                                                              FontStyle.italic,
+                                                                              Color(0xFF916B44).withOpacity(0.8),
                                                                         ),
-                                                                      )
-                                                                    : FutureBuilder<
-                                                                        List<
-                                                                            dynamic>>(
-                                                                        future:
-                                                                            Future.wait([
-                                                                          getvaccine(
-                                                                              item.appointmentAid.toString(),
-                                                                              item.generalEmail),
-                                                                          getdog(
-                                                                            item.dogDogId is int
-                                                                                ? item.dogDogId as int
-                                                                                : int.tryParse(item.dogDogId.toString()) ?? 0,
-                                                                          ),
-                                                                        ]),
-                                                                        builder:
-                                                                            (context,
-                                                                                snapshot) {
-                                                                          if (snapshot.connectionState ==
-                                                                              ConnectionState.waiting) {
-                                                                            return Container(
-                                                                              height: 16,
-                                                                              width: 120,
-                                                                              decoration: BoxDecoration(
-                                                                                gradient: LinearGradient(
-                                                                                  colors: [
-                                                                                    Color(0xFFE9CBAF).withOpacity(0.3),
-                                                                                    Color(0xFFE9CBAF).withOpacity(0.1),
-                                                                                  ],
-                                                                                ),
-                                                                                borderRadius: BorderRadius.circular(8),
-                                                                              ),
-                                                                            );
-                                                                          } else if (snapshot.hasError) {
-                                                                            return Text(
-                                                                              'เกิดข้อผิดพลาด',
-                                                                              style: TextStyle(
-                                                                                fontSize: 13,
-                                                                                color: Colors.red,
-                                                                                fontWeight: FontWeight.w500,
-                                                                              ),
-                                                                            );
-                                                                          }
-
-                                                                          final appointmentData =
-                                                                              snapshot.data?[0] as AppointmentClinic?;
-                                                                          final dogData =
-                                                                              snapshot.data?[1] as DogDetailsPost?;
-
-                                                                          if (appointmentData == null ||
-                                                                              appointmentData.data.isEmpty) {
-                                                                            return Text(
-                                                                              'ไม่มีข้อมูลวัคซีน',
-                                                                              style: TextStyle(
-                                                                                fontSize: 13,
-                                                                                fontWeight: FontWeight.w500,
-                                                                                color: Color(0xFF916B44).withOpacity(0.6),
-                                                                                fontStyle: FontStyle.italic,
-                                                                              ),
-                                                                            );
-                                                                          }
-
-                                                                          final vaccineName =
-                                                                              appointmentData.data.first.vaccines ?? '';
-                                                                          final dogName =
-                                                                              dogData?.name ?? 'ไม่ระบุชื่อสุนัข';
-
-                                                                          return Row(
-                                                                            children: [
-                                                                              Flexible(
-                                                                                child: Text(
-                                                                                  '(${dogName}) - $vaccineName',
-                                                                                  style: TextStyle(
-                                                                                    fontSize: 13,
-                                                                                    fontWeight: FontWeight.w600,
-                                                                                    color: Color(0xFF916B44),
-                                                                                    height: 1.2,
-                                                                                  ),
-                                                                                  overflow: TextOverflow.ellipsis,
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
                                                                       ),
-                                                              ),
-                                                            ],
+                                                                      TextSpan(
+                                                                        text: general.name ??
+                                                                            'ไม่ระบุชื่อ',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.w700,
+                                                                          color:
+                                                                              Color(0xFF916B44),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        15,
+                                                                    height: 1.2,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  maxLines: 1,
+                                                                );
+                                                              }
+                                                            },
                                                           ),
-                                                        ),
 
-                                                        Align(
-                                                          alignment: Alignment
-                                                              .topRight,
-                                                          child: Container(
+                                                          // SizedBox(height: 12),
+
+                                                          // กล่องข้อมูลวัคซีน
+                                                          Container(
+                                                            margin: EdgeInsets.only(
+                                                                top:
+                                                                    6), // ระยะห่างจากชื่อด้านบน
                                                             padding: EdgeInsets
                                                                 .symmetric(
                                                                     horizontal:
-                                                                        10,
+                                                                        12,
                                                                     vertical:
-                                                                        4),
-                                                            margin:
-                                                                EdgeInsets.only(
-                                                                    top: 6),
+                                                                        6),
                                                             decoration:
                                                                 BoxDecoration(
-                                                              gradient:
-                                                                  LinearGradient(
-                                                                begin: Alignment
-                                                                    .topLeft,
-                                                                end: Alignment
-                                                                    .bottomRight,
-                                                                colors: [
-                                                                  Color(0xFFDBA871)
-                                                                      .withOpacity(
-                                                                          0.15),
-                                                                  Color(0xFFE9CBAF)
-                                                                      .withOpacity(
-                                                                          0.1),
-                                                                ],
-                                                              ),
+                                                              color: Color(
+                                                                      0xFFE9CBAF)
+                                                                  .withOpacity(
+                                                                      0.06),
                                                               borderRadius:
                                                                   BorderRadius
                                                                       .circular(
@@ -922,107 +787,282 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                               border:
                                                                   Border.all(
                                                                 color: Color(
-                                                                        0xFFDBA871)
+                                                                        0xFFE9CBAF)
                                                                     .withOpacity(
-                                                                        0.3),
+                                                                        0.2),
                                                                 width: 1,
                                                               ),
                                                             ),
-                                                            child: Text(
-                                                              formatshowTime(
-                                                                  item.date!),
-                                                              style: TextStyle(
-                                                                fontSize: 11,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                color: Color(
-                                                                    0xFF916B44),
-                                                                letterSpacing:
-                                                                    0.3,
-                                                                height: 1.2,
-                                                              ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
+                                                            child: Row(
+                                                              children: [
+                                                                Container(
+                                                                  width: 8,
+                                                                  height: 8,
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    gradient:
+                                                                        LinearGradient(
+                                                                      colors: [
+                                                                        Color(
+                                                                            0xFF916B44),
+                                                                        Color(
+                                                                            0xFFDBA871),
+                                                                      ],
+                                                                    ),
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .circular(4),
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                    width: 8),
+                                                                Expanded(
+                                                                  child: (item.appointmentAid ==
+                                                                          null)
+                                                                      ? Text(
+                                                                          'ไม่มีข้อมูลวัคซีน',
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                13,
+                                                                            fontWeight:
+                                                                                FontWeight.w500,
+                                                                            color:
+                                                                                Color(0xFF916B44).withOpacity(0.6),
+                                                                            fontStyle:
+                                                                                FontStyle.italic,
+                                                                          ),
+                                                                        )
+                                                                      : FutureBuilder<
+                                                                          List<
+                                                                              dynamic>>(
+                                                                          future:
+                                                                              Future.wait([
+                                                                            getvaccine(item.appointmentAid.toString(),
+                                                                                item.generalEmail),
+                                                                            getdog(
+                                                                              item.dogDogId is int ? item.dogDogId as int : int.tryParse(item.dogDogId.toString()) ?? 0,
+                                                                            ),
+                                                                          ]),
+                                                                          builder:
+                                                                              (context, snapshot) {
+                                                                            if (snapshot.connectionState ==
+                                                                                ConnectionState.waiting) {
+                                                                              return Container(
+                                                                                height: 16,
+                                                                                width: 120,
+                                                                                decoration: BoxDecoration(
+                                                                                  gradient: LinearGradient(
+                                                                                    colors: [
+                                                                                      Color(0xFFE9CBAF).withOpacity(0.3),
+                                                                                      Color(0xFFE9CBAF).withOpacity(0.1),
+                                                                                    ],
+                                                                                  ),
+                                                                                  borderRadius: BorderRadius.circular(8),
+                                                                                ),
+                                                                              );
+                                                                            } else if (snapshot.hasError) {
+                                                                              return Text(
+                                                                                'เกิดข้อผิดพลาด',
+                                                                                style: TextStyle(
+                                                                                  fontSize: 13,
+                                                                                  color: Colors.red,
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                ),
+                                                                              );
+                                                                            }
+
+                                                                            final appointmentData =
+                                                                                snapshot.data?[0] as AppointmentClinic?;
+                                                                            final dogData =
+                                                                                snapshot.data?[1] as DogDetailsPost?;
+
+                                                                            if (appointmentData == null ||
+                                                                                appointmentData.data.isEmpty) {
+                                                                              return Text(
+                                                                                'ไม่มีข้อมูลวัคซีน',
+                                                                                style: TextStyle(
+                                                                                  fontSize: 13,
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  color: Color(0xFF916B44).withOpacity(0.6),
+                                                                                  fontStyle: FontStyle.italic,
+                                                                                ),
+                                                                              );
+                                                                            }
+
+                                                                            final vaccineName =
+                                                                                appointmentData.data.first.vaccines ?? '';
+                                                                            final dogName =
+                                                                                dogData?.name ?? 'ไม่ระบุชื่อสุนัข';
+
+                                                                            return Row(
+                                                                              children: [
+                                                                                Flexible(
+                                                                                  child: Text(
+                                                                                    '(${dogName}) - $vaccineName',
+                                                                                    style: TextStyle(
+                                                                                      fontSize: 13,
+                                                                                      fontWeight: FontWeight.w600,
+                                                                                      color: Color(0xFF916B44),
+                                                                                      height: 1.2,
+                                                                                    ),
+                                                                                    overflow: TextOverflow.ellipsis,
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
-                                                    ),
 
-                                                    // เวลา อยู่ขวาบน
-                                                  ],
-                                                ),
-                                              ),
+                                                          Align(
+                                                            alignment: Alignment
+                                                                .topRight,
+                                                            child: Container(
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      horizontal:
+                                                                          10,
+                                                                      vertical:
+                                                                          4),
+                                                              margin: EdgeInsets
+                                                                  .only(top: 6),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                gradient:
+                                                                    LinearGradient(
+                                                                  begin: Alignment
+                                                                      .topLeft,
+                                                                  end: Alignment
+                                                                      .bottomRight,
+                                                                  colors: [
+                                                                    Color(0xFFDBA871)
+                                                                        .withOpacity(
+                                                                            0.15),
+                                                                    Color(0xFFE9CBAF)
+                                                                        .withOpacity(
+                                                                            0.1),
+                                                                  ],
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10),
+                                                                border:
+                                                                    Border.all(
+                                                                  color: Color(
+                                                                          0xFFDBA871)
+                                                                      .withOpacity(
+                                                                          0.3),
+                                                                  width: 1,
+                                                                ),
+                                                              ),
+                                                              child: Text(
+                                                                formatshowTime(
+                                                                    item.date!),
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 11,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color: Color(
+                                                                      0xFF916B44),
+                                                                  letterSpacing:
+                                                                      0.3,
+                                                                  height: 1.2,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
 
-                                              SizedBox(width: 12),
-
-                                              // Enhanced Arrow Icon with Gradient Background
-                                              Container(
-                                                width: 36,
-                                                height: 36,
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      Color(0xFFE9CBAF)
-                                                          .withOpacity(0.15),
-                                                      Color(0xFFE9CBAF)
-                                                          .withOpacity(0.05),
+                                                      // เวลา อยู่ขวาบน
                                                     ],
                                                   ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(18),
-                                                  border: Border.all(
-                                                    color: Color(0xFFE9CBAF)
-                                                        .withOpacity(0.3),
-                                                    width: 1,
-                                                  ),
                                                 ),
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    Get.to(() =>
-                                                        Calendarbookingdetailpage(
-                                                            docId: item.docId));
-                                                  },
-                                                  borderRadius:
-                                                      BorderRadius.circular(18),
-                                                  child: Center(
-                                                    child: Icon(
-                                                      Icons.arrow_forward_ios,
-                                                      size: 16,
-                                                      color: Color(0xFF916B44),
+
+                                                SizedBox(width: 12),
+
+                                                // Enhanced Arrow Icon with Gradient Background
+                                                Container(
+                                                  width: 36,
+                                                  height: 36,
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Color(0xFFE9CBAF)
+                                                            .withOpacity(0.15),
+                                                        Color(0xFFE9CBAF)
+                                                            .withOpacity(0.05),
+                                                      ],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            18),
+                                                    border: Border.all(
+                                                      color: Color(0xFFE9CBAF)
+                                                          .withOpacity(0.3),
+                                                      width: 1,
+                                                    ),
+                                                  ),
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Get.to(() =>
+                                                          Calendarbookingdetailpage(
+                                                              docId:
+                                                                  item.docId));
+                                                    },
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            18),
+                                                    child: Center(
+                                                      child: Icon(
+                                                        Icons.arrow_forward_ios,
+                                                        size: 16,
+                                                        color:
+                                                            Color(0xFF916B44),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              )),
+                                    );
+                                  },
+                                )),
 
-                    // Bottom Safe Area
-                    SizedBox(height: 16),
-                  ],
-                ),
-        ));
+                      // Bottom Safe Area
+                      SizedBox(height: 16),
+                    ],
+                  ),
+          )
+        ],
+      ),
+    );
   }
 
-  // Pop-up Dialog Method
-  void _showAppointmentPopup(
+  Future<void> _showAppointmentPopup(
     BuildContext context,
     Map<String, dynamic> reserveData,
     DogDetailsPost? dogDetails,
     String docId,
     GeneralPost generalData,
-  ) {
-    showDialog(
+  ) async {
+    final result = await showDialog<String>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
@@ -1051,7 +1091,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => Navigator.pop(context, 'closed'),
                       child: Container(
                         width: 40,
                         height: 38,
@@ -1068,7 +1108,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                     ),
                   ),
                 ),
-
                 // Card Content
                 Padding(
                   padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
@@ -1087,9 +1126,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(
-                            width: 10,
-                          ),
+                          SizedBox(width: 10),
                           Text(
                             generalData.username,
                             style: TextStyle(
@@ -1100,9 +1137,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                           ),
                         ],
                       ),
-                      SizedBox(
-                        child: Padding(padding: EdgeInsets.only(bottom: 15)),
-                      ),
+                      SizedBox(height: 15),
 
                       const SizedBox(height: 24),
 
@@ -1125,7 +1160,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  dogDetails!.breed,
+                                  dogDetails.breed,
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 14,
@@ -1135,65 +1170,49 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                               ],
                             ),
                             Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  // shape: BoxShape.circle,
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: dogDetails.image.isNotEmpty
-                                      ? Image.network(
-                                          dogDetails.image,
-                                          height: 90,
-                                          width: 120,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child,
-                                              loadingProgress) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Shimmer.fromColors(
-                                              baseColor: Color(0xFFE9CBAF),
-                                              highlightColor: Colors.white,
-                                              child: Container(
-                                                width: 120,
-                                                height: 120,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: dogDetails.image.isNotEmpty
+                                    ? Image.network(
+                                        dogDetails.image,
+                                        height: 90,
+                                        width: 120,
+                                        fit: BoxFit.cover,
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Shimmer.fromColors(
+                                            baseColor: Color(0xFFE9CBAF),
+                                            highlightColor: Colors.white,
+                                            child: Container(
+                                              width: 120,
+                                              height: 120,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
-                                            );
-                                          },
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  Container(
-                                            width: 50,
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
                                             ),
-                                            child: const Icon(
-                                              Icons.pets,
-                                              size: 50,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        )
-                                      : Container(
-                                          width: 120,
-                                          height: 120,
+                                          );
+                                        },
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                          width: 50,
+                                          height: 50,
                                           decoration: BoxDecoration(
                                             color: Colors.grey,
                                             borderRadius:
@@ -1205,7 +1224,23 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                             color: Colors.white,
                                           ),
                                         ),
-                                )),
+                                      )
+                                    : Container(
+                                        width: 120,
+                                        height: 120,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.pets,
+                                          size: 50,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1225,8 +1260,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       _buildPopupDetailRow('ชื่อ :', generalData.name),
                       _buildPopupDetailRow('นามสกุล :', generalData.surname),
                       _buildPopupDetailRow('เบอร์โทร :', generalData.phone),
-                      // _buildPopupDetailRow(
-                      //     'วัคซีน', reservation.appointmentAid.toString()),
                       _buildPopupDetailRow('วันที่จอง :',
                           _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
@@ -1234,16 +1267,15 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
                       const SizedBox(height: 32),
 
-                      // Action Buttons
+                      // Action Buttons - แก้ไขส่วนนี้
                       Row(
                         children: [
                           Expanded(
                             child: _buildPopupActionButton(
                               label: 'ยกเลิกการจอง',
                               onPressed: () {
-                                Navigator.pop(context);
-                                // updatestatus(reservation.reserveId, 0);
-                                // _showRejectDialog();
+                                // ปิด dialog แรกก่อน
+                                Navigator.pop(context, 'cancel');
                               },
                               isPrimary: false,
                             ),
@@ -1253,11 +1285,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                             child: _buildPopupActionButton(
                               label: 'บันทึกประวัติ',
                               onPressed: () {
-                                // acceptrequest(reservation.reserveId, 2);
-                                Navigator.pop(context);
-                                Get.to(() => AddVaccinationRecordPage(
-                                    docId: reserveList[0].docId));
-                                // _showAcceptDialog();
+                                Navigator.pop(context, 'record');
                               },
                               isPrimary: true,
                             ),
@@ -1273,6 +1301,17 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
         );
       },
     );
+
+    // จัดการ result หลังจาก dialog ปิดแล้ว
+    if (result == 'cancel' && mounted && !_isDisposed) {
+      // รอ frame ถัดไปก่อนแสดง reject dialog
+      await Future.delayed(Duration(milliseconds: 100));
+      if (mounted && !_isDisposed) {
+        _showRejectDialog(docId, 0);
+      }
+    } else if (result == 'record' && mounted && !_isDisposed) {
+      Get.to(() => AddVaccinationRecordPage(docId: reserveList[0].docId));
+    }
   }
 
   String _formatDateString(dynamic dateValue) {
@@ -1559,64 +1598,127 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     );
   }
 
-  void startRealtimeGet() {
-    stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
+  Future<void> startRealtimeGet() async {
+    if (_isDisposed) return;
 
-    _reserveListener = FirebaseFirestore.instance
-        .collection('reserve')
-        .where('clinicEmail', isEqualTo: box.read("email"))
-        .snapshots()
-        .listen((snapshot) async {
-      try {
-        setState(() {
-          isLoading = true;
-        });
+    stopRealTime();
 
-        List<ReserveClinicFirebase> allData = snapshot.docs
-            .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
-            .where((data) => data.status != 3) // ✅ กรอง status != 3
-            .toList();
+    try {
+      final firstSnapshot = await FirebaseFirestore.instance
+          .collection('reserve')
+          .where('clinicEmail', isEqualTo: box.read("email"))
+          .snapshots()
+          .first;
 
-        allData.sort((a, b) => b.date.compareTo(a.date));
-        reserveList = allData;
-        reservebookingListAll.clear();
+      if (_isDisposed) return;
+      await _handleSnapshot(firstSnapshot);
 
-        for (var data in reserveList) {
+      if (_isDisposed) return;
+
+      _reserveListener = FirebaseFirestore.instance
+          .collection('reserve')
+          .where('clinicEmail', isEqualTo: box.read("email"))
+          .snapshots()
+          .listen(
+        (snapshot) {
+          if (!_isDisposed && mounted) {
+            _handleSnapshot(snapshot);
+          }
+        },
+        onError: (error) {
+          log("❌ Firebase listener error: $error");
+        },
+      );
+    } catch (e) {
+      log("❌ Error in startRealtimeGet: $e");
+    }
+  }
+
+  Future<void> _handleSnapshot(
+      QuerySnapshot<Map<String, dynamic>> snapshot) async {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      List<ReserveClinicFirebase> allData = snapshot.docs
+          .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
+          .where((data) => data.status != 3)
+          .toList();
+
+      allData.sort((a, b) => b.date.compareTo(a.date));
+      reserveList = allData;
+      reservebookingListAll.clear();
+
+      for (var data in reserveList) {
+        if (_isDisposed || !mounted) return;
+
+        try {
           final bookingData = await getReserveBook(data.docId);
-          log(data.docId);
+          if (_isDisposed || !mounted) return;
+
           if (bookingData != null) {
             try {
               final booking =
                   ReserveClinicFirebase.fromJson(bookingData, data.docId);
               reservebookingListAll.add(booking);
-              log("✅ Added: ${booking.docId}");
             } catch (e) {
               log("❌ Error parsing bookingData: $e");
             }
           } else {
             log("⚠️ No booking data for docId=${data.docId}");
           }
+        } catch (e) {
+          log("❌ Error getting reserve book for ${data.docId}: $e");
+          continue;
         }
-
-        log("✅ Total reservebookingListAll: ${reservebookingListAll.length}");
-        for (var booking in reservebookingListAll) {
-          log("📌 Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.generalEmail}");
-        }
-
-        setState(() {
-          isLoading = false;
-        });
-      } catch (e) {
-        log("❌ Error during snapshot handling: $e");
-        setState(() {
-          isLoading = false;
-        });
       }
-    });
+
+      log("✅ Total reservebookingListAll: ${reservebookingListAll.length}");
+      for (var booking in reservebookingListAll) {
+        log("📌 Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.generalEmail}");
+      }
+
+      // ✅ กรองเฉพาะ status == 2 และเซ็ต events
+      final filteredList = reservebookingListAll.where((e) {
+        return e.status == 2 &&
+            normalizeDate(e.date!) == normalizeDate(_selectedDay!);
+      }).toList();
+
+      if (_isDisposed || !mounted) return;
+      setState(() {
+        events = filteredList;
+        isLoading = false;
+      });
+    } catch (e) {
+      log("❌ Error during snapshot handling: $e");
+
+      if (_isDisposed || !mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void stopRealTime() {
     _reserveListener?.cancel();
+    _reserveListener = null;
+  }
+
+  void cleanupListeners() {
+    _isDisposed = true;
+    stopRealTime();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    stopRealTime();
+
+    // ไม่มี delay แล้ว เพื่อไม่ให้ race condition
+    super.dispose();
   }
 
   Future<DogDetailsPost?> getdog(int dogId) async {
@@ -1719,29 +1821,196 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     }
   }
 
-  // Future<void> updatestatus(int reserveID, int status) async {
-  //   if (status == 0) {
-  //     ReserveUpdateStatusPost req =
-  //         ReserveUpdateStatusPost(reserveId: reserveID, status: status);
-  //     var res = await http.put(
-  //       Uri.parse("$url/reserve/$reserveID"),
-  //       headers: {"Content-Type": "application/json"},
-  //       body: json.encode(req.toJson()),
-  //     );
-  //     if (res.statusCode == 200) {
-  //       log("Update data clinic success");
-  //     } else {
-  //       log("Failed to update doctor info: ${res.statusCode}");
-  //     }
-  //   }
-  // }
+  Future<void> updatestatus(String docId, int status) async {
+    showLoadingDialog();
+    if (status == 0) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .update({
+          'status': status,
+        });
+
+        log('✅ Updated status to $status for docId=$docId');
+        Get.back();
+      } catch (e) {
+        log('❌ Failed to update status: $e');
+      }
+    } else {
+      log('⚠️ Status not allowed to update: $status');
+    }
+  }
+
+  void _showRejectDialog(String docid, int status) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // ป้องกันการปิด dialog โดยไม่ตั้งใจ
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Colors.red,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'คุณต้องการปฏิเสธการนัดหมายนี้หรือไม่?',
+              style: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'โปรดทราบว่าการดำเนินการนี้ไม่สามารถย้อนกลับได้',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      // ปิดแค่ reject dialog เท่านั้น
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'ยกเลิก',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      // ปิด reject dialog
+                      Navigator.of(context).pop();
+
+                      // รอให้ dialog ปิดสมบูรณ์
+                      await Future.delayed(Duration(milliseconds: 100));
+
+                      // อัพเดท status
+                      await updatestatus(docid, 0);
+
+                      // เรียก _rejectReservation ถ้ามี
+                      if (mounted && !_isDisposed) {
+                        _rejectReservation();
+                      }
+
+                      // แสดง snackbar หรือ toast เพื่อแจ้งผลการยกเลิก (ถ้าต้องการ)
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('ยกเลิกการจองเรียบร้อยแล้ว'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                    ),
+                    child: const Text('ตกลง'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _rejectReservation() {
+    Flushbar(
+      message: 'ปฏิเสธการนัดหมายแล้ว',
+      duration: const Duration(seconds: 4),
+      backgroundColor: Colors.red,
+      flushbarPosition: FlushbarPosition.TOP,
+      borderRadius: BorderRadius.circular(8),
+      margin: const EdgeInsets.all(16),
+      animationDuration: const Duration(milliseconds: 500),
+    ).show(context);
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
 
   List<ReserveClinicFirebase> getEventsForDay(DateTime day) {
     final normalizedDay = normalizeDate(day);
 
     return reservebookingListAll.where((item) {
       final eventDay = normalizeDate(item.date!); // ไม่ต้อง parse แล้ว
-      return eventDay == normalizedDay;
+      return eventDay == normalizedDay && item.status == 2;
     }).toList();
   }
 
