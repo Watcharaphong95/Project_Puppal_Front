@@ -24,8 +24,9 @@ class ClinicSearchResponse {
   String weekdays;
   String open;
   String close;
-  List<String> specialDate;
+  List<DateTime> specialDate;
   double distanceKm;
+  bool toDayOpen;
   String distance;
   int special;
   int full;
@@ -46,6 +47,7 @@ class ClinicSearchResponse {
     required this.close,
     required this.specialDate,
     required this.distanceKm,
+    required this.toDayOpen,
     required this.distance,
     required this.special,
     required this.full,
@@ -66,8 +68,10 @@ class ClinicSearchResponse {
         weekdays: json["weekdays"],
         open: json["open"],
         close: json["close"],
-        specialDate: List<String>.from(json["special_date"].map((x) => x)),
+        specialDate: List<DateTime>.from(
+            json["special_date"].map((x) => DateTime.parse(x))),
         distanceKm: json["distanceKm"]?.toDouble(),
+        toDayOpen: json["toDayOpen"],
         distance: json["distance"],
         special: json["special"],
         full: json["full"],
@@ -87,8 +91,10 @@ class ClinicSearchResponse {
         "weekdays": weekdays,
         "open": open,
         "close": close,
-        "special_date": List<dynamic>.from(specialDate.map((x) => x)),
+        "special_date": List<dynamic>.from(specialDate.map((x) =>
+            "${x.year.toString().padLeft(4, '0')}-${x.month.toString().padLeft(2, '0')}-${x.day.toString().padLeft(2, '0')}")),
         "distanceKm": distanceKm,
+        "toDayOpen": toDayOpen,
         "distance": distance,
         "special": special,
         "full": full,

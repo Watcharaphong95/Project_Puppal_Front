@@ -383,44 +383,36 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                   final isSpecial = clinic.special == 1;
                   final isFull = clinic.full == 1;
                   final isDisabled = isFull && !isSpecial;
-
                   final hasSpecialties = clinic.specialties != null &&
                       clinic.specialties.isNotEmpty;
 
-                  final today = DateFormat('yyyy-MM-dd').format(widget.date);
-                  final todayWeekday = DateFormat('EEEE').format(widget.date);
-                  var isClinicOpenToday = true;
-                  var tempWeekdays = clinic.weekdays.split(',');
                   final isLastClinic =
                       clinic.userEmail == lastClinic && _hasLatestClinic;
 
-                  if (clinic.specialDate.contains(today) ||
-                      !tempWeekdays.contains(todayWeekday)) {
-                    isClinicOpenToday = false;
-                  }
-
-                  // Determine if clinic is interactable (closed clinics are not clickable)
-                  final isClinicInteractable = isClinicOpenToday && !isDisabled;
+                  // // Determine if clinic is interactable (closed clinics are not clickable)
+                  final isClinicInteractable =
+                      filterClinics[index].toDayOpen && !isDisabled;
 
                   return Container(
                     margin: EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: !isClinicOpenToday
+                      color: !filterClinics[index].toDayOpen
                           ? Colors.grey.shade100
                           : isDisabled
                               ? Colors.grey.shade200
                               : Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: !isClinicOpenToday
+                      border: !filterClinics[index].toDayOpen
                           ? Border.all(color: Colors.red.shade300, width: 1)
                           : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(!isClinicOpenToday
-                              ? 0.02
-                              : isDisabled
-                                  ? 0.04
-                                  : 0.08),
+                          color: Colors.black
+                              .withOpacity(!filterClinics[index].toDayOpen
+                                  ? 0.02
+                                  : isDisabled
+                                      ? 0.04
+                                      : 0.08),
                           blurRadius: 12,
                           spreadRadius: 0,
                           offset: Offset(0, 4),
@@ -471,10 +463,12 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                               BorderRadius.circular(12),
                                           child: ColorFiltered(
                                             colorFilter: ColorFilter.mode(
-                                              !isClinicOpenToday || isDisabled
+                                              !filterClinics[index].toDayOpen ||
+                                                      isDisabled
                                                   ? Colors.grey
                                                   : Colors.transparent,
-                                              !isClinicOpenToday || isDisabled
+                                              !filterClinics[index].toDayOpen ||
+                                                      isDisabled
                                                   ? BlendMode.saturation
                                                   : BlendMode.multiply,
                                             ),
@@ -508,7 +502,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           ),
                                         ),
                                         // Closed overlay
-                                        if (!isClinicOpenToday)
+                                        if (!filterClinics[index].toDayOpen)
                                           Positioned.fill(
                                             child: Container(
                                               decoration: BoxDecoration(
@@ -570,11 +564,12 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: !isClinicOpenToday
-                                                ? Colors.grey.shade500
-                                                : isDisabled
-                                                    ? Colors.grey.shade600
-                                                    : Color(0xFF2C3E50),
+                                            color:
+                                                !filterClinics[index].toDayOpen
+                                                    ? Colors.grey.shade500
+                                                    : isDisabled
+                                                        ? Colors.grey.shade600
+                                                        : Color(0xFF2C3E50),
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
@@ -584,11 +579,12 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: !isClinicOpenToday
-                                                ? Colors.red.shade50
-                                                : isDisabled
-                                                    ? Colors.grey.shade100
-                                                    : Colors.blue.shade50,
+                                            color:
+                                                !filterClinics[index].toDayOpen
+                                                    ? Colors.red.shade50
+                                                    : isDisabled
+                                                        ? Colors.grey.shade100
+                                                        : Colors.blue.shade50,
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -597,7 +593,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                             children: [
                                               Icon(
                                                 Icons.pin_drop,
-                                                color: !isClinicOpenToday
+                                                color: !filterClinics[index]
+                                                        .toDayOpen
                                                     ? Colors.red.shade400
                                                     : isDisabled
                                                         ? Colors.grey.shade500
@@ -608,7 +605,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                               Text(
                                                 '${clinic.distanceKm.toStringAsFixed(3)} กม.',
                                                 style: TextStyle(
-                                                  color: !isClinicOpenToday
+                                                  color: !filterClinics[index]
+                                                          .toDayOpen
                                                       ? Colors.red.shade400
                                                       : isDisabled
                                                           ? Colors.grey.shade500
@@ -626,7 +624,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                           children: [
                                             Icon(
                                               Icons.access_time,
-                                              color: !isClinicOpenToday
+                                              color: !filterClinics[index]
+                                                      .toDayOpen
                                                   ? Colors.red.shade600
                                                   : isDisabled
                                                       ? Colors.grey.shade500
@@ -635,11 +634,12 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                             ),
                                             SizedBox(width: 4),
                                             Text(
-                                              isClinicOpenToday
+                                              filterClinics[index].toDayOpen
                                                   ? 'เปิด ${clinic.open.substring(0, 5)} - ${clinic.close.substring(0, 5)}'
                                                   : 'ปิดวันนี้',
                                               style: TextStyle(
-                                                color: !isClinicOpenToday
+                                                color: !filterClinics[index]
+                                                        .toDayOpen
                                                     ? Colors.red.shade600
                                                     : isDisabled
                                                         ? Colors.grey.shade500
@@ -659,7 +659,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                             children: [
                                               Icon(
                                                 Icons.medical_services,
-                                                color: !isClinicOpenToday
+                                                color: !filterClinics[index]
+                                                        .toDayOpen
                                                     ? Colors.grey.shade400
                                                     : isDisabled
                                                         ? Colors.grey.shade500
@@ -670,9 +671,11 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                               SizedBox(width: 4),
                                               Expanded(
                                                 child: Row(
-                                                  children: clinic.specialties
-                                                      .take(3)
-                                                      .map<Widget>((specialty) {
+                                                  children:
+                                                      clinic.specialties
+                                                          .take(3)
+                                                          .map<Widget>(
+                                                              (specialty) {
                                                     return Container(
                                                       width:
                                                           screenWidth * 0.175,
@@ -684,29 +687,28 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                                         vertical: 1,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color:
-                                                            !isClinicOpenToday
+                                                        color: !filterClinics[
+                                                                    index]
+                                                                .toDayOpen
+                                                            ? Colors
+                                                                .grey.shade50
+                                                            : isDisabled
                                                                 ? Colors.grey
-                                                                    .shade50
-                                                                : isDisabled
-                                                                    ? Colors
-                                                                        .grey
-                                                                        .shade100
-                                                                    : Colors
-                                                                        .orange
-                                                                        .shade50,
+                                                                    .shade100
+                                                                : Colors.orange
+                                                                    .shade50,
                                                         border: Border.all(
-                                                          color:
-                                                              !isClinicOpenToday
+                                                          color: !filterClinics[
+                                                                      index]
+                                                                  .toDayOpen
+                                                              ? Colors
+                                                                  .grey.shade300
+                                                              : isDisabled
                                                                   ? Colors.grey
-                                                                      .shade300
-                                                                  : isDisabled
-                                                                      ? Colors
-                                                                          .grey
-                                                                          .shade400
-                                                                      : Colors
-                                                                          .orange
-                                                                          .shade600,
+                                                                      .shade400
+                                                                  : Colors
+                                                                      .orange
+                                                                      .shade600,
                                                           width: 1,
                                                         ),
                                                         borderRadius:
@@ -716,17 +718,17 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                                       child: Text(
                                                         specialty,
                                                         style: TextStyle(
-                                                          color:
-                                                              !isClinicOpenToday
+                                                          color: !filterClinics[
+                                                                      index]
+                                                                  .toDayOpen
+                                                              ? Colors
+                                                                  .grey.shade400
+                                                              : isDisabled
                                                                   ? Colors.grey
-                                                                      .shade400
-                                                                  : isDisabled
-                                                                      ? Colors
-                                                                          .grey
-                                                                          .shade500
-                                                                      : Colors
-                                                                          .orange
-                                                                          .shade600,
+                                                                      .shade500
+                                                                  : Colors
+                                                                      .orange
+                                                                      .shade600,
                                                           fontSize: 10,
                                                           fontWeight:
                                                               FontWeight.w500,
@@ -737,64 +739,78 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                                       ),
                                                     );
                                                   }).toList()
-                                                    ..addAll(clinic.specialties
-                                                                .length >
-                                                            3
-                                                        ? [
-                                                            Container(
-                                                              width:
-                                                                  screenWidth *
-                                                                      0.15,
-                                                              margin: EdgeInsets
-                                                                  .only(
-                                                                      right: 3),
-                                                              padding: EdgeInsets
-                                                                  .symmetric(
-                                                                horizontal: 4,
-                                                                vertical: 1,
-                                                              ),
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                color: !isClinicOpenToday
-                                                                    ? Colors.grey.shade100
-                                                                    : isDisabled
-                                                                        ? Colors.grey.shade200
-                                                                        : Colors.orange.shade100,
-                                                                border:
-                                                                    Border.all(
-                                                                  color: !isClinicOpenToday
-                                                                      ? Colors.grey.shade300
-                                                                      : isDisabled
-                                                                          ? Colors.grey.shade400
-                                                                          : Colors.orange.shade600,
-                                                                  width: 1,
+                                                        ..addAll(clinic
+                                                                    .specialties
+                                                                    .length >
+                                                                3
+                                                            ? [
+                                                                Container(
+                                                                  width:
+                                                                      screenWidth *
+                                                                          0.15,
+                                                                  margin: EdgeInsets
+                                                                      .only(
+                                                                          right:
+                                                                              3),
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .symmetric(
+                                                                    horizontal:
+                                                                        4,
+                                                                    vertical: 1,
+                                                                  ),
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    color: !filterClinics[index]
+                                                                            .toDayOpen
+                                                                        ? Colors
+                                                                            .grey
+                                                                            .shade100
+                                                                        : isDisabled
+                                                                            ? Colors.grey.shade200
+                                                                            : Colors.orange.shade100,
+                                                                    border:
+                                                                        Border
+                                                                            .all(
+                                                                      color: !filterClinics[index]
+                                                                              .toDayOpen
+                                                                          ? Colors
+                                                                              .grey
+                                                                              .shade300
+                                                                          : isDisabled
+                                                                              ? Colors.grey.shade400
+                                                                              : Colors.orange.shade600,
+                                                                      width: 1,
+                                                                    ),
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .circular(3),
+                                                                  ),
+                                                                  child: Text(
+                                                                    '+${clinic.specialties.length - 3}',
+                                                                    style:
+                                                                        TextStyle(
+                                                                      color: !filterClinics[index]
+                                                                              .toDayOpen
+                                                                          ? Colors
+                                                                              .grey
+                                                                              .shade400
+                                                                          : isDisabled
+                                                                              ? Colors.grey.shade500
+                                                                              : Colors.orange.shade600,
+                                                                      fontSize:
+                                                                          10,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                    ),
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .center,
+                                                                  ),
                                                                 ),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            3),
-                                                              ),
-                                                              child: Text(
-                                                                '+${clinic.specialties.length - 3}',
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: !isClinicOpenToday
-                                                                      ? Colors.grey.shade400
-                                                                      : isDisabled
-                                                                          ? Colors.grey.shade500
-                                                                          : Colors.orange.shade600,
-                                                                  fontSize: 10,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .center,
-                                                              ),
-                                                            ),
-                                                          ]
-                                                        : []),
+                                                              ]
+                                                            : []),
                                                 ),
                                               ),
                                             ],
@@ -812,24 +828,27 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: !isClinicOpenToday || isDisabled
-                                            ? [
-                                                Colors.grey.shade400,
-                                                Colors.grey.shade500,
-                                              ]
-                                            : [
-                                                Color(0xFFDBA871),
-                                                Color(0xFFCD9A5B),
-                                              ],
+                                        colors:
+                                            !filterClinics[index].toDayOpen ||
+                                                    isDisabled
+                                                ? [
+                                                    Colors.grey.shade400,
+                                                    Colors.grey.shade500,
+                                                  ]
+                                                : [
+                                                    Color(0xFFDBA871),
+                                                    Color(0xFFCD9A5B),
+                                                  ],
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color:
-                                              (!isClinicOpenToday || isDisabled
-                                                      ? Colors.grey.shade400
-                                                      : Color(0xFFDBA871))
-                                                  .withOpacity(0.3),
+                                          color: (!filterClinics[index]
+                                                          .toDayOpen ||
+                                                      isDisabled
+                                                  ? Colors.grey.shade400
+                                                  : Color(0xFFDBA871))
+                                              .withOpacity(0.3),
                                           blurRadius: 8,
                                           spreadRadius: 0,
                                           offset: Offset(0, 3),
@@ -837,7 +856,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                       ],
                                     ),
                                     child: Icon(
-                                      !isClinicOpenToday
+                                      !filterClinics[index].toDayOpen
                                           ? Icons.schedule
                                           : Icons.arrow_forward_ios,
                                       color: Colors.white,
@@ -849,7 +868,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                             ),
 
                             // Badges positioning
-                            if (!isClinicOpenToday)
+                            if (!filterClinics[index].toDayOpen)
                               // Closed Badge (takes priority)
                               Positioned(
                                 top: 8,
@@ -1736,7 +1755,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       filterClinics = clinics;
       _loadingSearchData = false;
     });
-    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
+    log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   Future<void> searchClinicCurrentPosition() async {
@@ -1796,7 +1815,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       filterClinics = clinics;
       _loadingSearchData = false;
     });
-    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
+    log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   String getDogAge(String birthday) {

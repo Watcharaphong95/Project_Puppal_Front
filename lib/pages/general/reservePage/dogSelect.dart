@@ -48,7 +48,8 @@ class _DogselectPageState extends State<DogselectPage> {
   @override
   void initState() {
     log(widget.date.toString());
-    log(widget.dogData.toString());
+    // log(jsonEncode(widget.dogData.map((date, dogs) => MapEntry(
+    //     date.toIso8601String(), dogs.map((d) => d.toJson()).toList()))));
     init();
     super.initState();
   }
@@ -490,7 +491,7 @@ class _DogselectPageState extends State<DogselectPage> {
                             Container(
                               margin: EdgeInsets.only(top: 1, bottom: 1),
                               child: Text(
-                                'วันนัดเดิม ${DateFormat('d MMM y', 'th').format(DateTime.parse(dog.date!).toLocal())}',
+                                'วันนัดเดิม ${dog.date!.split(',').map((d) => DateFormat('d MMM y', 'th').format(DateTime.parse(d).toLocal())).join(', ')}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFFDBA871),
@@ -650,83 +651,100 @@ class _DogselectPageState extends State<DogselectPage> {
   }
 
   Future<void> addDogData(Map<DateTime, List<Dog>> dogData) async {
-    List<ReserveDoglist> toAdd = [];
+    // Map เก็บข้อมูลชั่วคราว เพื่อรวม aid และ vaccine ของ dogId เดียวกัน
+    Map<int, ReserveDoglist> mergedDogs = {};
 
     dogData.forEach((date, dogs) {
       for (var dog in dogs) {
-        // Find matching dog in filterDogs by dogId
-        var existingEntries =
+        // หา template จาก filterDogs (ข้อมูลพื้นฐานที่ต้องคัดลอก)
+        var templateDogs =
             filterDogs.where((f) => f.dogId == dog.dogId).toList();
 
-        // If no matching dog info in filterDogs, skip or handle accordingly
-        if (existingEntries.isEmpty) {
-          // No dog info to copy, skip adding or handle error
+        if (templateDogs.isEmpty) {
+          // ถ้าไม่มีข้อมูลใน filterDogs ข้ามไป
           continue;
         }
 
-        // Check if any existing entry has the same date
-        var matchedByDate =
-            existingEntries.where((f) => f.date == date.toString()).toList();
+        var templateDog = templateDogs.first;
 
-        if (matchedByDate.isNotEmpty) {
-          // Update existing entries with same date
-          for (var f in matchedByDate) {
-            f.status = 2;
-            f.aid = dog.aid ?? [0];
-            f.vaccine = dog.vaccines.join(',');
-            f.reserveId = dog.reserveId;
+        if (mergedDogs.containsKey(dog.dogId)) {
+          // ถ้าเจอ dogId นี้แล้ว ให้รวม aid และ vaccine และ concat วันที่ด้วย
+          var existing = mergedDogs[dog.dogId]!;
+
+          // รวม aid ไม่ให้ซ้ำ
+          var newAid = {...?existing.aid, ...?dog.aid}.toList();
+          existing.aid = newAid;
+
+          // รวม vaccine ไม่ให้ซ้ำ
+          var existingVaccines = existing.vaccine
+              .split(',')
+              .where((v) => v.trim().isNotEmpty)
+              .toSet();
+          var newVaccines = dog.vaccines.toSet();
+          existing.vaccine = [...existingVaccines.union(newVaccines)].join(',');
+
+          // รวมวันที่ (concat string ด้วย comma)
+          existing.date = (existing.date ?? '') + ',${date.toString()}';
+
+          // ถ้า reserveId ยังไม่มี ให้ใส่จาก dog ตัวใหม่
+          if (existing.reserveId == null && dog.reserveId != null) {
+            existing.reserveId = dog.reserveId;
           }
         } else {
-          // No entry for this dogId + date -> add new entry copying from filterDogs info
-
-          // Just take the first matched dog info to copy
-          var templateDog = existingEntries.first;
-
-          toAdd.add(ReserveDoglist(
-              dogId: templateDog.dogId,
-              userEmail: templateDog.userEmail,
-              name: templateDog.name,
-              breed: templateDog.breed,
-              gender: templateDog.gender,
-              color: templateDog.color,
-              defect: templateDog.defect,
-              birthday: templateDog.birthday,
-              congentialDisease: templateDog.congentialDisease,
-              sterilization: templateDog.sterilization,
-              hair: templateDog.hair,
-              image: templateDog.image,
-              aid: dog.aid ?? [0],
-              date: date.toString(),
-              status: 2,
-              vaccine: dog.vaccines.join(','),
-              reserveId: dog.reserveId));
+          // สร้าง ReserveDoglist ใหม่ (copy ข้อมูลจาก template + ข้อมูลใหม่)
+          mergedDogs[dog.dogId] = ReserveDoglist(
+            dogId: templateDog.dogId,
+            userEmail: templateDog.userEmail,
+            name: templateDog.name,
+            breed: templateDog.breed,
+            gender: templateDog.gender,
+            color: templateDog.color,
+            defect: templateDog.defect,
+            birthday: templateDog.birthday,
+            congentialDisease: templateDog.congentialDisease,
+            sterilization: templateDog.sterilization,
+            hair: templateDog.hair,
+            image: templateDog.image,
+            aid: dog.aid ?? [0],
+            date: date.toIso8601String(),
+            status: 2,
+            vaccine: dog.vaccines.join(','),
+            reserveId: dog.reserveId,
+          );
         }
       }
     });
 
-    // Add all new entries after iteration
-    filterDogs.addAll(toAdd);
+    for (var dogId in mergedDogs.keys) {
+      filterDogs.removeWhere((d) => d.dogId == dogId);
+    }
 
-    // Optional: For all dogs in filterDogs, if status != 2, set status = 1
+    // นำข้อมูลที่ merge เสร็จแล้วใส่เข้า filterDogs (แทนการเพิ่มทีละอัน)
+    filterDogs.addAll(mergedDogs.values);
+
+    // อัพเดต status สำหรับรายการที่ไม่ได้อัพเดต
     for (var f in filterDogs) {
       if (f.status != 2) {
         f.status = 1;
       }
     }
 
+    // เรียงลำดับ filterDogs ตามวันที่
     filterDogs.sort((a, b) {
       DateTime parseDate(String? dateStr) {
         if (dateStr == null || dateStr.isEmpty) {
-          // fallback date when null or empty, e.g. widget.date or some default
           return widget.date;
         }
-        return DateTime.tryParse(dateStr) ?? (widget.date);
+
+        // แยกและเอาวันแรก
+        final firstDate = dateStr.split(',').first.trim();
+        return DateTime.tryParse(firstDate) ?? widget.date;
       }
 
       final dateA = parseDate(a.date);
       final dateB = parseDate(b.date);
 
-      return dateA.compareTo(dateB); // ascending
+      return dateA.compareTo(dateB);
     });
   }
 

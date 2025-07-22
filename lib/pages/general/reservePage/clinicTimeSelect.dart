@@ -904,7 +904,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(notifyData),
       );
-      Get.back();
+      // Get.back();
       // if (resNotifyClinic.statusCode == 200) {
       //   showAlertNoClose(
       //       title: 'ส่งคำขอเรียบร้อยแล้ว',

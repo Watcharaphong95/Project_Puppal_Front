@@ -480,7 +480,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 0, 0, 0, screenHeight * 0.05),
                             child: Column(
                               children: [
-                                events.isNotEmpty
+                                getEventsForDay(_selectedDay).isNotEmpty
                                     ? Column(
                                         children: events.map((e) {
                                           return Card(
@@ -762,15 +762,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         isEqualTo: box.read("email")); // collection, not doc
 
     context.read<AppData>().listener = colRef.snapshots().listen(
-      (querySnapshot) {
+      (querySnapshot) async {
         for (var change in querySnapshot.docChanges) {
           var docId = change.doc.id;
           var data = change.doc.data();
 
           if (change.type == DocumentChangeType.removed) {
-            eventMap.forEach((date, dogList) {
-              dogList.removeWhere((dog) => dog.reserveId == docId);
-            });
+            await getAppointmentEmail();
             setState(() {});
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
@@ -1246,12 +1244,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
     if (snapshot.exists) {
       final data = snapshot.data();
-      if (data != null &&
-          data['status'] != 0 &&
-          data['appointmentAid'] == null) {
+      if (data != null && data['status'] != 0) {
         await docRef.delete();
-      } else if (data != null && data['status'] != 0) {
-        await docRef.update({'status': 0});
       } else {
         log("Reserve already cancelled or invalid data");
       }
@@ -1346,6 +1340,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     // }
 
     buildEventMap(appointmentAll);
+    if (mounted) {
+      setState(() {});
+      log("🔄 appointmentAll updated with ${appointmentAll.length} items");
+    }
   }
 
   List<AppointmentGetEmail> mergeAppointments({
@@ -1613,6 +1611,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
   List<Dog> getEventsForDay(DateTime day) {
     final dateOnly = DateTime(day.year, day.month, day.day);
+    // setState(() {});
     return eventMap[dateOnly] ?? [];
   }
 
@@ -1638,6 +1637,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     eventMap.forEach((date, dogs) {
       dogs.sort((a, b) => a.status.compareTo(b.status));
     });
+    setState(() {});
   }
 
   String getDogAge(String birthday) {
