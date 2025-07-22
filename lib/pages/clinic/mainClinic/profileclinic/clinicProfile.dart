@@ -92,7 +92,7 @@ class _ClinicprofileState extends State<Clinicprofile> {
                               ],
                             ),
                             child: ClipOval(
-                              child: clinic.image.isNotEmpty
+                              child: (clinic.image ?? '').isNotEmpty
                                   ? Image.network(
                                       clinic.image,
                                       height: 120,
@@ -203,7 +203,7 @@ class _ClinicprofileState extends State<Clinicprofile> {
                           _buildInfoField(
                             icon: Icons.person,
                             label: 'ชื่อ',
-                            value: clinic.name,
+                            value: clinic.name ?? '',
                             screenHeight: screenHeight,
                           ),
                           const SizedBox(height: 20),
@@ -214,32 +214,10 @@ class _ClinicprofileState extends State<Clinicprofile> {
                             screenHeight: screenHeight,
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildInfoField(
-                                  icon: Icons.timer,
-                                  label: 'เวลาเปิดคลินิก',
-                                  value: clinic.open,
-                                  screenHeight: screenHeight,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: _buildInfoField(
-                                  icon: Icons.timer,
-                                  label: 'เวลาปิดคลินิก',
-                                  value: clinic.close,
-                                  screenHeight: screenHeight,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
                           _buildInfoField(
                             icon: Icons.timelapse_outlined,
                             label: 'จำนวนเลขที่รับต่อช่วงเวลา',
-                            value: clinic.numPerTime.toString(),
+                            value: clinic.numPerTime?.toString() ?? '0',
                             screenHeight: screenHeight,
                           ),
                           const SizedBox(height: 20),
@@ -429,14 +407,15 @@ class _ClinicprofileState extends State<Clinicprofile> {
   }
 
   ClinicEditProfilePost clinicEditProfilePostFromJson(String str) =>
-      ClinicEditProfilePost.fromJson(json.decode(str));
+      ClinicEditProfilePost.fromJson(json.decode(str)[0]);
 
   Future<void> searchclinic() async {
+    log(box.read('email'));
     final res =
-        await http.get(Uri.parse("$url/clinic/data/${box.read('email')}"));
+        await http.get(Uri.parse("$url/clinic/profile/${box.read('email')}"));
     if (res.statusCode == 200) {
       final data = clinicEditProfilePostFromJson(res.body);
-      log(data.name);
+      log(data.userEmail);
 
       // controller.lat.value = data.lat.toString();
       // controller.lng.value = data.lng.toString();

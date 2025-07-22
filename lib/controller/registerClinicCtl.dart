@@ -8,6 +8,7 @@ class registerClinicCtl extends GetxController {
   var address = ''.obs;
   var open = ''.obs;
   var close = ''.obs;
+  var weekdays = ''.obs;
   var numPerTime = 0.obs;
   var lat = ''.obs;
   var lng = ''.obs;
@@ -39,6 +40,10 @@ class registerClinicCtl extends GetxController {
 
   void setClose(String value) {
     close.value = value;
+  }
+
+  void setweekdays(String value) {
+    weekdays.value = value;
   }
 
   void setNumPerTime(int value) {

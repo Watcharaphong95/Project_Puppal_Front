@@ -13,6 +13,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/clinicEditProfilePost.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -227,29 +228,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                             controller: phoneCtl,
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: buildTimePickerField(
-                                  icon: Icons.timer,
-                                  label: 'เวลาเปิดคลินิก',
-                                  controller: openCtl,
-                                  screenHeight: screenHeight,
-                                  onTap: () => selectTime(context, openCtl),
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: buildTimePickerField(
-                                  icon: Icons.timer,
-                                  label: 'เวลาปิดคลินิก',
-                                  controller: closeCtl,
-                                  screenHeight: screenHeight,
-                                  onTap: () => selectTime(context, closeCtl),
-                                ),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: 20),
                           _buildNumberSelector(
                             icon: Icons.timelapse_outlined,
@@ -621,11 +599,11 @@ class _CliniceditprofileState extends State<EitprofilePage> {
   }
 
   ClinicEditProfilePost clinicEditProfilePostFromJson(String str) =>
-      ClinicEditProfilePost.fromJson(json.decode(str));
+      ClinicEditProfilePost.fromJson(json.decode(str)[0]);
 
   Future<void> searchclinic() async {
     final res =
-        await http.get(Uri.parse("$url/clinic/data/${box.read('email')}"));
+        await http.get(Uri.parse("$url/clinic/profile/${box.read('email')}"));
     if (res.statusCode == 200) {
       final data = clinicEditProfilePostFromJson(res.body);
       log(data.name);
@@ -638,8 +616,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
         numCtl.text = data.numPerTime.toString();
         imageCtl.text = data.image;
         addressCtl.text = data.address;
-        openCtl.text = data.open;
-        closeCtl.text = data.close;
       }
 
       numPerTime = data.numPerTime;
@@ -663,14 +639,13 @@ class _CliniceditprofileState extends State<EitprofilePage> {
   }
 
   Future<void> editProfileClinic() async {
+    showLoadingDialog(message: "กำลังโหลด...");
     if (nameCtl.text.isEmpty) nameCtl.text = clinicList[0].name;
     if (phoneCtl.text.isEmpty) phoneCtl.text = clinicList[0].phone;
     if (addressCtl.text.isEmpty) addressCtl.text = clinicList[0].address;
     if (latCtl.text.isEmpty) latCtl.text = clinicList[0].lat;
     if (lngCtl.text.isEmpty) lngCtl.text = clinicList[0].lng;
     if (imageCtl.text.isEmpty) imageCtl.text = clinicList[0].image;
-    if (openCtl.text.isEmpty) openCtl.text = clinicList[0].open;
-    if (closeCtl.text.isEmpty) closeCtl.text = clinicList[0].close;
     if (numCtl.text.isEmpty) numCtl.text = clinicList[0].numPerTime.toString();
 
     ClinicEditProfilePost req = ClinicEditProfilePost(
@@ -681,8 +656,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
         lat: latCtl.text,
         lng: lngCtl.text,
         image: imageCtl.text,
-        open: openCtl.text,
-        close: closeCtl.text,
         numPerTime: numPerTime);
 
     var res = await http.put(
@@ -690,11 +663,67 @@ class _CliniceditprofileState extends State<EitprofilePage> {
       headers: {"Content-Type": "application/json"},
       body: json.encode(req.toJson()),
     );
+    // ปิด loading dialog ก่อน
+    Get.back(); // ปิด dialog โหลด
+
     if (res.statusCode == 200) {
       log("Update data clinic success");
+      Get.snackbar('Success', 'แก้ไขข้อมูลเรียบร้อย');
+      Get.to(() => Clinicprofile());
     } else {
       log("Failed to update doctor info: ${res.statusCode}");
+      Get.snackbar('Error', 'ไม่สามารถแก้ไขข้อมูลได้');
     }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   Future<void> uploadImage() async {
