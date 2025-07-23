@@ -13,6 +13,7 @@ import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
@@ -569,7 +570,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              Get.to(() => IndexPage());
+              Get.to(() => Cliniclistdoctors());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF795548),

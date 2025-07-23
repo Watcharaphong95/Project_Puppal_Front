@@ -1226,6 +1226,7 @@ void showAlert({
   required String title,
   required String message,
   VoidCallback? onConfirm,
+  required BuildContext context,
 }) {
   Get.defaultDialog(
     title: '',

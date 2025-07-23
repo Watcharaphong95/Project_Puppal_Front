@@ -15,11 +15,11 @@ class ClinicinjectionRecordPost {
   int? oldAppointmentAid;
   int? nextAppointmentAid;
   String? clinicEmail;
-  String doctorCareerNo;
-  String vaccine;
-  DateTime date;
-  String vaccineLabel;
-  int type;
+  String? doctorCareerNo;
+  String? vaccine;
+  DateTime? date;
+  String? vaccineLabel;
+  int? type;
 
   ClinicinjectionRecordPost({
     required this.oldAppointmentAid,
@@ -51,7 +51,7 @@ class ClinicinjectionRecordPost {
         "doctorCareerNo": doctorCareerNo,
         "vaccine": vaccine,
         "date":
-            "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+            "${date?.year.toString().padLeft(4, '0')}-${date?.month.toString().padLeft(2, '0')}-${date?.day.toString().padLeft(2, '0')}",
         "vaccine_label": vaccineLabel,
         "type": type,
       };

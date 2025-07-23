@@ -8,6 +8,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
@@ -132,7 +134,6 @@ class _ClinicsettingState extends State<Clinicsetting> {
                 ListTile(
                   leading: Icon(Icons.home, color: Color(0xFF916b44)),
                   title: Text('หน้าหลัก'),
-                  onTap: () => Get.to(() => ClinicmainPage()),
                 ),
                 ListTile(
                   leading: Icon(Icons.system_security_update,
@@ -148,19 +149,24 @@ class _ClinicsettingState extends State<Clinicsetting> {
                   title: Text('แจ้งเตือน'),
                   onTap: () {
                     Get.back();
-                    // Get.to(() => );
+                    Get.to(() => Notificationpage());
                   },
                 ),
                 ListTile(
                   leading:
                       Icon(Icons.medical_services, color: Color(0xFF916b44)),
                   title: Text('ประวัติการฉีดยา'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Vaccinehistorypage());
+                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.supervised_user_circle,
                       color: Color(0xFF916b44)),
                   title: Text('หมอประจำคลินิก'),
                   onTap: () {
+                    Get.back();
                     Get.to(() => Cliniclistdoctors());
                   },
                 ),
@@ -173,7 +179,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                 ListTile(
                   leading: Icon(Icons.settings, color: Color(0xFF916b44)),
                   title: Text('ตั้งค่า'),
-                  onTap: () {},
+                  onTap: () => Get.to(() => Clinicsetting()),
                 ),
                 ListTile(
                   leading:
@@ -187,6 +193,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                         title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
                         message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
                         onConfirm: () {
+                          box.write('type', 'general');
                           box.write('generalName',
                               jsonDecode(resGeneral.body)['username']);
                           box.write('generalImage',
@@ -448,6 +455,56 @@ class _ClinicsettingState extends State<Clinicsetting> {
                 ),
               ),
             ),
+    );
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 

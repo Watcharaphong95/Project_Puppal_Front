@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_time_patterns.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import 'package:puppal_application/model/appointmentClinic.dart';
 import 'package:puppal_application/model/appointmentPost.dart';
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reservebooking.dart';
@@ -40,6 +42,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   static const Color lightColor = Color(0xFFE9CBAF);
   String? selectedVaccine;
   File? _imageFile;
+  final box = GetStorage();
+
   // final controller = Get.find<ClinicinjectionRecordPost>();
   final TextEditingController batchController = TextEditingController();
   TextEditingController vaccineController = TextEditingController();
@@ -50,7 +54,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
   DateTime? vaccinationDate;
   DateTime? nextAppointmentDate;
-  bool isLoading = true;
+  bool _loadingData = true;
   bool vaccineChanged = false;
   bool dateChanged = false;
 
@@ -70,7 +74,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     await getReserve(widget.docId);
 
     setState(() {
-      isLoading = false;
+      _loadingData = false;
     });
   }
 
@@ -211,267 +215,277 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
+      body: _loadingData
+          ? SizedBox(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Header Card
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [primaryColor, secondaryColor],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.medical_services,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              "บันทึกประวัติการรับวัคซีน",
-                              style: TextStyle(
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.medical_services,
                                 color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                                size: 24,
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              "กรอกข้อมูลวัคซีนที่ฉีดให้สัตว์เลี้ยง",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "บันทึกประวัติการรับวัคซีน",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    "กรอกข้อมูลวัคซีนที่ฉีดให้สัตว์เลี้ยง",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
 
-                const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                // Vaccine Selection
-                _buildFormCard(
-                  title: "วัคซีนป้องกันโรค",
-                  icon: Icons.vaccines,
-                  child: TextFormField(
-                    controller: vaccineController,
-                    decoration: InputDecoration(
-                      hintText: vaccineController.text,
-                      filled: true,
-                      fillColor: lightColor.withOpacity(0.5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryColor, width: 2),
-                      ),
-                    ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'กรุณากรอกชื่อวัคซีน'
-                        : null,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Batch Number
-                _buildFormCard(
-                  title: "หมายเลขชุดวัคซีน",
-                  icon: Icons.qr_code,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 180,
-                    child: ElevatedButton(
-                      onPressed: _pickImage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: lightColor.withOpacity(0.5),
-                        foregroundColor: Colors.black87,
-                        padding: EdgeInsets.zero,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      // Vaccine Selection
+                      _buildFormCard(
+                        title: "วัคซีนป้องกันโรค",
+                        icon: Icons.vaccines,
+                        child: TextFormField(
+                          controller: vaccineController,
+                          decoration: InputDecoration(
+                            hintText: vaccineController.text,
+                            filled: true,
+                            fillColor: lightColor.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: primaryColor, width: 2),
+                            ),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'กรุณากรอกชื่อวัคซีน'
+                              : null,
                         ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: (_imageFile != null && _imageFile!.existsSync())
-                            ? Image.file(
-                                _imageFile!,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                color: lightColor.withOpacity(0.3),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.camera_alt,
-                                  size: 48,
-                                  color: Color(0xFF916B44),
-                                ),
+                      const SizedBox(height: 16),
+
+                      // Batch Number
+                      _buildFormCard(
+                        title: "หมายเลขชุดวัคซีน",
+                        icon: Icons.qr_code,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 180,
+                          child: ElevatedButton(
+                            onPressed: _pickImage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: lightColor.withOpacity(0.5),
+                              foregroundColor: Colors.black87,
+                              padding: EdgeInsets.zero,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                      ),
-                    ),
-                  ),
-                ),
-                _buildFormCard(
-                  title: "เลือกสัตวแพทย์",
-                  icon: Icons.person_outline,
-                  child: buildDoctorDropdown(),
-                ),
-
-                const SizedBox(height: 16),
-                _buildFormCard(
-                  title: "วันที่ฉีดวัคซีน",
-                  icon: Icons.calendar_month,
-                  child: TextFormField(
-                    controller: dateController,
-                    readOnly: true,
-                    onTap: () async {
-                      await pickDate(context, vaccinationDate, (date) {
-                        setState(() {
-                          vaccinationDate = date;
-                          dateController.text = formatThaiDateTime(date);
-                        });
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'เลือกวันที่ฉีด',
-                      filled: true,
-                      fillColor: lightColor.withOpacity(0.5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryColor, width: 2),
-                      ),
-                      suffixIcon: Icon(
-                        Icons.calendar_month,
-                        color: primaryColor,
-                      ),
-                    ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'กรุณาเลือกวันที่ฉีดวัคซีน'
-                        : null,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-                _buildFormCard(
-                    title: "วันนัดครั้งถัดไป",
-                    icon: Icons.calendar_month,
-                    child: TextFormField(
-                      controller: nextDateController,
-                      readOnly: true,
-                      onTap: () async {
-                        await pickDate(context, nextAppointmentDate, (date) {
-                          setState(() {
-                            nextAppointmentDate = date;
-                            nextDateController.text = formatThaiDateTime(date);
-                          });
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'เลือกวันนัดครั้งถัดไป',
-                        filled: true,
-                        fillColor: lightColor.withOpacity(0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: (_imageFile != null &&
+                                      _imageFile!.existsSync())
+                                  ? Image.file(
+                                      _imageFile!,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: lightColor.withOpacity(0.3),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        size: 48,
+                                        color: Color(0xFF916B44),
+                                      ),
+                                    ),
+                            ),
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: primaryColor, width: 2),
+                      ),
+                      _buildFormCard(
+                        title: "เลือกสัตวแพทย์",
+                        icon: Icons.person_outline,
+                        child: buildDoctorDropdown(),
+                      ),
+
+                      const SizedBox(height: 16),
+                      _buildFormCard(
+                        title: "วันที่ฉีดวัคซีน",
+                        icon: Icons.calendar_month,
+                        child: TextFormField(
+                          controller: dateController,
+                          readOnly: true,
+                          onTap: () async {
+                            await pickDate(context, vaccinationDate, (date) {
+                              setState(() {
+                                vaccinationDate = date;
+                                dateController.text = formatThaiDateTime(date);
+                              });
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'เลือกวันที่ฉีด',
+                            filled: true,
+                            fillColor: lightColor.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: primaryColor, width: 2),
+                            ),
+                            suffixIcon: Icon(
+                              Icons.calendar_month,
+                              color: primaryColor,
+                            ),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'กรุณาเลือกวันที่ฉีดวัคซีน'
+                              : null,
                         ),
-                        suffixIcon:
-                            Icon(Icons.calendar_month, color: primaryColor),
                       ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'กรุณาเลือกวันนัดครั้งถัดไป'
-                          : null,
-                    )),
-                const SizedBox(height: 32),
-                Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+
+                      const SizedBox(height: 16),
+                      _buildFormCard(
+                          title: "วันนัดครั้งถัดไป",
+                          icon: Icons.calendar_month,
+                          child: TextFormField(
+                            controller: nextDateController,
+                            readOnly: true,
+                            onTap: () async {
+                              await pickDate(context, nextAppointmentDate,
+                                  (date) {
+                                setState(() {
+                                  nextAppointmentDate = date;
+                                  nextDateController.text =
+                                      formatThaiDateTime(date);
+                                });
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'เลือกวันนัดครั้งถัดไป',
+                              filled: true,
+                              fillColor: lightColor.withOpacity(0.5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: primaryColor, width: 2),
+                              ),
+                              suffixIcon: Icon(Icons.calendar_month,
+                                  color: primaryColor),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'กรุณาเลือกวันนัดครั้งถัดไป'
+                                : null,
+                          )),
+                      const SizedBox(height: 32),
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [primaryColor, secondaryColor],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await injectionAdd();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            'บันทึกประวัติ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await injectionAdd();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'บันทึกประวัติ',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -684,28 +698,30 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
           // log('📌 reserveList[0].appointmentAid: ${reserveList[0].appointmentAid}');
 
           setState(() {
-            isLoading = false;
+            _loadingData = false;
           });
         }
       } else {
         log('❌ No document found for docId=$docId');
         setState(() {
-          isLoading = false;
+          _loadingData = false;
         });
       }
     } catch (e) {
       log('❌ Error while fetching document: $e');
       setState(() {
-        isLoading = false;
+        _loadingData = false;
       });
     }
   }
 
   AppointmentClinic appointmentClinicFromJson(String str) {
     final jsonData = json.decode(str);
+    log("📦 Received JSON: $jsonData");
+
     if (jsonData is Map && jsonData['data'] != null) {
       return AppointmentClinic.fromJson(
-        Map<String, dynamic>.from(jsonData),
+        Map<String, dynamic>.from(jsonData['data']),
       );
     }
     throw Exception("Invalid JSON format");
@@ -840,6 +856,22 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     }
   }
 
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
+    try {
+      var res = await http.get(Uri.parse("$url/general/$generalEmail"));
+      if (res.statusCode == 200) {
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return GeneralPost.fromJson(jsonMap);
+      } else {
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
+    }
+  }
+
   Future<void> injectionAdd() async {
     // เช็คว่า reserveList มีข้อมูลไหม
     if (reserveList.isEmpty) {
@@ -911,11 +943,11 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       date: nextDate,
     );
 
-    await InsertionjectionRecord(appReq, imageUrl);
+    await InsertionjectionRecord(appReq, imageUrl, reserveList[0].docId);
   }
 
   Future<void> InsertionjectionRecord(
-      AppointmentPost appReq, String imageUrl) async {
+      AppointmentPost appReq, String imageUrl, String docId) async {
     try {
       // ✅ แสดง loading ก่อนส่ง
       showDialog(
@@ -972,6 +1004,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
       // ✅ ตรวจสอบผลลัพธ์
       if (res.statusCode == 200 || res.statusCode == 201) {
+        // 2. ดึงข้อมูลของ reserve
+
         final Map<String, dynamic> appData = jsonDecode(res.body);
         log("📥 ตอบกลับจาก appointment: ${res.body}");
 
@@ -993,18 +1027,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
             .toList();
         final int oldAid = aids.isNotEmpty ? aids.first : 0;
 
-        // 1. ดึงวัคซีนล่าสุดจาก appointment ที่โหลดมา
-        final appointment = appointmentClinicFromJson(res.body);
-        String latestVaccine = '';
-        if (appointment.data.isNotEmpty) {
-          latestVaccine = appointment.data.first.vaccines ?? '';
-
-          // กรอกลง TextField (ถ้า controller ยังว่าง)
-          if (vaccineController.text.trim().isEmpty &&
-              latestVaccine.isNotEmpty) {
-            vaccineController.text = latestVaccine;
-          }
-        }
+        // ✅ ใช้ vaccine ที่ผู้ใช้กรอกมา (เพราะ API ไม่ส่งมา)
+        final String latestVaccine = vaccineController.text.trim();
 
         ClinicinjectionRecordPost injReq = ClinicinjectionRecordPost(
           oldAppointmentAid: oldAid == 0 ? null : oldAid,
@@ -1027,6 +1051,34 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         );
 
         if (injRes.statusCode == 200 || injRes.statusCode == 201) {
+          final doc = await FirebaseFirestore.instance
+              .collection('reserve')
+              .doc(docId)
+              .get();
+          if (doc.exists) {
+            final data = doc.data();
+            final generalEmail = data?['generalEmail'];
+            final clinicEmail = data?['clinicEmail'];
+
+            if (generalEmail != null) {
+              final generalUser = await getGeneral(generalEmail);
+              final userName = generalUser?.name;
+
+              if (userName != null) {
+                await sendNotificationInjectioncompleted(
+                    generalEmail, userName);
+                await sendClinicInjectioncompletedNotification(
+                    clinicEmail: clinicEmail,
+                    userName: box.read('clinicName'),
+                    date: data?['date'] ?? '',
+                    generalEmail: generalEmail);
+              } else {
+                log("⚠️ Missing userName from getGeneral()");
+              }
+            } else {
+              log("⚠️ Missing generalEmail in document");
+            }
+          }
           log('✅ บันทึก clinicinjectionRecord สำเร็จ');
           await updatestatus(reserveList[0].docId, 3);
           Navigator.of(context).pushReplacement(
@@ -1040,7 +1092,6 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
           );
         }
       } else {
-        // ❌ ถ้า appointment ไม่สำเร็จ
         log("❌ บันทึก appointment ไม่สำเร็จ: ${res.statusCode}");
         log("❌ ตอบกลับ: ${res.body}");
         showTopNotification(
@@ -1057,6 +1108,64 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         'เกิดข้อผิดพลาดในการเชื่อมต่อ',
         isSuccess: false,
       );
+    }
+  }
+
+  Future<void> sendNotificationInjectioncompleted(
+      String generalEmail, String userName) async {
+    final sql = Uri.parse("$url/reserve/notify/refuse/general-reponse");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'generalEmail': generalEmail,
+          'userName': userName,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
+    }
+  }
+
+  Future<void> sendClinicInjectioncompletedNotification({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required String date,
+  }) async {
+    final apiUrl = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+
+    final Map<String, dynamic> data = {
+      'clinicEmail': clinicEmail,
+      'generalEmail': generalEmail,
+      'userName': userName,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ ส่งแจ้งเตือนสำเร็จ: ${response.body}');
+      } else {
+        print('❌ เกิดข้อผิดพลาด: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
     }
   }
 

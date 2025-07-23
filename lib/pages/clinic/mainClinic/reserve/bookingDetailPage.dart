@@ -44,11 +44,13 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   List<ReserveClinicPost> todayList = [];
   List<ReserveClinicPost> yesterdayList = [];
   List<ReserveClinicPost> earlierList = [];
-  bool isLoading = true;
+  bool _loadingData = true;
   List<ClinicinjectionRecordPost>? vaccineHistory;
   final PageController _vaccinePageController = PageController();
   int _currentVaccineIndex = 0;
-
+  final Color primaryBrown = const Color(0xFF916B44);
+  final Color secondaryBrown = const Color(0xFFDBA871);
+  final Color lightBrown = const Color(0xFFE9CBAF);
   List<getInjection.Datum>? clinicRecord; // เก็บจาก injection list API
 
   List<dynamic> get combinedList {
@@ -64,6 +66,9 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
       getReserve(widget.docid);
+      setState(() {
+        _loadingData = false;
+      });
     });
   }
 
@@ -106,219 +111,535 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
           centerTitle: true,
           // backgroundColor: const Color(0xFF916B44),
         ),
-        body: SingleChildScrollView(
-            child: Container(
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: dogList.map((dog) {
-                return Container(
-                  width: screenWidth * 0.88,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE9CBAF)
-                        .withOpacity(0.2), // ✅ สีพื้นไม่ไล่
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      // เงาด้านล่าง ขอบเข้ม
-                      BoxShadow(
-                        color: const Color(0xFF916B44).withOpacity(0.15),
-                        blurRadius: 20,
-                        offset: const Offset(6, 6),
-                        spreadRadius: 1,
-                      ),
-                      // เงาด้านบน ขอบอ่อน
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.8),
-                        blurRadius: 10,
-                        offset: const Offset(-6, -6),
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
+        body: _loadingData
+            ? SizedBox(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : SingleChildScrollView(
+                child: Container(
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: dogList.map((dog) {
+                      return Container(
+                        width: screenWidth * 0.88,
+                        margin: const EdgeInsets.only(bottom: 24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE9CBAF)
+                              .withOpacity(0.2), // ✅ สีพื้นไม่ไล่
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            // เงาด้านล่าง ขอบเข้ม
+                            BoxShadow(
+                              color: const Color(0xFF916B44).withOpacity(0.15),
+                              blurRadius: 20,
+                              offset: const Offset(6, 6),
+                              spreadRadius: 1,
+                            ),
+                            // เงาด้านบน ขอบอ่อน
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.8),
+                              blurRadius: 10,
+                              offset: const Offset(-6, -6),
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFF916B44)
-                                            .withOpacity(0.1),
-                                        const Color(0xFFDBA871)
-                                            .withOpacity(0.1),
-                                      ],
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF916B44)
-                                            .withOpacity(0.2),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  padding: const EdgeInsets.all(4),
-                                  child: dog.image.isNotEmpty
-                                      ? ClipRRect(
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
                                           borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: Image.network(
-                                            dog.image,
-                                            width: 200,
-                                            height: 150,
-                                            fit: BoxFit.cover,
+                                              BorderRadius.circular(16),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              const Color(0xFF916B44)
+                                                  .withOpacity(0.1),
+                                              const Color(0xFFDBA871)
+                                                  .withOpacity(0.1),
+                                            ],
                                           ),
-                                        )
-                                      : Container(
-                                          width: 200,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                const Color(0xFF916B44)
-                                                    .withOpacity(0.1),
-                                                const Color(0xFFDBA871)
-                                                    .withOpacity(0.1),
-                                              ],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF916B44)
+                                                  .withOpacity(0.2),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
                                             ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.all(4),
+                                        child: dog.image.isNotEmpty
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  dog.image,
+                                                  width: 200,
+                                                  height: 150,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              )
+                                            : Container(
+                                                width: 200,
+                                                height: 150,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      const Color(0xFF916B44)
+                                                          .withOpacity(0.1),
+                                                      const Color(0xFFDBA871)
+                                                          .withOpacity(0.1),
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.pets,
+                                                  size: 80,
+                                                  color: Color(0xFF916B44),
+                                                ),
+                                              ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              const Color(0xFF916B44),
+                                              const Color(0xFFDBA871),
+                                            ],
                                           ),
-                                          child: const Icon(
-                                            Icons.pets,
-                                            size: 80,
-                                            color: Color(0xFF916B44),
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF916B44)
+                                                  .withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          dog.name,
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
                                           ),
                                         ),
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFF916B44),
-                                        const Color(0xFFDBA871),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF916B44)
-                                            .withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE9CBAF)
+                                              .withOpacity(0.3),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          border: Border.all(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'พันธุ์: ${dog.breed}   เพศ: ${dog.gender}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF916B44),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  child: Text(
-                                    dog.name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                ),
+                                const SizedBox(height: 24),
+                                Container(
+                                  height: 2,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        const Color(0xFF916B44)
+                                            .withOpacity(0.3),
+                                        Colors.transparent,
+                                      ],
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 6,
+                                const SizedBox(height: 24),
+
+                                /// 🧾 รายการข้อมูลสำคัญ
+                                _buildInfoRow('วันเกิด',
+                                    formatThaiDateTime(dog.birthday)),
+                                _buildInfoRow('สี', dog.color),
+                                _buildInfoRow('ตำหนิ', dog.defect),
+                                _buildInfoRow(
+                                    'โรคประจำตัว', dog.congentialDisease),
+                                _buildInfoRow(
+                                  'การทำหมัน',
+                                  (dog.sterilization.toString() == '1' ||
+                                          dog.sterilization
+                                                  .toString()
+                                                  .toLowerCase() ==
+                                              'true')
+                                      ? 'ทำหมันแล้ว'
+                                      : 'ยังไม่ทำหมัน',
+                                ),
+                                _buildInfoRow('ลักษณะขน', dog.hair),
+                                const SizedBox(height: 20),
+
+                                /// 💉 ประวัติการฉีดยา
+                                SizedBox(
+                                  height: 550,
+                                  width: double.infinity,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFF916B44)
+                                              .withOpacity(0.05),
+                                          const Color(0xFFDBA871)
+                                              .withOpacity(0.05),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFF916B44)
+                                            .withOpacity(0.2),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Header Row
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xFF916B44),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.history,
+                                                    color: Colors.white,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                const Text(
+                                                  'ประวัติการฉีดยา',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF916B44),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            if (clinicRecord != null &&
+                                                clinicRecord!.isNotEmpty)
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF916B44)
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.swipe_left,
+                                                        size: 16,
+                                                        color:
+                                                            Color(0xFF916B44)),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      '${(clinicRecord?.length ?? 0) + (vaccineHistory?.length ?? 0)} รายการ',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color:
+                                                            Color(0xFF916B44),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+
+                                        // Content Area
+                                        if (combinedList.isNotEmpty) ...[
+                                          // Navigation Controls
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              IconButton(
+                                                onPressed:
+                                                    _currentVaccineIndex > 0
+                                                        ? _previousVaccinePage
+                                                        : null,
+                                                icon: Icon(
+                                                  Icons.arrow_back_ios,
+                                                  color: _currentVaccineIndex >
+                                                          0
+                                                      ? const Color(0xFF916B44)
+                                                      : Colors.grey[400],
+                                                ),
+                                              ),
+                                              Text(
+                                                '${_currentVaccineIndex + 1} / ${combinedList.length}',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Color(0xFF916B44),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                onPressed:
+                                                    _currentVaccineIndex <
+                                                            combinedList
+                                                                    .length -
+                                                                1
+                                                        ? _nextVaccinePage
+                                                        : null,
+                                                icon: Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  color: _currentVaccineIndex <
+                                                          combinedList.length -
+                                                              1
+                                                      ? const Color(0xFF916B44)
+                                                      : Colors.grey[400],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // PageView for Cards
+                                          SizedBox(
+                                            height: 380,
+                                            child: PageView.builder(
+                                              controller:
+                                                  _vaccinePageController,
+                                              onPageChanged: (index) {
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _currentVaccineIndex =
+                                                        index;
+                                                  });
+                                                }
+                                              },
+                                              itemCount: combinedList.length,
+                                              itemBuilder: (context, index) {
+                                                final item =
+                                                    combinedList[index];
+
+                                                final vaccine = item
+                                                        is ClinicinjectionRecordPost
+                                                    ? item.vaccine
+                                                    : (item as Datum).vaccine;
+
+                                                final date = item
+                                                        is ClinicinjectionRecordPost
+                                                    ? item.date
+                                                    : (item as Datum).date;
+
+                                                final label = item
+                                                        is ClinicinjectionRecordPost
+                                                    ? item.vaccineLabel
+                                                    : (item as Datum)
+                                                        .vaccineLabel;
+
+                                                return Container(
+                                                  width: 280,
+                                                  margin: const EdgeInsets
+                                                      .symmetric(horizontal: 8),
+                                                  padding:
+                                                      const EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: const Color(
+                                                                0xFF916B44)
+                                                            .withOpacity(0.1),
+                                                        blurRadius: 8,
+                                                        offset:
+                                                            const Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      _buildInfoRow(
+                                                          'วัคซีน',
+                                                          vaccine ??
+                                                              'ไม่ระบุวัคซีน'),
+                                                      _buildInfoRow(
+                                                          'วันที่',
+                                                          formatThaiDateTime(
+                                                              date!)),
+                                                      const SizedBox(
+                                                          height: 12),
+                                                      Center(
+                                                        child: ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(16),
+                                                          child: Image.network(
+                                                            label ?? '',
+                                                            width: 200,
+                                                            height: 200,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder:
+                                                                (context, error,
+                                                                    stackTrace) {
+                                                              return Container(
+                                                                width: 200,
+                                                                height: 200,
+                                                                color: Colors
+                                                                    .grey[200],
+                                                                child: const Icon(
+                                                                    Icons
+                                                                        .image_not_supported),
+                                                              );
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 12),
+
+                                          // Page Indicators
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: List.generate(
+                                              combinedList.length,
+                                              (index) => AnimatedContainer(
+                                                duration: const Duration(
+                                                    milliseconds: 300),
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 4),
+                                                height: 8,
+                                                width: _currentVaccineIndex ==
+                                                        index
+                                                    ? 24
+                                                    : 8,
+                                                decoration: BoxDecoration(
+                                                  color: _currentVaccineIndex ==
+                                                          index
+                                                      ? const Color(0xFF916B44)
+                                                      : const Color(0xFF916B44)
+                                                          .withOpacity(0.3),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ] else
+                                          Expanded(
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: const [
+                                                  Icon(Icons.vaccines_outlined,
+                                                      size: 48,
+                                                      color: Colors.grey),
+                                                  SizedBox(height: 12),
+                                                  Text(
+                                                    'ไม่มีข้อมูลประวัติการฉีดยา',
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontStyle:
+                                                          FontStyle.italic,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
+                                ),
+                                const SizedBox(height: 24),
+
+                                /// 👨‍⚕️ ข้อมูลเจ้าของ
+                                Container(
+                                  padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE9CBAF)
-                                        .withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(15),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFFDBA871)
+                                            .withOpacity(0.05),
+                                        const Color(0xFF916B44)
+                                            .withOpacity(0.05),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: const Color(0xFF916B44)
                                           .withOpacity(0.2),
                                     ),
                                   ),
-                                  child: Text(
-                                    'พันธุ์: ${dog.breed}   เพศ: ${dog.gender}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF916B44),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            height: 2,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  const Color(0xFF916B44).withOpacity(0.3),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          /// 🧾 รายการข้อมูลสำคัญ
-                          _buildInfoRow(
-                              'วันเกิด', formatThaiDateTime(dog.birthday)),
-                          _buildInfoRow('สี', dog.color),
-                          _buildInfoRow('ตำหนิ', dog.defect),
-                          _buildInfoRow('โรคประจำตัว', dog.congentialDisease),
-                          _buildInfoRow(
-                            'การทำหมัน',
-                            (dog.sterilization.toString() == '1' ||
-                                    dog.sterilization
-                                            .toString()
-                                            .toLowerCase() ==
-                                        'true')
-                                ? 'ทำหมันแล้ว'
-                                : 'ยังไม่ทำหมัน',
-                          ),
-                          _buildInfoRow('ลักษณะขน', dog.hair),
-                          const SizedBox(height: 20),
-
-                          /// 💉 ประวัติการฉีดยา
-                          SizedBox(
-                            height: 550,
-                            width: double.infinity,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFF916B44).withOpacity(0.05),
-                                    const Color(0xFFDBA871).withOpacity(0.05),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      const Color(0xFF916B44).withOpacity(0.2),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Header Row
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -330,426 +651,183 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                                   BorderRadius.circular(8),
                                             ),
                                             child: const Icon(
-                                              Icons.history,
+                                              Icons.person,
                                               color: Colors.white,
                                               size: 20,
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
+                                          const SizedBox(width: 12),
                                           const Text(
-                                            'ประวัติการฉีดยา',
+                                            'ข้อมูลเจ้าของ',
                                             style: TextStyle(
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: Color(0xFF916B44),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      if (clinicRecord != null &&
-                                          clinicRecord!.isNotEmpty)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF916B44)
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.swipe_left,
-                                                  size: 16,
-                                                  color: Color(0xFF916B44)),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '${(clinicRecord?.length ?? 0) + (vaccineHistory?.length ?? 0)} รายการ',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFF916B44),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  // Content Area
-                                  if (combinedList.isNotEmpty) ...[
-                                    // Navigation Controls
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        IconButton(
-                                          onPressed: _currentVaccineIndex > 0
-                                              ? _previousVaccinePage
-                                              : null,
-                                          icon: Icon(
-                                            Icons.arrow_back_ios,
-                                            color: _currentVaccineIndex > 0
-                                                ? const Color(0xFF916B44)
-                                                : Colors.grey[400],
-                                          ),
-                                        ),
-                                        Text(
-                                          '${_currentVaccineIndex + 1} / ${combinedList.length}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Color(0xFF916B44),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        IconButton(
-                                          onPressed: _currentVaccineIndex <
-                                                  combinedList.length - 1
-                                              ? _nextVaccinePage
-                                              : null,
-                                          icon: Icon(
-                                            Icons.arrow_forward_ios,
-                                            color: _currentVaccineIndex <
-                                                    combinedList.length - 1
-                                                ? const Color(0xFF916B44)
-                                                : Colors.grey[400],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // PageView for Cards
-                                    SizedBox(
-                                      height: 380,
-                                      child: PageView.builder(
-                                        controller: _vaccinePageController,
-                                        onPageChanged: (index) {
-                                          if (mounted) {
-                                            setState(() {
-                                              _currentVaccineIndex = index;
-                                            });
-                                          }
-                                        },
-                                        itemCount: combinedList.length,
-                                        itemBuilder: (context, index) {
-                                          final item = combinedList[index];
-
-                                          final vaccine =
-                                              item is ClinicinjectionRecordPost
-                                                  ? item.vaccine
-                                                  : (item as Datum).vaccine;
-
-                                          final date =
-                                              item is ClinicinjectionRecordPost
-                                                  ? item.date
-                                                  : (item as Datum).date;
-
-                                          final label = item
-                                                  is ClinicinjectionRecordPost
-                                              ? item.vaccineLabel
-                                              : (item as Datum).vaccineLabel;
-
-                                          return Container(
-                                            width: 280,
-                                            margin: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(0xFF916B44)
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                _buildInfoRow('วัคซีน',
-                                                    vaccine ?? 'ไม่ระบุวัคซีน'),
-                                                _buildInfoRow('วันที่',
-                                                    formatThaiDateTime(date!)),
-                                                const SizedBox(height: 12),
-                                                Center(
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
-                                                    child: Image.network(
-                                                      label ?? '',
-                                                      width: 200,
-                                                      height: 200,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context,
-                                                          error, stackTrace) {
-                                                        return Container(
-                                                          width: 200,
-                                                          height: 200,
-                                                          color:
-                                                              Colors.grey[200],
-                                                          child: const Icon(Icons
-                                                              .image_not_supported),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 12),
-
-                                    // Page Indicators
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: List.generate(
-                                        combinedList.length,
-                                        (index) => AnimatedContainer(
-                                          duration:
-                                              const Duration(milliseconds: 300),
-                                          margin: const EdgeInsets.symmetric(
-                                              horizontal: 4),
-                                          height: 8,
-                                          width: _currentVaccineIndex == index
-                                              ? 24
-                                              : 8,
-                                          decoration: BoxDecoration(
-                                            color: _currentVaccineIndex == index
-                                                ? const Color(0xFF916B44)
-                                                : const Color(0xFF916B44)
-                                                    .withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ] else
-                                    Expanded(
-                                      child: Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: const [
-                                            Icon(Icons.vaccines_outlined,
-                                                size: 48, color: Colors.grey),
-                                            SizedBox(height: 12),
-                                            Text(
-                                              'ไม่มีข้อมูลประวัติการฉีดยา',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontStyle: FontStyle.italic,
-                                                fontSize: 16,
-                                              ),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF916B44)
+                                                  .withOpacity(0.1),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
                                             ),
                                           ],
                                         ),
+                                        child: (reserveList.isEmpty)
+                                            ? const Text('ไม่มีข้อมูลจอง')
+                                            : FutureBuilder<GeneralPost?>(
+                                                future: getGeneral(
+                                                    reserveList[0]
+                                                        .generalEmail),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return const CircularProgressIndicator();
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    return Text(
+                                                        'Error: ${snapshot.error}');
+                                                  } else if (!snapshot
+                                                      .hasData) {
+                                                    return const Text(
+                                                        'No data found');
+                                                  } else if (snapshot.data ==
+                                                          null ||
+                                                      snapshot.data!.username
+                                                          .isEmpty) {
+                                                    return const Text(
+                                                        'ไม่มีข้อมูลเจ้าของ');
+                                                  } else {
+                                                    final general =
+                                                        snapshot.data!;
+                                                    return Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        _buildInfoRow('ชื่อ',
+                                                            general.name),
+                                                        _buildInfoRow('นามสกุล',
+                                                            general.surname),
+                                                        _buildInfoRow(
+                                                            'เบอร์โทร',
+                                                            general.phone),
+                                                        _buildInfoRow('อีเมล',
+                                                            general.userEmail),
+                                                      ],
+                                                    );
+                                                  }
+                                                },
+                                              ),
                                       ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 30),
 
-                          /// 👨‍⚕️ ข้อมูลเจ้าของ
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFFDBA871).withOpacity(0.05),
-                                  const Color(0xFF916B44).withOpacity(0.05),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFF916B44).withOpacity(0.2),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                                // Edit Button with Pet Theme
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF916B44),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                        size: 20,
+                                    Expanded(
+                                      child: _buildPopupActionButton(
+                                        label: 'ปฏิเสธการจอง',
+                                        onPressed: () async {
+                                          Navigator.pop(context);
+                                          bool isConfirmed = await RejectDialog(
+                                              context, widget.docid);
+                                          if (!isConfirmed) {
+                                            log("ผู้ใช้ยกเลิกการบันทึก");
+                                            return;
+                                          }
+                                        },
+                                        isPrimary: false,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    const Text(
-                                      'ข้อมูลเจ้าของ',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF916B44),
+                                    Expanded(
+                                      child: _buildPopupActionButton(
+                                        label: 'ยืนยันการจอง',
+                                        onPressed: () async {
+                                          Navigator.pop(context);
+                                          bool isConfirmed =
+                                              await confirmDialog(
+                                                  context, widget.docid);
+                                          if (!isConfirmed) {
+                                            log("ผู้ใช้ยกเลิกการบันทึก");
+                                            return;
+                                          }
+                                          // _showAcceptDialog(docId);
+                                        },
+                                        isPrimary: true,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF916B44)
-                                            .withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: (reserveList.isEmpty)
-                                      ? const Text('ไม่มีข้อมูลจอง')
-                                      : FutureBuilder<GeneralPost?>(
-                                          future: getGeneral(
-                                              reserveList[0].generalEmail),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.connectionState ==
-                                                ConnectionState.waiting) {
-                                              return const CircularProgressIndicator();
-                                            } else if (snapshot.hasError) {
-                                              return Text(
-                                                  'Error: ${snapshot.error}');
-                                            } else if (!snapshot.hasData) {
-                                              return const Text(
-                                                  'No data found');
-                                            } else if (snapshot.data == null ||
-                                                snapshot
-                                                    .data!.username.isEmpty) {
-                                              return const Text(
-                                                  'ไม่มีข้อมูลเจ้าของ');
-                                            } else {
-                                              final general = snapshot.data!;
-                                              return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  _buildInfoRow(
-                                                      'ชื่อ', general.name),
-                                                  _buildInfoRow('นามสกุล',
-                                                      general.surname),
-                                                  _buildInfoRow('เบอร์โทร',
-                                                      general.phone),
-                                                  _buildInfoRow('อีเมล',
-                                                      general.userEmail),
-                                                ],
-                                              );
-                                            }
-                                          },
-                                        ),
-                                ),
+
+                                const SizedBox(height: 30),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 30),
-
-                          // Edit Button with Pet Theme
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      _showRejectDialog(
-                                          widget.docid); // เรียก Dialog ปฏิเสธ
-                                    },
-                                    icon: const Icon(Icons.cancel,
-                                        color: Colors.white),
-                                    label: const Text(
-                                      "ปฏิเสธคำขอ",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      elevation: 8,
-                                      shadowColor: Colors.red.withOpacity(0.4),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      _showAcceptDialog(
-                                          widget.docid); // เรียก Dialog ยืนยัน
-                                    },
-                                    icon: const Icon(Icons.check_circle,
-                                        color: Colors.white),
-                                    label: const Text(
-                                      "ยืนยันการจอง",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      elevation: 8,
-                                      shadowColor:
-                                          Colors.green.withOpacity(0.4),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 30),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
+                ),
+              )));
+  }
+
+  Widget _buildPopupActionButton({
+    required String label,
+    required VoidCallback onPressed,
+    required bool isPrimary,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          if (isPrimary)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              offset: Offset(0, 4),
+              blurRadius: 10,
+              spreadRadius: 1,
             ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary ? primaryBrown : Colors.grey[100],
+          foregroundColor: isPrimary ? Colors.white : Colors.grey[700],
+          elevation: 5, // ปิด elevation ของ ElevatedButton เอง
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: isPrimary
+                ? BorderSide.none
+                : BorderSide(color: Colors.grey[300]!, width: 1),
           ),
-        )));
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildInfoRow(String label, String? value) {
@@ -960,6 +1038,8 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   }
 
   Future<void> getReserve(String docId) async {
+    showLoadingDialog();
+
     try {
       final doc = await FirebaseFirestore.instance
           .collection('reserve')
@@ -1004,6 +1084,9 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     } catch (e) {
       log('❌ Error while fetching document: $e');
     }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
   }
 
   List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
@@ -1032,6 +1115,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   }
 
   Future<List<Datum>?> getInjectionList(int dogId, String date) async {
+    log("$dogId");
     try {
       final res =
           await http.get(Uri.parse("$url/clinicinjectionRecord/$dogId/$date"));
@@ -1169,7 +1253,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   Future<void> getdog(int dogId) async {
     try {
       log("🐶 Getting dog info for ID: $dogId");
-      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      var res = await http.get(Uri.parse("$url/dog/getdog/$dogId"));
       if (res.statusCode == 200) {
         dogList = dogDetailsPostFromJson(res.body);
         setState(() {});
@@ -1181,7 +1265,41 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     }
   }
 
+  DateTime? parseThaiDate(String dateStr) {
+    const Map<String, int> thaiMonths = {
+      'มกราคม': 1,
+      'กุมภาพันธ์': 2,
+      'มีนาคม': 3,
+      'เมษายน': 4,
+      'พฤษภาคม': 5,
+      'มิถุนายน': 6,
+      'กรกฎาคม': 7,
+      'สิงหาคม': 8,
+      'กันยายน': 9,
+      'ตุลาคม': 10,
+      'พฤศจิกายน': 11,
+      'ธันวาคม': 12,
+    };
+
+    try {
+      final parts = dateStr.split('-');
+      if (parts.length != 3) return null;
+
+      final day = int.parse(parts[0]);
+      final month = thaiMonths[parts[1].trim()];
+      final year = int.parse(parts[2]);
+
+      if (month == null) return null;
+
+      return DateTime(year, month, day);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<void> acceptrequest(String docId, int status) async {
+    showLoadingDialog();
+
     if (status == 0 || status == 2) {
       try {
         // 1. อัปเดต status
@@ -1236,6 +1354,9 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     } else {
       log('⚠️ Status not allowed to update: $status');
     }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
   }
 
   Future<GeneralPost?> getGeneral(String generalEmail) async {
@@ -1268,158 +1389,257 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   //   }
   // }
 
-  void _showAcceptDialog(String docid) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Color(0xFF916B44).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Icon(
-                Icons.check,
+  Future<bool> confirmDialog(BuildContext context, String docId) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
                 color: Color(0xFF916B44),
-                size: 32,
+                width: 2,
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'คุณต้องการยืนยันการนัดหมายนี้หรือไม่?',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'เมื่อตกลง การนัดหมายนี้จะถือว่ายืนยันแล้ว',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'ยกเลิก',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context, true);
-                      acceptrequest(docid, 2);
-                      // _acceptReservation();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF916B44),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('ตกลง'),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการขอจอง",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).pop(true);
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 2);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
-  void _showRejectDialog(String docid) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.red,
-                size: 32,
+  Future<bool> RejectDialog(BuildContext context, String docId) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: const Color.fromARGB(255, 203, 22, 9),
+                width: 2,
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'คุณต้องการปฏิเสธการนัดหมายนี้หรือไม่?',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'โปรดทราบว่าการดำเนินการนี้ไม่สามารถย้อนกลับได้',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'ยกเลิก',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context, true);
-                      acceptrequest(docid, 0);
-                      // _rejectReservation();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('ตกลง'),
+                const SizedBox(height: 16),
+                const Text(
+                  "ปฏิเสธการขอจอง!!!",
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    fontSize: 16,
+                    height: 1.4,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color.fromARGB(255, 203, 22, 9),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: const Color.fromARGB(255, 203, 22, 9),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 203, 22, 9)
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).pop(true);
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 0);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _acceptReservation() {
@@ -1444,5 +1664,55 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
       margin: const EdgeInsets.all(16),
       animationDuration: const Duration(milliseconds: 500),
     ).show(context);
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 }
