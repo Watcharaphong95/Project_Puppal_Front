@@ -38,10 +38,12 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
       appBar: AppBar(
         title: Text(
           'เปลี่ยนรหัสผ่าน',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Container(

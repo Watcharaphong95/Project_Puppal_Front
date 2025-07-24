@@ -10,10 +10,12 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/clinicSearch.dart';
 import 'package:puppal_application/model/clinicSearchRes.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/model/specialDoctorRes.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicTimeSelect.dart';
 import 'package:readmore/readmore.dart';
@@ -25,6 +27,7 @@ class ClinicsearchPage extends StatefulWidget {
   final String? reserveId;
   final DateTime date;
   final List<int> aid;
+  final Map<DateTime, List<Dog>>? dogData;
 
   const ClinicsearchPage(
       {super.key,
@@ -32,7 +35,8 @@ class ClinicsearchPage extends StatefulWidget {
       required this.vaccineName,
       required this.reserveId,
       required this.date,
-      required this.aid});
+      required this.aid,
+      required this.dogData});
 
   @override
   State<ClinicsearchPage> createState() => _ClinicsearchPageState();
@@ -67,6 +71,10 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
   TextEditingController searchClinicCtl = TextEditingController();
 
+  List<String> vaccinePastList = [];
+
+  String vaccinePast = '';
+
   @override
   void initState() {
     log(widget.dogId.toString());
@@ -74,6 +82,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     log(widget.date.toString());
     log('AID: ${widget.aid.toString()}');
     log('RESERVE: ${widget.reserveId.toString()}');
+    log(jsonEncode(widget.dogData?.map((date, dogs) => MapEntry(
+        date.toIso8601String(), dogs.map((d) => d.toJson()).toList()))));
     init();
     super.initState();
   }
@@ -103,9 +113,16 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: Color(0xFFDBA871),
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     'เลือกคลินิก',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+      //   ),
+      //   centerTitle: true,
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      // ),
       body: _loadingData
           ? Center(
               child: Column(
@@ -344,7 +361,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
   SafeArea showClinicResult() {
     return SafeArea(
       child: SizedBox(
-        height: _isDogInfoExpanded ? screenHeight * 0.19 : screenHeight * 0.43,
+        height: _isDogInfoExpanded
+            ? screenHeight * 0.5
+            : screenHeight * 0.5 - MediaQuery.of(context).padding.bottom,
         child: clinics.isEmpty
             ? Center(
                 child: Column(
@@ -425,16 +444,16 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                         borderRadius: BorderRadius.circular(16),
                         onTap: isClinicInteractable
                             ? () {
-                                Get.to(() => ClinictimeselectPage(
-                                      email: clinic.userEmail,
-                                      dogId: widget.dogId,
-                                      distance: clinic.distanceKm,
-                                      date: widget.date,
-                                      vaccineName: widget.vaccineName,
-                                      aid: widget.aid,
-                                      reserveId: widget.reserveId,
-                                      special: isSpecial,
-                                    ));
+                                AppNavigation.toWidget(ClinictimeselectPage(
+                                  email: clinic.userEmail,
+                                  dogId: widget.dogId,
+                                  distance: clinic.distanceKm,
+                                  date: widget.date,
+                                  vaccineName: widget.vaccineName,
+                                  aid: widget.aid,
+                                  reserveId: widget.reserveId,
+                                  special: isSpecial,
+                                ));
                               }
                             : null,
                         child: Stack(
@@ -1665,54 +1684,89 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                   border: Border.all(color: Colors.green.shade200),
                 ),
                 child: SingleChildScrollView(
-                  child: widget.vaccineName != ""
-                      ? ReadMoreText(
-                          widget.vaccineName
-                              .split(',')
-                              .map((e) => '• ${e.trim()}')
-                              .join('\n'),
-                          trimMode: TrimMode.Line,
-                          trimLines: 3,
-                          colorClickableText: Colors.transparent,
-                          trimCollapsedText: 'แสดงเพิ่มเติม',
-                          trimExpandedText: '\n\nย่อข้อความ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.green.shade700,
-                          ),
-                          moreStyle: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade600,
-                          ),
-                          lessStyle: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade600,
-                          ),
-                        )
-                      : ReadMoreText(
-                          "ไม่มีวัคซีน",
-                          trimMode: TrimMode.Line,
-                          trimLines: 3,
-                          colorClickableText: Colors.transparent,
-                          trimCollapsedText: 'แสดงเพิ่มเติม',
-                          trimExpandedText: '\n\nย่อข้อความ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.green.shade700,
-                          ),
-                          moreStyle: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade600,
-                          ),
-                          lessStyle: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade600,
-                          ),
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // แสดงวัคซีนปัจจุบัน
+                      widget.vaccineName.trim().isNotEmpty
+                          ? ReadMoreText(
+                              widget.vaccineName
+                                  .split(',')
+                                  .map((e) => '• ${e.trim()}')
+                                  .join('\n'),
+                              trimMode: TrimMode.Line,
+                              trimLines: 3,
+                              colorClickableText: Colors.transparent,
+                              trimCollapsedText: 'แสดงเพิ่มเติม',
+                              trimExpandedText: '\n\nย่อข้อความ',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.green.shade700,
+                              ),
+                              moreStyle: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade600,
+                              ),
+                              lessStyle: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red.shade600,
+                              ),
+                            )
+                          : Text(
+                              "ไม่มีวัคซีน",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+
+                      SizedBox(height: 12),
+
+                      // แสดงวัคซีนเก่า
+                      vaccinePast.trim().isNotEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "วัคซีนที่เลยกำหนด:",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                ReadMoreText(
+                                  vaccinePast
+                                      .split(',')
+                                      .map((e) => '• ${e.trim()}')
+                                      .join('\n'),
+                                  trimMode: TrimMode.Line,
+                                  trimLines: 3,
+                                  colorClickableText: Colors.transparent,
+                                  trimCollapsedText: 'แสดงเพิ่มเติม',
+                                  trimExpandedText: '\n\nย่อข้อความ',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  moreStyle: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  lessStyle: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade600,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SizedBox.shrink()
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1748,14 +1802,14 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
       if (an == lc) return -1;
       if (bn == lc) return 1;
-      return a.distanceKm.compareTo(b.distanceKm);
+      return 0;
     });
 
     setState(() {
       filterClinics = clinics;
       _loadingSearchData = false;
     });
-    log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
+    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   Future<void> searchClinicCurrentPosition() async {
@@ -1808,14 +1862,14 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
       if (an == lc) return -1;
       if (bn == lc) return 1;
-      return a.distanceKm.compareTo(b.distanceKm);
+      return 0;
     });
 
     setState(() {
       filterClinics = clinics;
       _loadingSearchData = false;
     });
-    log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
+    // log('clinic: ${jsonEncode(clinics.map((e) => e.toJson()).toList())}');
   }
 
   String getDogAge(String birthday) {
@@ -1858,7 +1912,20 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
       dog =
           jsonData.map<DogsGetEmail>((e) => DogsGetEmail.fromJson(e)).toList();
 
-      log(dog[0].name);
+      // log(dog[0].name);
+      if (widget.dogData != null) {
+        for (var entry in widget.dogData!.entries) {
+          List<Dog> dogData = entry.value;
+          for (var v in dogData) {
+            vaccinePastList
+                .addAll(v.vaccines.where((e) => e.trim().isNotEmpty));
+            if (v.aid != null) {
+              widget.aid.addAll(v.aid ?? []);
+            }
+          }
+        }
+      }
+      vaccinePast = vaccinePastList.join(', ');
     }
   }
 
@@ -1870,9 +1937,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
           .map<SpecialDoctorResponse>((e) => SpecialDoctorResponse.fromJson(e))
           .toList();
 
-      log('docSpecial: ${jsonEncode(docSpecial.map((e) => e.toJson()).toList())}');
+      // log('docSpecial: ${jsonEncode(docSpecial.map((e) => e.toJson()).toList())}');
     } else {
-      log(res.body);
+      // log(res.body);
     }
   }
 }

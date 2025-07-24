@@ -41,6 +41,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    log(dogCtl.birthday.value);
   }
 
   @override
@@ -50,7 +51,12 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text('เพิ่มรูปภาพสุนัข'),
+        title: Text(
+          'เพิ่มรูปภาพสุนัข',
+          style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Color(0xFFDBA871),
       ),
       body: SizedBox(
         width: screenWidth,
@@ -96,8 +102,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
               ),
               onPressed: () {
                 if (_imageFile == null) {
-                  showAlertConfirm(
-                    context: context,
+                  showAlertNoClose(
                     title: 'ไม่มีรูปโปรไฟล์',
                     message: 'กรุณาเลือกรูปก่อนทำการยืนยัน',
                   );
@@ -105,7 +110,6 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
                 }
 
                 showAlert(
-                  context: context,
                   title: 'ยืนยันรูปโปรไฟล์',
                   message: 'คุณต้องการยืนยันรูปโปรไฟล์นี้หรือไม่?',
                   onConfirm: confirmAvatarButton,
@@ -126,7 +130,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
   }
 
   void confirmAvatarButton() async {
-    showLoadingDialog(context, message: "กำลังโหลด...");
+    showLoadingDialog();
     await Supabase.instance.client.auth.signInWithPassword(
       email: '65011212077@msu.ac.th',
       password: '1234',
@@ -189,7 +193,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
         gender: dogCtl.gender.value,
         color: dogCtl.color.value,
         defect: dogCtl.defect.value,
-        birthday: dogCtl.birthday.value,
+        birthday: convertThaiDateToISO(dogCtl.birthday.value),
         congentialDisease: dogCtl.disease.value,
         sterilization: dogCtl.sterilization.value,
         hair: dogCtl.hair.value,
@@ -209,112 +213,52 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
       Get.back();
 
       if (res.statusCode == 201) {
-        showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFFFFF3F3),
-            title: Text(
-              "เพิ่มสุนัขสำเร็จ",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF795548),
-              ),
-            ),
-            content: Text(
-              "เพิ่มสุนัขสำเร็จแล้ว",
-              style: const TextStyle(color: Colors.black87),
-            ),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Get.to(() => GeneraldogPage());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF795548),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('ตกลง'),
-              ),
-            ],
-          ),
-        );
+        showAlertNoClose(
+            title: 'เพิ่มสุนัขสำเร็จแล้ว',
+            message: 'กดตกลงเพื่อกลับไปยังหน้าสุนัขของคุณ',
+            onConfirm: () {
+              Get.to(() => GeneraldogPage());
+            });
       } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFFFFF3F3),
-            title: Text(
-              "เกิดข้อผิดพลาด",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF795548),
-              ),
-            ),
-            content: Text(
-              "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
-              style: const TextStyle(color: Colors.black87),
-            ),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF795548),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('ตกลง'),
-              ),
-            ],
-          ),
-        );
+        showAlertNoClose(
+            title: 'เกิดข้อผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
       }
     }
 
     if (res.statusCode != 201) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "เกิดข้อผิดพลาด",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
+      showAlertNoClose(
+          title: 'เกิดข้อผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
     }
+  }
+
+  String convertThaiDateToISO(String thaiDate) {
+    Map<String, String> thaiMonths = {
+      'มกราคม': '01',
+      'กุมภาพันธ์': '02',
+      'มีนาคม': '03',
+      'เมษายน': '04',
+      'พฤษภาคม': '05',
+      'มิถุนายน': '06',
+      'กรกฎาคม': '07',
+      'สิงหาคม': '08',
+      'กันยายน': '09',
+      'ตุลาคม': '10',
+      'พฤศจิกายน': '11',
+      'ธันวาคม': '12',
+    };
+
+    // แยกวันที่ เดือน และปี
+    List<String> parts = thaiDate.split('-');
+    if (parts.length != 3) return ''; // เช็คความถูกต้อง
+
+    String day = parts[0].padLeft(2, '0'); // เติม 0 หน้าเลขวันถ้าจำเป็น
+    String monthName = parts[1];
+    String year = parts[2];
+
+    String? month = thaiMonths[monthName];
+    if (month == null) return ''; // ถ้าเดือนไม่ตรงกับที่กำหนด
+
+    return "$year-$month-$day";
   }
 
   Future<void> recordInsert() async {
@@ -409,29 +353,53 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
     }
   }
 
-  void showLoadingDialog(BuildContext context, {String? message}) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
-                Text(message ?? "Loading...",
-                    style: const TextStyle(fontSize: 16)),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 
@@ -474,90 +442,233 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
   }
 
   void showAlert({
-    required BuildContext context,
     required String title,
     required String message,
     VoidCallback? onConfirm,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF3F3),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548),
-          ),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
-            child: const Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF795548),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFA1887F),
+              ),
             ),
-            child: const Text('ตกลง'),
-          ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 
-  void showAlertConfirm({
-    required BuildContext context,
+  void showAlertNoClose({
     required String title,
     required String message,
-    VoidCallback? onConfirm,
+    VoidCallback? onConfirm, // Optional action
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF3F3),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548),
-          ),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF795548),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
+              ),
             ),
-            child: const Text('ตกลง'),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 }

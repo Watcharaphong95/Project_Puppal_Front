@@ -90,7 +90,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: isLoading
           ? Center(
@@ -286,66 +287,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                       ],
                     ),
                   ),
-
-                  // Dog Info Card
-                  Container(
-                    margin: EdgeInsets.all(16),
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF7FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: FaIcon(
-                            FontAwesomeIcons.syringe,
-                            color: Color(0xFF4299E1),
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "อายุ: ${getDogAge(dogBirthDay)}",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2D3748),
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'ไม่มีวัคซีนต้องได้รับในขณะนี้',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF718096),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Color(0xFFA0AEC0),
-                        ),
-                      ],
-                    ),
+                  SizedBox(
+                    height: screenHeight * 0.02,
                   ),
 
                   // Vaccine Records Section
@@ -462,7 +405,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                 ),
                                               ),
                                               title: Text(
-                                                record.injectionVaccine,
+                                                record.injectionVaccine ??
+                                                    'ไม่มีข้อมูลวัคซีน',
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -475,7 +419,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                 children: [
                                                   SizedBox(height: 4),
                                                   Text(
-                                                    record.clinicName.isNotEmpty
+                                                    (record.clinicName ?? '')
+                                                            .isNotEmpty
                                                         ? 'คลินิก: ${record.clinicName}'
                                                         : 'ไม่มีข้อมูลคลินิก',
                                                     style: TextStyle(
@@ -485,7 +430,9 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                   ),
                                                   SizedBox(height: 2),
                                                   Text(
-                                                    "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.injectionDate).toLocal())}",
+                                                    record.injectionDate != null
+                                                        ? "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.injectionDate!).toLocal())}"
+                                                        : "ไม่มีข้อมูลวันที่ฉีด",
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       color: Color(0xFF718096),
@@ -711,8 +658,10 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                           Expanded(
                             child: _buildEnhancedInfoCard(
                               title: 'วันที่ฉีด',
-                              content: _formatDate(
-                                  DateTime.parse(record.injectionDate)),
+                              content: record.injectionDate != null
+                                  ? _formatDate(
+                                      DateTime.parse(record.injectionDate!))
+                                  : 'ไม่ทราบ',
                               icon: Icons.calendar_today,
                               color: Color(0xFF2196F3),
                             ),
@@ -1139,7 +1088,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
               ),
               SizedBox(width: 8),
               Text(
-                'เปิด: ${record.open.substring(0, 5) ?? 'ไม่ระบุ'} - ปิด: ${record.close.substring(0, 5) ?? 'ไม่ระบุ'}',
+                'เปิด: ${record.open?.substring(0, 5) ?? 'ไม่ระบุ'} - ปิด: ${record.close?.substring(0, 5) ?? 'ไม่ระบุ'}',
                 style: TextStyle(fontSize: 14, color: Colors.black87),
               ),
             ],
@@ -1186,7 +1135,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       dogRecord = jsonData
           .map((e) => DogsRecordIdGet.fromJson(e as Map<String, dynamic>))
           .toList();
-      // log(res.body);
+      log(res.body);
     }
   }
 }

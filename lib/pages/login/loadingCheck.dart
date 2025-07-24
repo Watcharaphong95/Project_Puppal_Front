@@ -8,6 +8,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
 
@@ -38,6 +39,9 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
     });
     if (box.read('email') != null) {
       await updateFcm();
+      Get.offAll(() => GeneralMainBottomNavigate(
+            indexPage: 1,
+          ));
     }
   }
 
@@ -45,7 +49,24 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Color(0xFFDBA871),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'กำลังโหลด...',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

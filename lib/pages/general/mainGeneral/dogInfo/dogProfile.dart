@@ -287,10 +287,13 @@ class _DogprofilePageState extends State<DogprofilePage> {
         appBar: AppBar(
             title: Text(
               'โปรไฟล์สุนัข',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600),
             ),
             centerTitle: true,
-            backgroundColor: Color(0xFF916B44)),
+            backgroundColor: Color(0xFFDBA871)),
         body: _loadingData
             ? Center(
                 child: Column(

@@ -53,15 +53,17 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'คู่มือการเลี้ยงสุนัข',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
-        elevation: 0,
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     'คู่มือการเลี้ยงสุนัข',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+      //   ),
+      //   centerTitle: true,
+      //   iconTheme: IconThemeData(color: Colors.white),
+      //   backgroundColor: Color(0xFFDBA871),
+      //   elevation: 0,
+      // ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -90,7 +92,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -262,7 +264,7 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF916B44), Color(0xFFA1887F)],
+                    colors: [Color(0xFFDBA871), Color(0xFFF5D9A0)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -375,70 +377,70 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
               SizedBox(height: 20),
 
               // Emergency Tips Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          FontAwesomeIcons.triangleExclamation,
-                          color: Colors.red.shade600,
-                          size: 20,
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'เหตุฉุกเฉิน',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'หากสุนัขมีอาการป่วยฉับพลัน เช่น อาเจียนติดต่อกัน ท้องเสีย เบื่ออาหาร ชัก หรือหายใจลำบาก ให้รีบพาไปพบสัตวแพทย์ทันที',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.red.shade700,
-                        height: 1.4,
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade600,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(FontAwesomeIcons.phone,
-                                size: 16, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'เบอร์ฉุกเฉิน 1669',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
+              // Container(
+              //   width: double.infinity,
+              //   padding: EdgeInsets.all(20),
+              //   decoration: BoxDecoration(
+              //     color: Colors.red.shade50,
+              //     borderRadius: BorderRadius.circular(15),
+              //     border: Border.all(color: Colors.red.shade200),
+              //   ),
+              //   child: Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       Row(
+              //         children: [
+              //           Icon(
+              //             FontAwesomeIcons.triangleExclamation,
+              //             color: Colors.red.shade600,
+              //             size: 20,
+              //           ),
+              //           SizedBox(width: 10),
+              //           Text(
+              //             'เหตุฉุกเฉิน',
+              //             style: TextStyle(
+              //               fontSize: 18,
+              //               fontWeight: FontWeight.bold,
+              //               color: Colors.red.shade700,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       SizedBox(height: 10),
+              //       Text(
+              //         'หากสุนัขมีอาการป่วยฉับพลัน เช่น อาเจียนติดต่อกัน ท้องเสีย เบื่ออาหาร ชัก หรือหายใจลำบาก ให้รีบพาไปพบสัตวแพทย์ทันที',
+              //         style: TextStyle(
+              //           fontSize: 14,
+              //           color: Colors.red.shade700,
+              //           height: 1.4,
+              //         ),
+              //       ),
+              //       SizedBox(height: 15),
+              //       SizedBox(
+              //         width: double.infinity,
+              //         child: Container(
+              //           padding: EdgeInsets.symmetric(vertical: 12),
+              //           decoration: BoxDecoration(
+              //             color: Colors.red.shade600,
+              //             borderRadius: BorderRadius.circular(10),
+              //           ),
+              //           child: Row(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Icon(FontAwesomeIcons.phone,
+              //                   size: 16, color: Colors.white),
+              //               SizedBox(width: 8),
+              //               Text(
+              //                 'เบอร์ฉุกเฉิน 1669',
+              //                 style: TextStyle(color: Colors.white),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       )
+              //     ],
+              //   ),
+              // ),
 
               SizedBox(height: 30),
 

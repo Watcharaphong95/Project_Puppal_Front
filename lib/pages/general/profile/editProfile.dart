@@ -2,15 +2,20 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get/utils.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/model/generalLocationPut.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/generalProfilePost.dart';
 import 'package:puppal_application/model/userPost.dart';
@@ -46,10 +51,29 @@ class _EditprofilePageState extends State<EditprofilePage> {
   TextEditingController phoneCtl = TextEditingController();
   TextEditingController addressCtl = TextEditingController();
   TextEditingController imageCtl = TextEditingController();
+  TextEditingController latCtl = TextEditingController();
+  TextEditingController lngCtl = TextEditingController();
+
+  LatLng? selectedLatLng;
+  GoogleMapController? mapController;
+
+  Future<LatLng> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    return LatLng(position.latitude, position.longitude);
+  }
+
+  Set<Marker> markers = {};
 
   @override
   void initState() {
     init();
+    _getCurrentLocation().then((latLng) {
+      setState(() {
+        selectedLatLng = latLng;
+      });
+    });
     super.initState();
   }
 
@@ -68,11 +92,12 @@ class _EditprofilePageState extends State<EditprofilePage> {
       appBar: AppBar(
         title: Text(
           'แก้ไขโปรไฟล์',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
-        automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFF916B44),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _loadingData
           ? Center(
@@ -129,6 +154,10 @@ class _EditprofilePageState extends State<EditprofilePage> {
                                     fit: BoxFit.cover,
                                   ),
                                 ),
+                        ),
+                        Text(
+                          'กดที่รูปโปรไฟล์เพื่อเปลี่ยนรูป',
+                          style: TextStyle(color: Colors.grey),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,32 +369,83 @@ class _EditprofilePageState extends State<EditprofilePage> {
                             ),
                           ],
                         ),
+                        Container(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 10),
+                                Material(
+                                  elevation: 5,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    height: screenHeight * 0.55,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: selectedLatLng == null
+                                        ? Center(
+                                            child: CircularProgressIndicator())
+                                        : ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            child: Stack(children: [
+                                              GoogleMap(
+                                                onMapCreated: (controller) {
+                                                  mapController = controller;
+                                                },
+                                                myLocationEnabled: true,
+                                                myLocationButtonEnabled: true,
+                                                initialCameraPosition:
+                                                    CameraPosition(
+                                                  target: selectedLatLng!,
+                                                  zoom: 15,
+                                                ),
+                                                onCameraMove: (position) {
+                                                  selectedLatLng =
+                                                      position.target;
+                                                  _dataChange = true;
+                                                },
+                                                onCameraIdle: () {
+                                                  setState(() {});
+                                                },
+                                                markers: markers,
+                                                gestureRecognizers: <Factory<
+                                                    OneSequenceGestureRecognizer>>{
+                                                  Factory<
+                                                      OneSequenceGestureRecognizer>(
+                                                    () =>
+                                                        EagerGestureRecognizer(),
+                                                  ),
+                                                },
+                                              ),
+                                              Center(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          0, 0, 0, 35),
+                                                  child: Icon(
+                                                    Icons.location_pin,
+                                                    size: 40,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              )
+                                            ]),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         Padding(
                           padding: EdgeInsets.fromLTRB(
                               0, screenHeight * 0.01, 0, screenHeight * 0.05),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              SizedBox(
-                                width: screenWidth * 0.4,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        backgroundColor: Colors.grey.shade400),
-                                    onPressed: () {
-                                      Get.to(() => GeneralprofilePage());
-                                    },
-                                    child: Text(
-                                      'กลับ',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                              ),
                               SizedBox(
                                 width: screenWidth * 0.4,
                                 child: ElevatedButton(
@@ -410,7 +490,7 @@ class _EditprofilePageState extends State<EditprofilePage> {
   }
 
   Future<void> updateGeneralData() async {
-    showLoadingDialog(context, message: "กำลังโหลด...");
+    showLoadingDialog();
     if (_imageFile != null) {
       await uploadImage();
     }
@@ -429,16 +509,43 @@ class _EditprofilePageState extends State<EditprofilePage> {
       headers: {"Content-Type": "application/json; charset=utf-8"},
       body: generalEditProfilePostToJson(generalDataNew),
     );
+    if (res.statusCode == 200) {
+      Get.back();
+    } else {
+      showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
+    }
     log(res.statusCode.toString());
 
-    Get.back();
+    await updateLocation();
 
     setState(() {
       _dataChange = false;
     });
+  }
 
-    showAlertNoClose(
-        title: 'อัพเดทเสร็จสิ้น', message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว');
+  Future<void> updateLocation() async {
+    showLoadingDialog();
+    GeneralLocationPut generalNewLocation = GeneralLocationPut(
+        email: box.read('email'),
+        lat: selectedLatLng!.latitude.toString(),
+        lng: selectedLatLng!.longitude.toString());
+
+    var res = await http.put(Uri.parse("$url/general/location"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: generalLocationPutToJson(generalNewLocation));
+    log(res.statusCode.toString());
+
+    if (res.statusCode == 200) {
+      Get.back();
+      showAlertNoClose(
+          title: 'อัพเดทเสร็จสิ้น',
+          message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
+          onConfirm: () {
+            Get.off(() => GeneralprofilePage());
+          });
+    } else {
+      showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
+    }
   }
 
   Future<void> uploadImage() async {
@@ -480,7 +587,7 @@ class _EditprofilePageState extends State<EditprofilePage> {
       log("Confirmed with file: ${_imageFile!.path}");
       log("Public image URL: $publicUrl");
       imageCtl.text = publicUrl;
-
+      box.write('generalImage', publicUrl);
       // await insertToDB();
     } catch (e) {
       log("Error during upload: $e");
@@ -538,6 +645,16 @@ class _EditprofilePageState extends State<EditprofilePage> {
     phoneCtl.text = generalData.phone;
     addressCtl.text = generalData.address;
     imageCtl.text = generalData.image;
+
+    markers = {
+      Marker(
+        markerId: MarkerId('selected_location'),
+        position: LatLng(
+            double.parse(generalData.lat), double.parse(generalData.lng)),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: InfoWindow(title: 'ตำแหน่งที่อยู่ของคุณ'),
+      ),
+    };
 
     _loadingData = false;
     setState(() {});
@@ -687,80 +804,83 @@ class _EditprofilePageState extends State<EditprofilePage> {
   void showAlertNoClose({
     required String title,
     required String message,
+    VoidCallback? onConfirm, // Optional action
   }) {
     Get.defaultDialog(
       title: '',
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.all(16),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7CCC8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 24,
-              color: const Color(0xFFA1887F),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Color(0xFF8D6E63),
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            message,
-            style: const TextStyle(
-              color: Color(0xFFA1887F),
-              fontSize: 14,
-              height: 1.4,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Single confirm button
-          SizedBox(
-            width: double.infinity,
-            height: 40,
-            child: ElevatedButton(
-              onPressed: () => Get.back(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 2,
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
               ),
-              child: const Text(
-                'ตกลง',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
@@ -768,29 +888,53 @@ class _EditprofilePageState extends State<EditprofilePage> {
     );
   }
 
-  void showLoadingDialog(BuildContext context, {String? message}) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
-                Text(message ?? "Loading...",
-                    style: const TextStyle(fontSize: 16)),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

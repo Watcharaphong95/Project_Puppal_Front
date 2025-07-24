@@ -59,14 +59,16 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          'การแจ้งเตือน',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Color(0xFF916B44),
-      ),
+      // appBar: AppBar(
+      //   centerTitle: true,
+      //   title: Text(
+      //     'การแจ้งเตือน',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+      //   ),
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      // ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -95,7 +97,7 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -479,7 +481,7 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
 
   Future<void> getNotification() async {
     final docRef = FirebaseFirestore.instance
-        .collection('notify')
+        .collection('generalNotifications')
         .where('receiverEmail', isEqualTo: box.read('email'))
         .orderBy('createAt', descending: true);
 
@@ -488,10 +490,10 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
     notifyList =
         snapshot.docs.map((doc) => NotifyModel.fromMap(doc.data())).toList();
 
-    for (var n in notifyList) {
-      log(n.message);
-      log(n.createAt.toString());
-    }
+    // for (var n in notifyList) {
+    //   log(n.message);
+    //   log(n.createAt.toString());
+    // }
   }
 
   void showAlert({

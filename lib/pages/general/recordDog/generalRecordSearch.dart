@@ -63,14 +63,15 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'ประวัติการฉีดยา',
-            style: TextStyle(color: Colors.white),
-          ),
-          centerTitle: true,
-          backgroundColor: Color(0xFF916B44),
-        ),
+        // appBar: AppBar(
+        //   title: Text(
+        //     'ประวัติการฉีดยา',
+        //     style: TextStyle(color: Colors.white),
+        //   ),
+        //   centerTitle: true,
+        //   backgroundColor: Color(0xFFDBA871),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        // ),
         drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
@@ -99,7 +100,7 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: Color(0xFFDBA871),
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),

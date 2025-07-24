@@ -51,10 +51,12 @@ class _CheckotpPageState extends State<CheckotpPage> {
       appBar: AppBar(
         title: Text(
           'เช็ครหัส OTP',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Container(

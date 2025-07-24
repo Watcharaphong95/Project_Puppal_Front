@@ -18,6 +18,7 @@ import 'package:puppal_application/model/dogAppointmentEmailGet.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
 import 'package:puppal_application/model/dogsIdGet.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -28,6 +29,7 @@ import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.d
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:puppal_application/pages/general/reservePage/dogSelect.dart';
 import 'package:puppal_application/pages/general/reservePage/reserveInfo.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:puppal_application/services/changeNotifier.dart';
 import 'package:puppal_application/testFireStore.dart';
@@ -102,6 +104,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     });
     await getAppointmentEmail();
     events = getEventsForDay(_selectedDay);
+    if (!mounted) return;
     setState(() {
       _loadingData = false;
     });
@@ -119,14 +122,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         return provider;
       },
       child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text(
-            'หน้าหลัก',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Color(0xFF916B44),
-        ),
+        // appBar: AppBar(
+        //   centerTitle: true,
+        //   title: const Text(
+        //     'PUPPAL',
+        //     style: TextStyle(
+        //         color: Colors.white, fontWeight: FontWeight.w600, fontSize: 24),
+        //   ),
+        //   backgroundColor: Color(0xFFDBA871),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        // ),
         drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
@@ -155,7 +160,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: Color(0xFFDBA871),
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),
@@ -196,43 +201,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                     ),
                   ),
                   ListTile(
-                    leading: Icon(
-                      FontAwesomeIcons.house,
-                      color: Color(0xFF916b44),
-                    ),
-                    title: Text(
-                      'หน้าหลัก',
-                      style: TextStyle(
-                        color: Color(0xFF916b44),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(FontAwesomeIcons.solidBell,
-                        color: Color(0xFF916b44)),
-                    title: Text('การแจ้งเตือน'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => GeneralnotificationPage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(FontAwesomeIcons.dog, color: Color(0xFF916b44)),
-                    title: Text('สุนัข'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => GeneraldogPage());
-                    },
-                  ),
-                  ListTile(
                     leading: Icon(FontAwesomeIcons.syringe,
                         color: Color(0xFF916b44)),
                     title: Text('ประวัติการฉีดยา'),
                     onTap: () {
                       Get.back();
-                      Get.to(() => GeneralrecordsearchPage());
+                      Get.offAll(() => GeneralMainBottomNavigate(indexPage: 3));
                     },
                   ),
                   ListTile(
@@ -496,14 +470,39 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                   showReserveInfoAlert(
                                                       context, e);
                                                 } else {
-                                                  Get.to(() => ClinicsearchPage(
-                                                        dogId: e.dogId,
-                                                        vaccineName: e.vaccines
-                                                            .join(', '),
-                                                        date: _selectedDay,
-                                                        aid: e.aid,
-                                                        reserveId: e.reserveId,
-                                                      ));
+                                                  AppNavigation.toWidget(
+                                                      ClinicsearchPage(
+                                                    dogId: e.dogId,
+                                                    vaccineName:
+                                                        e.vaccines.join(', '),
+                                                    date: _selectedDay,
+                                                    aid: e.aid,
+                                                    reserveId: e.reserveId,
+                                                    dogData: Map.fromEntries(
+                                                      eventMap.entries
+                                                          // 1. Keep only dates before now
+                                                          .where((entry) => entry
+                                                              .key
+                                                              .isBefore(DateTime
+                                                                  .now()))
+                                                          // 2. Map to new entries with filtered dog lists (only status == 0)
+                                                          .map((entry) =>
+                                                              MapEntry(
+                                                                entry.key,
+                                                                entry.value
+                                                                    .where((dog) =>
+                                                                        dog.status ==
+                                                                            0 &&
+                                                                        dog.dogId ==
+                                                                            e.dogId)
+                                                                    .toList(),
+                                                              ))
+                                                          // 3. Keep only entries where filtered list is not empty
+                                                          .where((entry) =>
+                                                              entry.value
+                                                                  .isNotEmpty),
+                                                    ),
+                                                  ));
                                                 }
                                               },
                                               child: ListTile(
@@ -542,8 +541,21 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                   elevation: 2,
                                   child: InkWell(
                                     onTap: () {
-                                      Get.to(() => DogselectPage(
+                                      // log(_selectedDay.toString());
+                                      final localSelectedDay = DateTime(
+                                        _selectedDay.year,
+                                        _selectedDay.month,
+                                        _selectedDay.day,
+                                      );
+                                      AppNavigation.toWidget(
+                                        DogselectPage(
                                             date: _selectedDay,
+                                            dogHasAppointment:
+                                                eventMap[localSelectedDay]
+                                                        ?.map(
+                                                            (dog) => dog.dogId)
+                                                        .toList() ??
+                                                    [],
                                             dogData: Map.fromEntries(
                                               eventMap.entries
                                                   // 1. Keep only dates before now
@@ -560,8 +572,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                   // 3. Keep only entries where filtered list is not empty
                                                   .where((entry) =>
                                                       entry.value.isNotEmpty),
-                                            ),
-                                          ));
+                                            )),
+                                      );
                                     },
                                     child: ListTile(
                                       title: Column(
@@ -769,6 +781,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
           if (change.type == DocumentChangeType.removed) {
             await getAppointmentEmail();
+            if (!mounted) return;
             setState(() {});
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
@@ -1246,12 +1259,26 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       final data = snapshot.data();
       if (data != null && data['status'] != 0) {
         await docRef.delete();
+        var notifyData = {
+          "clinicEmail": data['clinicEmail'],
+          "generalEmail": box.read('email'),
+          "userName": box.read('generalName'),
+          "date": DateFormat('d MMMM y เวลา HH:mm', 'th')
+              .format(DateTime.parse(data['date'].toString()).toLocal())
+        };
+
+        var resNotifyClinic = await http.post(
+          Uri.parse("$url/reserve/notify/clinic-reject"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: jsonEncode(notifyData),
+        );
       } else {
         log("Reserve already cancelled or invalid data");
       }
     } else {
       log("Document not found");
     }
+
     Get.back();
     Get.back();
   }
@@ -1340,10 +1367,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     // }
 
     buildEventMap(appointmentAll);
-    if (mounted) {
-      setState(() {});
-      log("🔄 appointmentAll updated with ${appointmentAll.length} items");
-    }
+    if (!mounted) return;
+    setState(() {});
+    // log("🔄 appointmentAll updated with ${appointmentAll.length} items");
   }
 
   List<AppointmentGetEmail> mergeAppointments({
@@ -1385,12 +1411,36 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
     // Add or merge dog in grouped map
     void addDogToGroup(DateTime date, Dog dog) {
-      final closeKey = findCloseDateKey(date);
+      if (dog.status != 0) {
+        // ⛔ No merging: add exactly by date
+        grouped.putIfAbsent(date, () => []).add(dog);
+        return;
+      }
+
+      // ✅ Merge only with status == 0 dogs and only into groups of status == 0
+      // Find a nearby date that contains status == 0 dogs only
+      DateTime? findCloseStatusZeroDateKey(DateTime target) {
+        for (var key in grouped.keys) {
+          final dogsOnDate = grouped[key]!;
+          final hasOnlyStatusZero = dogsOnDate.every((d) => d.status == 0);
+          if (hasOnlyStatusZero && key.difference(target).inDays.abs() <= 1) {
+            final midTimestamp =
+                (key.millisecondsSinceEpoch + target.millisecondsSinceEpoch) ~/
+                    2;
+            return DateTime.fromMillisecondsSinceEpoch(midTimestamp);
+          }
+        }
+        return null;
+      }
+
+      final closeKey = findCloseStatusZeroDateKey(date);
       final groupKey = closeKey ?? date;
 
       if (closeKey != null) {
         final keysToRemove = grouped.keys
-            .where((k) => k.difference(groupKey).inDays.abs() <= 1)
+            .where((k) =>
+                grouped[k]!.every((d) => d.status == 0) &&
+                k.difference(groupKey).inDays.abs() <= 1)
             .toList();
 
         final mergedDogs = <Dog>[];
@@ -1516,8 +1566,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         clinicLng: clinicData != null ? clinicData['lng'] as String : '',
       );
 
+      // final date = toDate(fs.date, source: 'firestoreData', id: fs.docId);
+      // addDogToGroup(date, dog);
+
       final date = toDate(fs.date, source: 'firestoreData', id: fs.docId);
-      addDogToGroup(date, dog);
+
+      if (fs.status == 0) {
+        addDogToGroup(date, dog); // 🔁 merge if status == 0
+      } else {
+        grouped.putIfAbsent(date, () => []).add(dog); // ❌ no merge
+      }
     }
 
     final firestoreAidSet = <int>{};
@@ -1535,7 +1593,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       if (aid != null && firestoreAidSet.contains(aid)) continue;
 
       final status = appointment['status'] as int? ?? 0;
-      if (status != 0) continue;
 
       final dogData = dogMap[appointment['dogId'] as int];
       if (dogData == null) {
@@ -1570,9 +1627,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         clinicLng: clinicData != null ? clinicData['lng'] as String : '',
       );
 
+      // final date = toDate(appointment['date'],
+      //     source: 'appointments', id: aid?.toString() ?? 'null');
+      // addDogToGroup(date, dog);
       final date = toDate(appointment['date'],
           source: 'appointments', id: aid?.toString() ?? 'null');
-      addDogToGroup(date, dog);
+      if (status == 0) {
+        addDogToGroup(date, dog);
+      } else {
+        grouped.putIfAbsent(date, () => []).add(dog);
+      }
     }
 
     // Convert grouped to list of AppointmentGetEmail
@@ -1637,6 +1701,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     eventMap.forEach((date, dogs) {
       dogs.sort((a, b) => a.status.compareTo(b.status));
     });
+    // eventMap.forEach((date, dogs) {
+    //   log('Date: $date');
+    //   for (var dog in dogs) {
+    //     log('  Dog: ${dog.toString()}');
+    //   }
+    // });
+    if (!mounted) return;
     setState(() {});
   }
 

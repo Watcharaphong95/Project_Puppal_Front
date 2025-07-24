@@ -15,6 +15,7 @@ import 'package:puppal_application/model/clinicSlotPost.dart';
 import 'package:puppal_application/model/clinicSlotsReq.dart';
 import 'package:puppal_application/model/clinicSlotsRes.dart';
 import 'package:puppal_application/model/reserveSpecialCheck.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -92,9 +93,16 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF916B44),
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     'เลือกเวลา',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+      //   ),
+      //   centerTitle: true,
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      // ),
       body: _loadingData
           ? Center(child: CircularProgressIndicator(color: Color(0xFFDBA871)))
           : CustomScrollView(
@@ -884,11 +892,15 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           };
         }
         await db.collection('reserve').add(data);
+
         showAlertNoClose(
             title: 'ส่งคำขอเรียบร้อยแล้ว',
             message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
             onConfirm: () {
-              Get.off(() => GeneralmainPage());
+              while (Get.isDialogOpen ?? false) {
+                Get.back();
+              }
+              AppNavigation.offAll(1);
             });
       }
       var notifyData = {
@@ -991,13 +1003,16 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           headers: {"Content-Type": "application/json; charset=utf-8"},
           body: jsonEncode(notifyData),
         );
-        Get.back();
+
         if (resNotifyClinic.statusCode == 200) {
           showAlertNoClose(
               title: 'ส่งคำขอเรียบร้อยแล้ว',
               message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
               onConfirm: () {
-                Get.off(() => GeneralmainPage());
+                while (Get.isDialogOpen ?? false) {
+                  Get.back();
+                }
+                AppNavigation.offAll(1);
               });
         } else {
           showAlertNoClose(

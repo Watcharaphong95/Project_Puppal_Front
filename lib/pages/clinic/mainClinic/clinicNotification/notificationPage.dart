@@ -515,7 +515,7 @@ class _NotificationpageState extends State<Notificationpage> {
     if (email == null) return;
 
     _reserveListener = FirebaseFirestore.instance
-        .collection('notify')
+        .collection('clinicNotifications')
         .where('receiverEmail', isEqualTo: email)
         .orderBy('createAt', descending: true)
         .snapshots()

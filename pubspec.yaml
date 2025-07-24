@@ -64,6 +64,7 @@ dependencies:
   flutter_local_notifications: ^19.3.0
   cloud_firestore: ^5.6.11
   flutter_launcher_icons: ^0.14.4
+  animated_notch_bottom_bar: ^1.0.3
 
 dev_dependencies:
   flutter_test:
