@@ -60,13 +60,17 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      getReserve(widget.docId);
-      setState(() {
-        _loadingData = false;
-      });
+    });
+    await getReserve(widget.docId);
+    setState(() {
+      _loadingData = false;
     });
   }
 
@@ -104,10 +108,45 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     screenHeight = MediaQuery.of(context).size.height;
     final combinedList = [...(clinicRecord ?? []), ...(vaccineHistory ?? [])];
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(
+            "รายละเอียดคำขอ",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
+
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               )
             : SingleChildScrollView(
                 child: Container(
@@ -1029,7 +1068,6 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
   }
 
   Future<void> getReserve(String docId) async {
-    showLoadingDialog();
     try {
       final doc = await FirebaseFirestore.instance
           .collection('reserve')
@@ -1093,9 +1131,6 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
       }
     } catch (e) {
       log('❌ Error while fetching document: $e');
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 

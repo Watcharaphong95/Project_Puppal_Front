@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:get/get.dart';
@@ -166,10 +167,11 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
           "กำหนดเวลาเปิด-ปิดคลินิก",
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: Color(0xFF916B44),
+            color: Colors.white,
           ),
         ),
-        // backgroundColor: primaryColor,
+        backgroundColor: secondaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
         elevation: 0,
         centerTitle: true,
         // leading: IconButton(
@@ -205,7 +207,7 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: secondaryColor,
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -335,7 +337,8 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
                     showAlert(
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
+                      onConfirm: () async {
+                        await FirebaseMessaging.instance.deleteToken();
                         box.erase();
                         Get.offAll(() => IndexPage());
                       },
@@ -348,7 +351,7 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
         ),
       ),
       body: Container(
-        color: Colors.white,
+        color: Color(0xFFFAF8F5),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: SingleChildScrollView(
@@ -755,11 +758,12 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, secondaryColor],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        // gradient: LinearGradient(
+        //   colors: [primaryColor, secondaryColor],
+        //   begin: Alignment.centerLeft,
+        //   end: Alignment.centerRight,
+        // ),
+        color: primaryColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

@@ -104,13 +104,44 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
     final combinedList = [...(clinicRecord ?? []), ...(vaccineHistory ?? [])];
     return Scaffold(
         appBar: AppBar(
-          title: const Text('ประวัติการฉีดวัคซีน'),
+          title: const Text(
+            "รายละเอียดประวัติการฉีดยา",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
+
+          elevation: 0,
           centerTitle: true,
-          // backgroundColor: const Color(0xFF916B44),
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
         ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               )
             : SingleChildScrollView(
                 child: Container(
@@ -958,7 +989,6 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
   }
 
   Future<void> getReserve(String docId) async {
-    showLoadingDialog();
     try {
       final doc = await FirebaseFirestore.instance
           .collection('reserve')
@@ -1004,9 +1034,6 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
       }
     } catch (e) {
       log('❌ Error while fetching document: $e');
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 

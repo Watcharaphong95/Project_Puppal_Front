@@ -205,15 +205,22 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "เพิ่มข้อมูลวัคซีน",
+          "บันทึกข้อมูลการฉีดวัคซีน",
           style: TextStyle(
-            color: Colors.black87,
             fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
       ),
       body: _loadingData
           ? SizedBox(
@@ -1143,7 +1150,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     required String userName,
     required String date,
   }) async {
-    final apiUrl = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+    final apiUrl =
+        Uri.parse("$url/reserve/notify/injectioncompleted/clinic-request");
 
     final Map<String, dynamic> data = {
       'clinicEmail': clinicEmail,

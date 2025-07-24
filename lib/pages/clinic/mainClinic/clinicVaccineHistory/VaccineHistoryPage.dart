@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -74,7 +75,25 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(
+            "ประวัติการฉีดวัคซีน",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: secondaryBrown,
+          iconTheme: IconThemeData(color: Colors.white),
+
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
@@ -103,7 +122,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: secondaryBrown,
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),
@@ -244,7 +263,8 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                       showAlert(
                         title: 'ออกจากระบบ?',
                         message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           box.erase();
                           Get.offAll(() => IndexPage());
                         },
@@ -257,10 +277,28 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
           ),
         ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               )
             : Container(
+                color: Color(0xFFFAF8F5),
                 child: Column(
                   children: [
                     // Calendar Section with Modern Card Design
@@ -1201,7 +1239,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
   }
 
   Future<void> getReserve() async {
-    showLoadingDialog();
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('reserve')
@@ -1254,9 +1291,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
       setState(() {
         _loadingData = false;
       });
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 

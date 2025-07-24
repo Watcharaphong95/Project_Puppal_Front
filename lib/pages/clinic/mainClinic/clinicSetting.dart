@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -62,205 +63,64 @@ class _ClinicsettingState extends State<Clinicsetting> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(),
-      drawer: Drawer(
-        child: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/indexBg.png'),
-              fit: BoxFit.cover,
+        appBar: AppBar(
+          title: const Text(
+            "การตั้งค่า",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
+        drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+              image: DecorationImage(
+                image: AssetImage('assets/images/indexBg.png'),
+                fit: BoxFit.cover,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(2, 2),
-                ),
-              ],
             ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          box.read('clinicImage'),
-                          width: screenWidth * 0.2,
-                          height: screenWidth * 0.2,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                width: screenWidth * 0.2,
-                                height: screenWidth * 0.2,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        box.read('clinicName') ?? "ผู้ใช้งาน",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
-                ),
-                ListTile(
-                  leading: Icon(Icons.system_security_update,
-                      color: Color(0xFF916b44)),
-                  title: Text('คำขอฉีดยา'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => VaccineRequestsPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.notifications, color: Color(0xFF916b44)),
-                  title: Text('แจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Notificationpage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                  title: Text('ประวัติการฉีดยา'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Vaccinehistorypage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.supervised_user_circle,
-                      color: Color(0xFF916b44)),
-                  title: Text('หมอประจำคลินิก'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Cliniclistdoctors());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                  title: Text('เวลาปิด-เปิด'),
-                  onTap: () => Get.to(() => Clinicopeninghours()),
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                  title: Text('ตั้งค่า'),
-                  onTap: () => Get.to(() => Clinicsetting()),
-                ),
-                ListTile(
-                  leading:
-                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                  title: Text('สลับโหมด'),
-                  onTap: () async {
-                    var resGeneral = await http.get(
-                        Uri.parse("$url/general/name/${box.read('email')}"));
-                    if (resGeneral.statusCode == 200) {
-                      showAlert(
-                        title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
-                        message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
-                        onConfirm: () {
-                          box.write('type', 'general');
-                          box.write('generalName',
-                              jsonDecode(resGeneral.body)['username']);
-                          box.write('generalImage',
-                              jsonDecode(resGeneral.body)['image']);
-                          log('Name ${box.read('generalName')}');
-                          Get.offAll(() => GeneralmainPage());
-                        },
-                      );
-                    } else {
-                      showAlert(
-                        title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
-                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-                        onConfirm: () {
-                          Get.back();
-                          Get.to(() => RegisterusergooglePage());
-                        },
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.redAccent),
-                  title: Text('ออกจากระบบ'),
-                  onTap: () {
-                    showAlert(
-                      title: 'ออกจากระบบ?',
-                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
-                        box.erase();
-                        Get.offAll(() => IndexPage());
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: _loadingData
-          ? SizedBox(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : Container(
-              height: screenHeight,
+            child: Container(
               decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/indexBg.png'),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                        Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                color: Colors.white.withOpacity(0.85),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: Offset(2, 2),
+                  ),
+                ],
               ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.05,
-                      vertical: screenHeight * 0.05),
-                  child: SizedBox(
-                    width: screenWidth * 0.9,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Color(0xFFDBA871),
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         ClipOval(
                           child: Image.network(
-                            avatarImage,
-                            width: screenWidth * 0.35,
-                            height: screenWidth * 0.35,
+                            box.read('clinicImage'),
+                            width: screenWidth * 0.2,
+                            height: screenWidth * 0.2,
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
@@ -268,193 +128,419 @@ class _ClinicsettingState extends State<Clinicsetting> {
                                 baseColor: Colors.grey[300]!,
                                 highlightColor: Colors.grey[100]!,
                                 child: Container(
-                                  width: screenWidth * 0.35,
-                                  height: screenWidth * 0.35,
+                                  width: screenWidth * 0.2,
+                                  height: screenWidth * 0.2,
                                   color: Colors.white,
                                 ),
                               );
                             },
                           ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        SizedBox(
-                          width: screenWidth * 0.6,
-                          child: Center(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 24),
-                            ),
+                        SizedBox(height: 10),
+                        Text(
+                          box.read('clinicName') ?? "ผู้ใช้งาน",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
-                                height: screenHeight * 0.075,
-                                width: screenWidth * 0.8,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Get.to(() => Clinicprofile());
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.edit_note,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'แก้ไขโปรไฟล์',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(
-                                        FontAwesomeIcons.chevronRight,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
-                                height: screenHeight * 0.075,
-                                width: screenWidth * 0.8,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Get.to(() => RecoverypasswordPage());
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.lock,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'เปลี่ยนรหัสผ่าน',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(
-                                        FontAwesomeIcons.chevronRight,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
-                                height: screenHeight * 0.075,
-                                width: screenWidth * 0.8,
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            FontAwesomeIcons.question,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'เกี่ยวกับ',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(
-                                        FontAwesomeIcons.chevronRight,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
-                                height: screenHeight * 0.075,
-                                width: screenWidth * 0.8,
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            FontAwesomeIcons.trash,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFFEF4444),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'ลบโปรไฟล์',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.red),
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(
-                                        FontAwesomeIcons.chevronRight,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        )
                       ],
                     ),
                   ),
-                ),
+                  ListTile(
+                    leading: Icon(Icons.home, color: Color(0xFF916b44)),
+                    title: Text('หน้าหลัก'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.system_security_update,
+                        color: Color(0xFF916b44)),
+                    title: Text('คำขอฉีดยา'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => VaccineRequestsPage());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(Icons.notifications, color: Color(0xFF916b44)),
+                    title: Text('แจ้งเตือน'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => Notificationpage());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                    title: Text('ประวัติการฉีดยา'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => Vaccinehistorypage());
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.supervised_user_circle,
+                        color: Color(0xFF916b44)),
+                    title: Text('หมอประจำคลินิก'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => Cliniclistdoctors());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                    title: Text('เวลาปิด-เปิด'),
+                    onTap: () => Get.to(() => Clinicopeninghours()),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                    title: Text('ตั้งค่า'),
+                    onTap: () => Get.to(() => Clinicsetting()),
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+                    title: Text('สลับโหมด'),
+                    onTap: () async {
+                      var resGeneral = await http.get(
+                          Uri.parse("$url/general/name/${box.read('email')}"));
+                      if (resGeneral.statusCode == 200) {
+                        showAlert(
+                          title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+                          message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
+                          onConfirm: () {
+                            box.write('type', 'general');
+                            box.write('generalName',
+                                jsonDecode(resGeneral.body)['username']);
+                            box.write('generalImage',
+                                jsonDecode(resGeneral.body)['image']);
+                            log('Name ${box.read('generalName')}');
+                            Get.offAll(() => GeneralmainPage());
+                          },
+                        );
+                      } else {
+                        showAlert(
+                          title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+                          message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+                          onConfirm: () {
+                            Get.back();
+                            Get.to(() => RegisterusergooglePage());
+                          },
+                        );
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.logout, color: Colors.redAccent),
+                    title: Text('ออกจากระบบ'),
+                    onTap: () {
+                      showAlert(
+                        title: 'ออกจากระบบ?',
+                        message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
+                          box.erase();
+                          Get.offAll(() => IndexPage());
+                        },
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
+          ),
+        ),
+        body: _loadingData
+            ? Container(
+                color: Color(0xFFFAF8F5),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
+                  ),
+                ),
+              )
+            : Container(
+                height: screenHeight,
+                decoration: BoxDecoration(
+                  color: Color(0xFFFAF8F5),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Header Section with Profile
+                      SafeArea(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(24, 40, 24, 40),
+                          child: Column(
+                            children: [
+                              // Profile Image
+                              Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    avatarImage,
+                                    width: screenWidth * 0.32,
+                                    height: screenWidth * 0.32,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Shimmer.fromColors(
+                                        baseColor: Color(0xFFE9CBAF),
+                                        highlightColor: Colors.white,
+                                        child: Container(
+                                          width: screenWidth * 0.32,
+                                          height: screenWidth * 0.32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                      width: screenWidth * 0.32,
+                                      height: screenWidth * 0.32,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFE9CBAF),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(height: 16),
+
+                              // Name
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  name,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF916B44),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Menu Section
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                        child: Column(
+                          children: [
+                            // Edit Profile
+                            _buildModernMenuItem(
+                              icon: Icons.edit_outlined,
+                              title: 'แก้ไขโปรไฟล์',
+                              subtitle: 'จัดการข้อมูลส่วนตัว',
+                              onTap: () {
+                                Get.to(() => Clinicprofile());
+                              },
+                              screenWidth: screenWidth,
+                            ),
+
+                            SizedBox(height: 16),
+
+                            // Change Password
+                            _buildModernMenuItem(
+                              icon: Icons.lock_outline,
+                              title: 'เปลี่ยนรหัสผ่าน',
+                              subtitle: 'อัปเดตรหัสผ่านของคุณ',
+                              onTap: () {
+                                Get.to(() => RecoverypasswordPage());
+                              },
+                              screenWidth: screenWidth,
+                            ),
+
+                            SizedBox(height: 16),
+
+                            // Delete Profile
+                            _buildModernMenuItem(
+                              icon: Icons.delete_outline,
+                              title: 'ลบโปรไฟล์',
+                              subtitle: 'ลบบัญชีผู้ใช้งาน',
+                              onTap: () {},
+                              screenWidth: screenWidth,
+                              isDangerous: true,
+                            ),
+
+                            SizedBox(height: 40),
+
+                            // Logout Button
+                            Container(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  // Handle logout
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Color(0xFF916B44),
+                                  elevation: 0,
+                                  side: BorderSide(
+                                    color: Color(0xFF916B44),
+                                    width: 2,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.logout,
+                                      size: 22,
+                                      color: Color(0xFF916B44),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'ออกจากระบบ',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ));
+  }
+
+// Modern Menu Item Widget
+  Widget _buildModernMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required double screenWidth,
+    bool isDangerous = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDangerous
+                ? Color(0xFFEF4444).withOpacity(0.2)
+                : Color(0xFFE9CBAF),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF916B44).withOpacity(0.05),
+              offset: Offset(0, 2),
+              blurRadius: 10,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon Container
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDangerous
+                    ? Color(0xFFEF4444).withOpacity(0.1)
+                    : Color(0xFFE9CBAF).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isDangerous ? Color(0xFFEF4444) : Color(0xFF916B44),
+                size: 24,
+              ),
+            ),
+
+            SizedBox(width: 16),
+
+            // Text Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          isDangerous ? Color(0xFFEF4444) : Color(0xFF916B44),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color:
+                          (isDangerous ? Color(0xFFEF4444) : Color(0xFF916B44))
+                              .withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Arrow Icon
+            Icon(
+              Icons.chevron_right,
+              color: isDangerous
+                  ? Color(0xFFEF4444).withOpacity(0.5)
+                  : Color(0xFFDBA871),
+              size: 24,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

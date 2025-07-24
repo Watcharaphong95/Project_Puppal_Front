@@ -56,14 +56,19 @@ class _CliniceditprofileState extends State<EitprofilePage> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-      searchclinic();
-      _requestLocationPermission();
-      setState(() {
-        _loadingData = false;
-      });
+  }
+
+  void init() async {
+    final config = await Configuration.getConfig();
+    url = config['apiEndPoint'];
+
+    await searchclinic(); // <- เรียกหลังจาก url ได้ค่าแล้ว
+    await _requestLocationPermission();
+
+    setState(() {
+      _loadingData = false;
     });
   }
 
@@ -72,10 +77,45 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(
+            "แก้ไขข้อมูลคลินิก",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
+
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               )
             : SingleChildScrollView(
                 child: Container(
@@ -461,45 +501,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                                                       ),
                                               ),
                                             ),
-                                            // THIS IS THE LAT LNG FOR ONLY DEBUGGING PURPOSES
-                                            // Padding(
-                                            //   padding: EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
-                                            //   child: SizedBox(
-                                            //     width: screenWidth,
-                                            //     child: Column(
-                                            //       crossAxisAlignment: CrossAxisAlignment.center,
-                                            //       children: [
-                                            //         SizedBox(
-                                            //           width: screenWidth * 0.5,
-                                            //           child: Card(
-                                            //             color: Color(0xFF916B44),
-                                            //             child: Padding(
-                                            //               padding: const EdgeInsets.all(20.0),
-                                            //               child: Column(
-                                            //                 children: [
-                                            //                   Text(
-                                            //                     selectedLatLng != null
-                                            //                         ? 'Lat: ${selectedLatLng!.latitude.toStringAsFixed(4)}'
-                                            //                         : 'กรุณาเลือกตำแหน่ง',
-                                            //                     style: TextStyle(
-                                            //                         fontSize: 16, color: Colors.white),
-                                            //                   ),
-                                            //                   Text(
-                                            //                     selectedLatLng != null
-                                            //                         ? 'Lng: ${selectedLatLng!.longitude.toStringAsFixed(4)}'
-                                            //                         : 'กรุณาเลือกตำแหน่ง',
-                                            //                     style: TextStyle(
-                                            //                         fontSize: 16, color: Colors.white),
-                                            //                   ),
-                                            //                 ],
-                                            //               ),
-                                            //             ),
-                                            //           ),
-                                            //         ),
-                                            //       ],
-                                            //     ),
-                                            //   ),
-                                            // ),
                                             Padding(
                                               padding: EdgeInsets.fromLTRB(0,
                                                   screenHeight * 0.075, 0, 0),
@@ -630,6 +631,7 @@ class _CliniceditprofileState extends State<EitprofilePage> {
               ));
   }
 
+  // Modern Info Field Widget (Doctor Registration Style)
   Widget _buildCleanInfoField({
     required IconData icon,
     required String label,
@@ -639,23 +641,33 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF916B44),
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Color(0xFFFAF8F5),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: Color(0xFFE9CBAF),
-              width: 1,
+              width: 1.5,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
           ),
           child: TextField(
             controller: controller,
@@ -663,13 +675,19 @@ class _CliniceditprofileState extends State<EitprofilePage> {
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(12),
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Icon(
                   icon,
-                  color: Color(0xFFDBA871),
+                  color: Color(0xFF916B44),
                   size: 20,
                 ),
               ),
@@ -679,8 +697,10 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                 color: Color(0xFF916B44).withOpacity(0.5),
                 fontSize: 16,
               ),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: maxLines > 1 ? 18 : 18,
+              ),
             ),
           ),
         ),
@@ -688,7 +708,7 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     );
   }
 
-// Clean Number Selector Widget
+// Modern Number Selector Widget (Doctor Registration Style)
   Widget _buildCleanNumberSelector({
     required IconData icon,
     required String label,
@@ -698,33 +718,54 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF916B44),
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Color(0xFFFAF8F5),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: Color(0xFFE9CBAF),
-              width: 1,
+              width: 1.5,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: Color(0xFFDBA871),
-                size: 20,
+              // Icon Container
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
               ),
+
               const SizedBox(width: 16),
+
+              // Label and Controls
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -733,11 +774,13 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                       'จำนวน',
                       style: TextStyle(
                         fontSize: 16,
+                        fontWeight: FontWeight.w500,
                         color: Color(0xFF916B44),
                       ),
                     ),
                     Row(
                       children: [
+                        // Decrease Button
                         GestureDetector(
                           onTap: () {
                             if (selectedValue > 1) {
@@ -745,21 +788,47 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                             }
                           },
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
-                              color: Color(0xFFE9CBAF),
-                              borderRadius: BorderRadius.circular(8),
+                              color: selectedValue > 1
+                                  ? Color(0xFFE9CBAF)
+                                  : Color(0xFFE9CBAF).withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: selectedValue > 1
+                                  ? [
+                                      BoxShadow(
+                                        color:
+                                            Color(0xFF916B44).withOpacity(0.1),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : [],
                             ),
                             child: Icon(
                               Icons.remove,
-                              color: Color(0xFF916B44),
+                              color: selectedValue > 1
+                                  ? Color(0xFF916B44)
+                                  : Color(0xFF916B44).withOpacity(0.5),
                               size: 18,
                             ),
                           ),
                         ),
+
+                        // Number Display
                         Container(
                           margin: EdgeInsets.symmetric(horizontal: 16),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFAF8F5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Color(0xFFE9CBAF),
+                              width: 1,
+                            ),
+                          ),
                           child: Text(
                             selectedValue.toString(),
                             style: TextStyle(
@@ -769,16 +838,25 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                             ),
                           ),
                         ),
+
+                        // Increase Button
                         GestureDetector(
                           onTap: () {
                             onChanged(selectedValue + 1);
                           },
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: Color(0xFF916B44),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF916B44).withOpacity(0.3),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
                             ),
                             child: Icon(
                               Icons.add,
@@ -879,175 +957,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
         ),
       ),
     );
-  }
-
-// Enhanced Number Selector Widget
-  Widget _buildEnhancedNumberSelector({
-    required IconData icon,
-    required String label,
-    required double screenHeight,
-    required int selectedValue,
-    required Function(int?) onChanged,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFFE9CBAF).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Color(0xFFE9CBAF).withOpacity(0.5),
-          width: 1.5,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF916B44), Color(0xFFDBA871)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFF916B44).withOpacity(0.3),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF916B44),
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          if (selectedValue > 1) {
-                            onChanged(selectedValue - 1);
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF916B44),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF916B44).withOpacity(0.3),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.remove,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Color(0xFFE9CBAF),
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          selectedValue.toString(),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF916B44),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          onChanged(selectedValue + 1);
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF916B44),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF916B44).withOpacity(0.3),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> moveToAddress(String address) async {
-    try {
-      List<Location> locations = await locationFromAddress(address);
-      if (locations.isNotEmpty) {
-        LatLng latLng = LatLng(locations[0].latitude, locations[0].longitude);
-
-        if (mapController != null) {
-          mapController!.animateCamera(
-            CameraUpdate.newLatLngZoom(latLng, 15),
-          );
-
-          setState(() {
-            selectedLatLng = latLng;
-          });
-
-          log("📍 ย้ายแผนที่ไปที่: $latLng");
-        } else {
-          print("⚠️ mapController ยังไม่ถูกกำหนดค่า");
-        }
-      } else {
-        print("❌ ไม่พบพิกัดจากที่อยู่ที่ระบุ");
-      }
-    } catch (e) {
-      print("❌ ไม่สามารถค้นหาที่อยู่ได้: $e");
-    }
   }
 
   Widget _buildNumberSelector({
@@ -1283,8 +1192,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
       ClinicEditProfilePost.fromJson(json.decode(str)[0]);
 
   Future<void> searchclinic() async {
-    showLoadingDialog();
-
     final res =
         await http.get(Uri.parse("$url/clinic/profile/${box.read('email')}"));
     if (res.statusCode == 200) {
@@ -1328,9 +1235,6 @@ class _CliniceditprofileState extends State<EitprofilePage> {
       setState(() {
         _loadingData = false;
       });
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 

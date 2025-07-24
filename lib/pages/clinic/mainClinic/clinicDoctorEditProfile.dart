@@ -76,13 +76,18 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFFDBA871),
           elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black),
-          title: Text(
-            'แก้ไขข้อมูลคลินิก',
-            style: TextStyle(color: Colors.black, fontSize: 20),
+          centerTitle: true,
+          title: const Text(
+            "แก้ไขโปรไฟล์คุณหมอ",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
           ),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: _loadingData
             ? SizedBox(

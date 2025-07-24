@@ -53,113 +53,24 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      appBar: AppBar(),
-      drawer: Drawer(
-        child: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/indexBg.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(2, 2),
-                ),
-              ],
-            ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.person, size: 50, color: Colors.white),
-                      SizedBox(height: 10),
-                      Text(
-                        box.read('email') ?? "ผู้ใช้งาน",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
-                  onTap: () {
-                    Get.to(() => ClinicmainPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.system_security_update,
-                      color: Color(0xFF916b44)),
-                  title: Text('คำขอฉีดยา'),
-                  onTap: () {
-                    Get.to(() => VaccineRequestsPage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                  title: Text('ประวัติการฉีดยา'),
-                ),
-                ListTile(
-                  leading: Icon(Icons.supervised_user_circle,
-                      color: Color(0xFF916b44)),
-                  title: Text('หมอประจำคลินิก'),
-                  onTap: () {
-                    Get.to(() => Clinicadddoctor());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                  title: Text('เวลาปิด-เปิด'),
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                  title: Text('ตั้งค่า'),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.redAccent),
-                  title: Text('ออกจากระบบ'),
-                  onTap: () {
-                    showAlert(
-                      context: context,
-                      title: 'ออกจากระบบ?',
-                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
-                        box.erase();
-                        Get.to(() => IndexPage());
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
+      appBar: AppBar(
+        title: const Text(
+          "เพิ่มรูปภาพคุณหมอ",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
           ),
         ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
       ),
       body: SizedBox(
         width: screenWidth,
@@ -203,9 +114,9 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
                     borderRadius: BorderRadius.circular(10)),
                 backgroundColor: const Color(0xFF916b44),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (_imageFile == null) {
-                  showAlertConfirm(
+                  showAlert(
                     context: context,
                     title: 'ไม่มีรูปคุณหมอ',
                     message: 'กรุณาเลือกรูปก่อนทำการยืนยัน',
@@ -213,12 +124,12 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
                   return;
                 }
 
-                showAlert(
-                  context: context,
-                  title: 'ยืนยันรูปคุณหมอ',
-                  message: 'คุณต้องการยืนยันรูปคุณหมอนี้หรือไม่?',
-                  onConfirm: confirmAvatarButton,
-                );
+                bool confirmed = await confirmDialog(context);
+
+                if (confirmed) {
+                  // ถ้าผู้ใช้กดยืนยัน
+                  confirmAvatarButton(); // <-- ใส่ฟังก์ชันที่คุณต้องการทำหลังจากยืนยัน
+                }
               },
               child: const Text(
                 'ยืนยันรูปคุณหมอ',
@@ -235,7 +146,9 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
   }
 
   void confirmAvatarButton() async {
-    showLoadingDialog(context, message: "กำลังโหลด...");
+    confirmDialog(
+      context,
+    );
     await Supabase.instance.client.auth.signInWithPassword(
       email: '65011212077@msu.ac.th',
       password: '1234',
@@ -324,30 +237,119 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
     );
   }
 
-  void showLoadingDialog(BuildContext context, {String? message}) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
+  // void showLoadingDialog(BuildContext context, {String? message}) {
+  //   showDialog(
+  //     barrierDismissible: false,
+  //     context: context,
+  //     builder: (context) {
+  //       return Dialog(
+  //         backgroundColor: Colors.white,
+  //         shape:
+  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(20.0),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               const CircularProgressIndicator(),
+  //               const SizedBox(height: 20),
+  //               Text(message ?? "Loading...",
+  //                   style: const TextStyle(fontSize: 16)),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  Future<bool> confirmDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(message ?? "Loading...",
-                    style: const TextStyle(fontSize: 16)),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการเลือกรูปภาพ",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันการเลือกรูปภาพนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("ยกเลิก"),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ) ??
+        false;
   }
 
   void showAlert({
@@ -397,44 +399,44 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
     );
   }
 
-  void showAlertConfirm({
-    required BuildContext context,
-    required String title,
-    required String message,
-    VoidCallback? onConfirm,
-  }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF3F3),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548),
-          ),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF795548),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('ตกลง'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void showAlertConfirm({
+  //   required BuildContext context,
+  //   required String title,
+  //   required String message,
+  //   VoidCallback? onConfirm,
+  // }) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       backgroundColor: const Color(0xFFFFF3F3),
+  //       title: Text(
+  //         title,
+  //         style: const TextStyle(
+  //           fontWeight: FontWeight.bold,
+  //           color: Color(0xFF795548),
+  //         ),
+  //       ),
+  //       content: Text(
+  //         message,
+  //         style: const TextStyle(color: Colors.black87),
+  //       ),
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  //       actions: [
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             if (onConfirm != null) onConfirm();
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: const Color(0xFF795548),
+  //             foregroundColor: Colors.white,
+  //             shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(10)),
+  //           ),
+  //           child: const Text('ตกลง'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

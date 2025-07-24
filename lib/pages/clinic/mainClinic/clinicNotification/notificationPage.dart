@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -102,38 +103,22 @@ class _NotificationpageState extends State<Notificationpage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Center(
-            child: Padding(
-          padding: const EdgeInsets.only(right: 35),
-          child: const Text(
-            'การแจ้งเตือน',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
+        title: const Text(
+          "คำขอฉีดวัคซีน",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
           ),
-        )),
-        // backgroundColor: const Color(0xFF916B44),
-        // actions: [
-        //   if (unreadCount > 0)
-        //     TextButton(
-        //       onPressed: () {
-        //         setState(() {
-        //           for (var notification in notifications) {
-        //             notification.isRead = true;
-        //           }
-        //         });
-        //       },
-        //       child: const Text(
-        //         'อ่านทั้งหมด',
-        //         style: TextStyle(
-        //           color: Colors.white,
-        //           fontWeight: FontWeight.w600,
-        //         ),
-        //       ),
-        //     ),
-        // ],
+        ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
       ),
       drawer: Drawer(
         child: Container(
@@ -163,7 +148,7 @@ class _NotificationpageState extends State<Notificationpage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -303,7 +288,8 @@ class _NotificationpageState extends State<Notificationpage> {
                     showAlert(
                       title: 'ออกจากระบบ?',
                       message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () {
+                      onConfirm: () async {
+                        await FirebaseMessaging.instance.deleteToken();
                         box.erase();
                         Get.offAll(() => IndexPage());
                       },

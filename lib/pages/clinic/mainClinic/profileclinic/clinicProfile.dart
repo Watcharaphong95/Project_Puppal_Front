@@ -37,14 +37,19 @@ class _ClinicprofileState extends State<Clinicprofile> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-      searchclinic();
-      _requestLocationPermission();
-      setState(() {
-        _loadingData = false;
-      });
+  }
+
+  void init() async {
+    final config = await Configuration.getConfig();
+    url = config['apiEndPoint'];
+
+    await searchclinic(); // <- เรียกหลังจาก url ได้ค่าแล้ว
+    await _requestLocationPermission();
+
+    setState(() {
+      _loadingData = false;
     });
   }
 
@@ -53,51 +58,87 @@ class _ClinicprofileState extends State<Clinicprofile> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "ข้อมูลคลินิก",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
+      ),
       body: _loadingData
-          ? SizedBox(
-              child: Center(child: CircularProgressIndicator()),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลด...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             )
           : SingleChildScrollView(
               child: Container(
-                decoration: BoxDecoration(),
+                decoration: BoxDecoration(
+                  color: Color(0xFFFAF8F5),
+                ),
                 child: Column(
                   children: clinicList.map((clinic) {
                     return Container(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                          horizontal: 20, vertical: 12),
                       child: Column(
                         children: [
-                          const SizedBox(height: 20),
-                          // Profile Header with Pet Theme
+                          const SizedBox(height: 30),
+
+                          // Elegant Profile Section
                           Container(
-                            padding: const EdgeInsets.all(4),
+                            width: double.infinity,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              // color: Colors.white,
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
-                                // BoxShadow(
-                                //   color: Colors.black.withOpacity(0.1),
-                                //   blurRadius: 10,
-                                //   spreadRadius: 2,
-                                // ),
+                                BoxShadow(
+                                  color: Color(0xFF916B44).withOpacity(0.08),
+                                  offset: Offset(0, 4),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
+                                ),
                               ],
                             ),
                             child: Column(
                               children: [
-                                // Profile Image with Pet Border
+                                const SizedBox(height: 40),
+
+                                // Profile Image
                                 Container(
-                                  padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
+                                    border: Border.all(
+                                      color: Color(0xFFE9CBAF),
+                                      width: 4,
+                                    ),
                                   ),
                                   child: ClipOval(
                                     child: (clinic.image ?? '').isNotEmpty
@@ -129,9 +170,9 @@ class _ClinicprofileState extends State<Clinicprofile> {
                                                     Container(
                                               width: 120,
                                               height: 120,
-                                              decoration: const BoxDecoration(
+                                              decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: Colors.grey,
+                                                color: Color(0xFFE9CBAF),
                                               ),
                                               child: const Icon(
                                                 Icons.pets,
@@ -143,9 +184,9 @@ class _ClinicprofileState extends State<Clinicprofile> {
                                         : Container(
                                             width: 120,
                                             height: 120,
-                                            decoration: const BoxDecoration(
+                                            decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.grey,
+                                              color: Color(0xFFE9CBAF),
                                             ),
                                             child: const Icon(
                                               Icons.pets,
@@ -155,25 +196,30 @@ class _ClinicprofileState extends State<Clinicprofile> {
                                           ),
                                   ),
                                 ),
-                                const SizedBox(height: 15),
-                                // Veterinarian Badge
+
+                                const SizedBox(height: 24),
+
+                                // Doctor Badge
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Color(0xFFE9CBAF).withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.medical_services,
-                                          color: Color(0xFF916B44), size: 25),
+                                      Icon(
+                                        Icons.medical_services,
+                                        color: Color(0xFF916B44),
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
                                         clinic.userEmail,
                                         style: TextStyle(
-                                          fontSize: 20,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: Color(0xFF916B44),
                                         ),
@@ -181,136 +227,207 @@ class _ClinicprofileState extends State<Clinicprofile> {
                                     ],
                                   ),
                                 ),
+
+                                const SizedBox(height: 30),
                               ],
                             ),
                           ),
 
                           const SizedBox(height: 24),
 
-                          // Information Card
+                          // Information Display Section
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Color(0xFFE9CBAF),
-                                width: 2,
-                              ),
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFFDBA871).withOpacity(0.2),
-                                  offset: const Offset(0, 6),
-                                  blurRadius: 16,
-                                  spreadRadius: 1,
+                                  color: Color(0xFF916B44).withOpacity(0.08),
+                                  offset: Offset(0, 4),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
                                 ),
                               ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildInfoField(
-                                  icon: Icons.person,
+                                Text(
+                                  'ข้อมูลคลินิก',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF916B44),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                _buildCleanInfoDisplay(
+                                  icon: Icons.person_outline,
                                   label: 'ชื่อ',
                                   value: clinic.name ?? '',
-                                  screenHeight: screenHeight,
                                 ),
                                 const SizedBox(height: 20),
-                                _buildInfoField(
-                                  icon: Icons.phone_android,
+                                _buildCleanInfoDisplay(
+                                  icon: Icons.phone_outlined,
                                   label: 'เบอร์โทร',
                                   value: clinic.phone,
-                                  screenHeight: screenHeight,
                                 ),
                                 const SizedBox(height: 20),
-                                _buildInfoField(
-                                  icon: Icons.timelapse_outlined,
+                                _buildCleanNumberDisplay(
+                                  icon: Icons.access_time_outlined,
                                   label: 'จำนวนเลขที่รับต่อช่วงเวลา',
-                                  value: clinic.numPerTime?.toString() ?? '0',
-                                  screenHeight: screenHeight,
+                                  value: clinic.numPerTime ?? 0,
                                 ),
                                 const SizedBox(height: 20),
-                                _buildInfoField(
-                                  icon: Icons.home,
+                                _buildCleanInfoDisplay(
+                                  icon: Icons.home_outlined,
                                   label: 'ที่อยู่',
                                   value: clinic.address,
-                                  screenHeight: screenHeight,
+                                  maxLines: 3,
                                 ),
-                                const SizedBox(height: 20),
                               ],
                             ),
                           ),
 
-                          const SizedBox(height: 30),
-                          Column(
-                            children: [
-                              Container(
-                                height: 300,
-                                child: GoogleMap(
-                                  onMapCreated: (controller) {
-                                    mapController = controller;
-                                  },
-                                  myLocationEnabled: true,
-                                  myLocationButtonEnabled: true,
-                                  initialCameraPosition: CameraPosition(
-                                    target: selectedLatLng ?? LatLng(0, 0),
-                                    zoom: 15,
-                                  ),
-                                  onTap: (latLng) {
-                                    setState(() {
-                                      selectedLatLng = latLng;
-                                    });
-                                  },
-                                  markers: selectedLatLng != null
-                                      ? {
-                                          Marker(
-                                            markerId: MarkerId("selected"),
-                                            position: selectedLatLng!,
-                                          )
-                                        }
-                                      : {},
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 24),
 
-                          // Edit Button with Pet Theme
+                          // Map Section
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF916B44).withOpacity(0.08),
+                                  offset: Offset(0, 4),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on_outlined,
+                                        color: Color(0xFF916B44),
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'ตำแหน่งคลินิก',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF916B44),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      Material(
+                                        elevation: 5,
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Container(
+                                          height: 300,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            child: GoogleMap(
+                                              onMapCreated: (controller) {
+                                                mapController = controller;
+                                              },
+                                              myLocationEnabled: true,
+                                              myLocationButtonEnabled: true,
+                                              initialCameraPosition:
+                                                  CameraPosition(
+                                                target: selectedLatLng ??
+                                                    LatLng(0, 0),
+                                                zoom: 15,
+                                              ),
+                                              onTap: (latLng) {
+                                                setState(() {
+                                                  selectedLatLng = latLng;
+                                                });
+                                              },
+                                              markers: selectedLatLng != null
+                                                  ? {
+                                                      Marker(
+                                                        markerId: MarkerId(
+                                                            "selected"),
+                                                        position:
+                                                            selectedLatLng!,
+                                                      )
+                                                    }
+                                                  : {},
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Edit Button
                           Container(
                             width: double.infinity,
-                            margin: const EdgeInsets.symmetric(horizontal: 24),
-                            child: ElevatedButton.icon(
+                            height: 56,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            child: ElevatedButton(
                               onPressed: () {
                                 Get.to(() => EitprofilePage());
                               },
-                              icon: Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                              label: Text(
-                                "แก้ไขข้อมูล",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFF916B44),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 16, horizontal: 24),
+                                elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                elevation: 8,
-                                shadowColor: Color(0xFF916B44).withOpacity(0.4),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    "แก้ไขข้อมูล",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
 
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     );
@@ -318,6 +435,170 @@ class _ClinicprofileState extends State<Clinicprofile> {
                 ),
               ),
             ),
+    );
+  }
+
+// Clean Info Display Widget (แสดงข้อมูลเฉพาะ)
+  Widget _buildCleanInfoDisplay({
+    required IconData icon,
+    required String label,
+    required String value,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                margin: EdgeInsets.only(right: 20),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value.isEmpty ? 'ไม่ระบุ' : value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: maxLines,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+// Clean Number Display Widget (แสดงตัวเลข)
+  Widget _buildCleanNumberDisplay({
+    required IconData icon,
+    required String label,
+    required int value,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Icon Container
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Label and Value
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      'จำนวน',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF916B44),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Text(
+                        value.toString(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF916B44),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -419,7 +700,6 @@ class _ClinicprofileState extends State<Clinicprofile> {
       ClinicEditProfilePost.fromJson(json.decode(str)[0]);
 
   Future<void> searchclinic() async {
-    showLoadingDialog();
     log(box.read('email'));
     final res =
         await http.get(Uri.parse("$url/clinic/profile/${box.read('email')}"));
@@ -444,9 +724,6 @@ class _ClinicprofileState extends State<Clinicprofile> {
       setState(() {
         _loadingData = false;
       });
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 

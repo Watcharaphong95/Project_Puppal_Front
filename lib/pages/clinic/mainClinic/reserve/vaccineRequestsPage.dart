@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -66,17 +67,18 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
-      if (!mounted) return; // ✅ ป้องกัน setState หลังจาก widget โดน dispose
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      if (!mounted) return;
       url = config['apiEndPoint'];
-      // getReserve();
-      // fetchReserveData();
-      startRealtimeGet();
-      _init();
-      setState(() {
-        _loadingData = false;
-      });
+    });
+    startRealtimeGet();
+    setState(() {
+      _loadingData = false;
     });
   }
 
@@ -91,7 +93,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(
+            "คำขอฉีดวัคซีน",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: secondaryBrown,
+          iconTheme: IconThemeData(color: Colors.white),
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
@@ -120,7 +139,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: secondaryBrown,
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),
@@ -261,7 +280,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       showAlert(
                         title: 'ออกจากระบบ?',
                         message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           box.erase();
                           Get.offAll(() => IndexPage());
                         },
@@ -274,119 +294,141 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           ),
         ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            : Column(
-                children: [
-                  // Toggle buttons (existing code)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 16),
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE9CBAF).withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isNormalSelected = true;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isNormalSelected
-                                    ? const Color(0xFF916B44)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(22),
-                                boxShadow: isNormalSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF916B44)
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'การจองปกติ',
-                                style: TextStyle(
-                                  color: isNormalSelected
-                                      ? Colors.white
-                                      : const Color(0xFF916B44),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                color: Color(0xFFFAF8F5),
+                child: Column(
+                  children: [
+                    // Toggle buttons (existing code)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isNormalSelected = false;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isNormalSelected
-                                    ? Colors.transparent
-                                    : const Color(0xFF916B44),
-                                borderRadius: BorderRadius.circular(22),
-                                boxShadow: !isNormalSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF916B44)
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'คำขอพิเศษ',
-                                style: TextStyle(
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isNormalSelected = true;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
                                   color: isNormalSelected
                                       ? const Color(0xFF916B44)
-                                      : Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: isNormalSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'การจองปกติ',
+                                  style: TextStyle(
+                                    color: isNormalSelected
+                                        ? Colors.white
+                                        : const Color(0xFF916B44),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isNormalSelected = false;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isNormalSelected
+                                      ? Colors.transparent
+                                      : const Color(0xFF916B44),
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: !isNormalSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'คำขอพิเศษ',
+                                  style: TextStyle(
+                                    color: isNormalSelected
+                                        ? const Color(0xFF916B44)
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Content with empty state handling
-                  Expanded(
-                    child: _buildBookingContent(),
-                  ),
-                ],
+                    // Content with empty state handling
+                    Expanded(
+                      child: _buildBookingContent(),
+                    ),
+                  ],
+                ),
               ));
   }
 
@@ -1155,6 +1197,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     date: data?['date'] ?? '',
                     generalEmail: generalEmail);
               } else if (status == 0) {
+                final doc = await FirebaseFirestore.instance
+                    .collection('reserve')
+                    .doc(docId)
+                    .delete();
                 await sendNotificationRefuse(generalEmail, userName);
                 await sendClinicRefuseNotification(
                     clinicEmail: clinicEmail,
@@ -1482,12 +1528,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return '$day $month $year';
   }
 
-  Future<void> _init() async {
-    final config = await Configuration.getConfig();
-    url = config['apiEndPoint'];
-    // await getReserve();
-  }
-
   Future<void> _openBookingDetail(String docid) async {
     final result = await Navigator.push(
       context,
@@ -1602,7 +1642,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     Navigator.of(context).pop(true);
                     acceptrequest(docId, 2);
                     // _rejectReservation();
-                    _init();
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white,
@@ -1731,7 +1770,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     Navigator.of(context).pop(true);
                     acceptrequest(docId, 0);
                     // _rejectReservation();
-                    _init();
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -41,13 +42,23 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-      getDoctor();
-      setState(() {
-        _loadingData = false;
-      });
+  }
+
+  void init() async {
+    final config = await Configuration.getConfig();
+    url = config['apiEndPoint'];
+
+    if (url == null || url.isEmpty) {
+      log('❌ URL not loaded properly from config');
+      return;
+    }
+
+    await getDoctor();
+
+    setState(() {
+      _loadingData = false;
     });
   }
 
@@ -65,13 +76,22 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
               },
             ),
           ),
-          title: const Text('คุณหมอประจำคลินิก'),
+          title: const Text(
+            "คุณหมอประจำคลินิก",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
           centerTitle: true,
           actions: [
             IconButton(
               icon: Icon(
                 Icons.add_circle,
-                color: Color(0xFF916b44),
+                color: Colors.white,
                 size: 45,
               ),
               onPressed: () {
@@ -108,7 +128,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: Color(0xFFDBA871),
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),
@@ -151,6 +171,10 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                   ListTile(
                     leading: Icon(Icons.home, color: Color(0xFF916b44)),
                     title: Text('หน้าหลัก'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => ClinicmainPage());
+                    },
                   ),
                   ListTile(
                     leading: Icon(Icons.system_security_update,
@@ -239,7 +263,8 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                       showAlert(
                         title: 'ออกจากระบบ?',
                         message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           box.erase();
                           Get.offAll(() => IndexPage());
                         },
@@ -252,169 +277,197 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
           ),
         ),
         body: _loadingData
-            ? SizedBox(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(12.0),
+            ? Center(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextField(
-                      onChanged: (text) {
-                        if (text.trim().isEmpty) {
-                          getDoctor();
-                        } else {
-                          searcheDoctor(names);
-                        }
-                      },
-                      controller: names,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintText: 'ค้นหา',
-                        prefixIcon:
-                            const Icon(Icons.search, color: Color(0xFF916B44)),
-                        hintStyle: const TextStyle(color: Color(0xFF916B44)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFDBA871)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF916B44), width: 2),
-                        ),
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                        child: _loadingData
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                    color: Color(0xFF916B44)))
-                            : doctorsList.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      "ไม่พบข้อมูลคุณหมอ",
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          color: Color(0xFF916B44)),
-                                    ),
-                                  )
-                                : Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: GridView.count(
-                                      crossAxisCount: 2, // จาก 3 เป็น 2
-                                      crossAxisSpacing: 25,
-                                      mainAxisSpacing: 15,
-                                      childAspectRatio:
-                                          0.75, // ปรับสัดส่วนให้ดูไม่แคบเกินไป
-                                      children: doctorsList.map((doctor) {
-                                        return Card(
-                                          elevation: 5,
-                                          color: const Color.fromARGB(
-                                              255, 246, 234, 224),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                            side: const BorderSide(
-                                                color: Color(0xFFDBA871),
-                                                width: 1),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 12, horizontal: 8),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                ClipOval(
-                                                  child: doctor.image.isNotEmpty
-                                                      ? Image.network(
-                                                          doctor.image,
-                                                          height: 80,
-                                                          width: 80,
-                                                          fit: BoxFit.cover,
-                                                          loadingBuilder: (context,
-                                                              child,
-                                                              loadingProgress) {
-                                                            if (loadingProgress ==
-                                                                null)
-                                                              return child;
-                                                            return Shimmer
-                                                                .fromColors(
-                                                              baseColor: Colors
-                                                                  .grey[300]!,
-                                                              highlightColor:
-                                                                  Colors.grey[
-                                                                      100]!,
-                                                              child: Container(
-                                                                width: 80,
-                                                                height: 80,
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                            );
-                                                          },
-                                                          errorBuilder: (context,
-                                                                  error,
-                                                                  stackTrace) =>
-                                                              const Icon(
-                                                                  Icons.error),
-                                                        )
-                                                      : Image.asset(
-                                                          'assets/images/indexBg.png',
-                                                          height: 80,
-                                                          width: 80,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Text(
-                                                  doctor.name,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15,
-                                                    color: Color(0xFF916B44),
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                const SizedBox(height: 10),
-                                                ElevatedButton(
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        const Color(0xFFDBA871),
-                                                    foregroundColor:
-                                                        Colors.white,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
-                                                    ),
-                                                    elevation: 2,
-                                                  ),
-                                                  onPressed: () {
-                                                    Get.to(() =>
-                                                        Clinicdoctorprofile(
-                                                            name: doctor.name));
-                                                  },
-                                                  child: const Text(
-                                                    'ดูประวัติ',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  )),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ],
+                ),
+              )
+            : Container(
+                color: Color(0xFFFAF8F5),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        onChanged: (text) {
+                          if (text.trim().isEmpty) {
+                            getDoctor();
+                          } else {
+                            searcheDoctor(names);
+                          }
+                        },
+                        controller: names,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          hintText: 'ค้นหา',
+                          prefixIcon: const Icon(Icons.search,
+                              color: Color(0xFF916B44)),
+                          hintStyle: const TextStyle(color: Color(0xFF916B44)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFDBA871)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF916B44), width: 2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                          child: _loadingData
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                      color: Color(0xFF916B44)))
+                              : doctorsList.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        "ไม่พบข้อมูลคุณหมอ",
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            color: Color(0xFF916B44)),
+                                      ),
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: GridView.count(
+                                        crossAxisCount: 2, // จาก 3 เป็น 2
+                                        crossAxisSpacing: 25,
+                                        mainAxisSpacing: 15,
+                                        childAspectRatio:
+                                            0.75, // ปรับสัดส่วนให้ดูไม่แคบเกินไป
+                                        children: doctorsList.map((doctor) {
+                                          return Card(
+                                            elevation: 5,
+                                            color: const Color.fromARGB(
+                                                255, 246, 234, 224),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              side: const BorderSide(
+                                                  color: Color(0xFFDBA871),
+                                                  width: 1),
+                                            ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 12,
+                                                      horizontal: 8),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  ClipOval(
+                                                    child: doctor
+                                                            .image.isNotEmpty
+                                                        ? Image.network(
+                                                            doctor.image,
+                                                            height: 80,
+                                                            width: 80,
+                                                            fit: BoxFit.cover,
+                                                            loadingBuilder:
+                                                                (context, child,
+                                                                    loadingProgress) {
+                                                              if (loadingProgress ==
+                                                                  null)
+                                                                return child;
+                                                              return Shimmer
+                                                                  .fromColors(
+                                                                baseColor:
+                                                                    Colors.grey[
+                                                                        300]!,
+                                                                highlightColor:
+                                                                    Colors.grey[
+                                                                        100]!,
+                                                                child:
+                                                                    Container(
+                                                                  width: 80,
+                                                                  height: 80,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                              );
+                                                            },
+                                                            errorBuilder: (context,
+                                                                    error,
+                                                                    stackTrace) =>
+                                                                const Icon(Icons
+                                                                    .error),
+                                                          )
+                                                        : Image.asset(
+                                                            'assets/images/indexBg.png',
+                                                            height: 80,
+                                                            width: 80,
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Text(
+                                                    doctor.name,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15,
+                                                      color: Color(0xFF916B44),
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          const Color(
+                                                              0xFFDBA871),
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                      ),
+                                                      elevation: 2,
+                                                    ),
+                                                    onPressed: () {
+                                                      Get.to(() =>
+                                                          Clinicdoctorprofile(
+                                                              name:
+                                                                  doctor.name));
+                                                    },
+                                                    child: const Text(
+                                                      'ดูประวัติ',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    )),
+                    ],
+                  ),
                 ),
               ));
   }
@@ -423,8 +476,6 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
       json.decode(str).map((x) => DoctorPost.fromJson(x)));
 
   Future<void> getDoctor() async {
-    showLoadingDialog();
-
     var res = await http
         .get(Uri.parse("$url/doctor/searchemail/${box.read('email')}"));
     if (res.statusCode == 200) {
@@ -437,9 +488,6 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
       setState(() {
         _loadingData = false;
       });
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 
