@@ -93,24 +93,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "คำขอฉีดวัคซีน",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: secondaryBrown,
-          iconTheme: IconThemeData(color: Colors.white),
-          elevation: 0,
-          centerTitle: true,
-          // leading: IconButton(
-          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-          //   onPressed: () => Navigator.pop(context),
-          // ),
-        ),
+        // appBar: AppBar(
+        //   title: const Text(
+        //     "คำขอฉีดวัคซีน",
+        //     style: TextStyle(
+        //       fontWeight: FontWeight.w600,
+        //       fontSize: 24,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        //   backgroundColor: secondaryBrown,
+        //   iconTheme: IconThemeData(color: Colors.white),
+        //   elevation: 0,
+        //   centerTitle: true,
+        //   // leading: IconButton(
+        //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   //   onPressed: () => Navigator.pop(context),
+        //   // ),
+        // ),
         // drawer: Drawer(
         //   child: Container(
         //     decoration: BoxDecoration(
