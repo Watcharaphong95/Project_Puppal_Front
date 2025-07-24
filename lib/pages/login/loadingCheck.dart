@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -33,15 +34,36 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
     super.initState();
   }
 
+  // void init() async {
+  //   await Configuration.getConfig().then((config) {
+  //     url = config['apiEndPoint'];
+  //   });
+  //   if (box.read('email') != null) {
+  //     await updateFcm();
+  //     Get.offAll(() => GeneralMainBottomNavigate(
+  //           indexPage: 1,
+  //         ));
+  //   }
+  // }
+
   void init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+
     if (box.read('email') != null) {
       await updateFcm();
-      Get.offAll(() => GeneralMainBottomNavigate(
-            indexPage: 1,
-          ));
+
+      final userType = box.read('type'); // อ่านประเภท user
+
+      if (userType == 'general') {
+        Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
+      } else if (userType == 'clinic') {
+        Get.offAll(() => Clinicmainbottomnavigate(indexPage: 2));
+      } else {
+        // กรณีอื่นๆ หรือ default page
+        Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
+      }
     }
   }
 

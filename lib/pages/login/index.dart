@@ -14,6 +14,7 @@ import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/login.dart';
@@ -297,7 +298,9 @@ class _IndexPageState extends State<IndexPage> {
             if (tokenUpdate.statusCode == 201) {
               log('Name ${box.read('clinicName')}');
               Get.back();
-              Get.offAll(() => ClinicmainPage());
+              Get.offAll(() => Clinicmainbottomnavigate(
+                    indexPage: 2,
+                  ));
             } else {
               Get.snackbar(
                 'ข้อผิดพลาด',
