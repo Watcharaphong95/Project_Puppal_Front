@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicLocationSelect.dart';
 
 class RegisterclinicgooglePage extends StatefulWidget {
@@ -41,6 +45,9 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
 
   final controller = Get.find<registerClinicCtl>();
   final box = GetStorage();
+  List<String> selectedWeekdays = [];
+  TimeOfDay? openTime;
+  TimeOfDay? closeTime;
 
   TextEditingController nameCtl = TextEditingController();
   TextEditingController emailCtl = TextEditingController();
@@ -172,6 +179,64 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      "เลือกวันเปิดทำการ",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(7, (index) {
+                        final days = [
+                          'Monday',
+                          'Tuesday',
+                          'Wednesday',
+                          'Thursday',
+                          'Friday',
+                          'Saturday',
+                          'Sunday'
+                        ];
+                        final daysShort = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+                        final day = days[index];
+                        final isSelected = selectedWeekdays.contains(day);
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                selectedWeekdays.remove(day);
+                              } else {
+                                selectedWeekdays.add(day);
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.brown : Colors.white,
+                              border: Border.all(
+                                  color:
+                                      isSelected ? Colors.brown : Colors.grey),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                daysShort[index],
+                                style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.white : Colors.brown,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       'เวลาเปิดคลินิก',
                       style: TextStyle(fontSize: 20),
@@ -195,15 +260,11 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                             hintText: "เลือกเวลาเปิดคลินิก",
                             hintStyle: TextStyle(color: Colors.grey),
                           ),
-                          onTap: _showOpenSelectTime,
+                          onTap: () => _showCustomTimePicker(isOpen: true),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                    const SizedBox(height: 16),
                     Text(
                       'เวลาปิดคลินิก',
                       style: TextStyle(fontSize: 20),
@@ -214,9 +275,10 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                       child: SizedBox(
                         height: screenHeight * 0.055,
                         child: TextField(
-                          readOnly: true,
                           controller: closeCtl,
+                          readOnly: true,
                           decoration: InputDecoration(
+                            suffixIcon: Icon(Icons.arrow_drop_down),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
@@ -225,9 +287,8 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                             ),
                             hintText: "เลือกเวลาปิดคลินิก",
                             hintStyle: TextStyle(color: Colors.grey),
-                            suffixIcon: Icon(Icons.arrow_drop_down),
                           ),
-                          onTap: _showCloseSelectTime,
+                          onTap: () => _showCustomTimePicker(isOpen: false),
                         ),
                       ),
                     ),
@@ -318,13 +379,40 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     );
   }
 
+  void _showCustomTimePicker({required bool isOpen}) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return TimePickerBottomSheet(
+          isOpenTime: isOpen,
+          initialTime: isOpen ? openTime : closeTime,
+          onTimeSelected: (selected) {
+            setState(() {
+              if (isOpen) {
+                openTime = selected;
+                openCtl.text = selected.format(context);
+              } else {
+                closeTime = selected;
+                closeCtl.text = selected.format(context);
+              }
+            });
+          },
+        );
+      },
+    );
+  }
+
   Future<void> userRegisterNextButton() async {
     if (nameCtl.text.trim().isEmpty ||
         emailCtl.text.trim().isEmpty ||
         phoneCtl.text.trim().isEmpty ||
         addressCtl.text.trim().isEmpty ||
-        openCtl.text.trim().isEmpty ||
-        closeCtl.text.trim().isEmpty ||
+        // openCtl.text.trim().isEmpty ||
+        // closeCtl.text.trim().isEmpty ||
         numPerTimeCtl.text.trim().isEmpty) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -383,6 +471,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     controller.phone.value = phoneCtl.text;
     controller.open.value = openCtl.text;
     controller.close.value = closeCtl.text;
+    controller.weekdays.value = selectedWeekdays.join(',');
     controller.numPerTime.value = int.parse(numPerTimeCtl.text);
     controller.address.value = addressCtl.text;
 
@@ -641,6 +730,188 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
           ),
         );
       },
+    );
+  }
+}
+
+// Time Picker Bottom Sheet using time_picker_spinner package
+class TimePickerBottomSheet extends StatefulWidget {
+  final TimeOfDay? initialTime;
+  final bool isOpenTime;
+  final Function(TimeOfDay) onTimeSelected;
+
+  const TimePickerBottomSheet({
+    Key? key,
+    required this.initialTime,
+    required this.isOpenTime,
+    required this.onTimeSelected,
+  }) : super(key: key);
+
+  @override
+  State<TimePickerBottomSheet> createState() => _TimePickerBottomSheetState();
+}
+
+class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
+  late DateTime selectedTime;
+
+  static const Color primaryColor = Color(0xFF916B44);
+  static const Color secondaryColor = Color(0xFFDBA871);
+  static const Color tertiaryColor = Color(0xFFE9CBAF);
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final time = widget.initialTime ?? TimeOfDay.now();
+    selectedTime =
+        DateTime(now.year, now.month, now.day, time.hour, time.minute);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.isOpenTime ? "เลือกเวลาเปิด" : "เลือกเวลาปิด",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Icon(
+                  widget.isOpenTime ? Icons.wb_sunny : Icons.nightlight_round,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+
+          // Time Display
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: tertiaryColor.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: secondaryColor.withOpacity(0.3),
+              ),
+            ),
+            child: Text(
+              "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Time Picker Spinner
+          Expanded(
+            child: TimePickerSpinner(
+              time: selectedTime,
+              is24HourMode: true,
+              normalTextStyle: TextStyle(
+                fontSize: 18,
+                color: primaryColor.withOpacity(0.6),
+              ),
+              highlightedTextStyle: TextStyle(
+                fontSize: 22,
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+              spacing: 40,
+              itemHeight: 60,
+              isForce2Digits: true,
+              minutesInterval: 5,
+              onTimeChange: (time) {
+                setState(() {
+                  selectedTime = time;
+                });
+              },
+            ),
+          ),
+
+          // Buttons
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: primaryColor),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      "ยกเลิก",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onTimeSelected(
+                        TimeOfDay.fromDateTime(selectedTime),
+                      );
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "ตกลง",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

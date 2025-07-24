@@ -3,13 +3,26 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
+import 'package:puppal_application/pages/login/index.dart';
+import 'package:shimmer/shimmer.dart';
 
 class Notificationpage extends StatefulWidget {
   const Notificationpage({super.key});
@@ -23,7 +36,8 @@ class _NotificationpageState extends State<Notificationpage> {
   late double screenHeight;
   final box = GetStorage();
   String url = '';
-  bool isLoading = true;
+  bool _loadingData = true;
+
   List<ReserveClinicFirebase> reservebookingListAll = [];
   List<ReserveClinicFirebase> reserveList = [];
   StreamSubscription<QuerySnapshot>? _reserveListener;
@@ -62,7 +76,9 @@ class _NotificationpageState extends State<Notificationpage> {
   Future<void> initialize() async {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
-
+    setState(() {
+      _loadingData = false;
+    });
     startRealtimeGet();
     box.write('type', 'clinic');
     _isMounted = true;
@@ -82,138 +98,312 @@ class _NotificationpageState extends State<Notificationpage> {
 
   @override
   Widget build(BuildContext context) {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Center(
-            child: Padding(
-          padding: const EdgeInsets.only(right: 35),
-          child: const Text(
-            'การแจ้งเตือน',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+        title: const Text(
+          "คำขอฉีดวัคซีน",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
+      ),
+      drawer: Drawer(
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/indexBg.png'),
+              fit: BoxFit.cover,
             ),
           ),
-        )),
-        // backgroundColor: const Color(0xFF916B44),
-        // actions: [
-        //   if (unreadCount > 0)
-        //     TextButton(
-        //       onPressed: () {
-        //         setState(() {
-        //           for (var notification in notifications) {
-        //             notification.isRead = true;
-        //           }
-        //         });
-        //       },
-        //       child: const Text(
-        //         'อ่านทั้งหมด',
-        //         style: TextStyle(
-        //           color: Colors.white,
-        //           fontWeight: FontWeight.w600,
-        //         ),
-        //       ),
-        //     ),
-        // ],
-      ),
-      body: Column(
-        children: [
-          // 🔔 Summary Card
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
+          child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF916B44), Color(0xFFDBA871)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: Colors.white.withOpacity(0.85),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
-              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF916B44).withOpacity(0.3),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  offset: Offset(2, 2),
                 ),
               ],
             ),
-            child: Row(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
+                DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Color(0xFFDBA871),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(30),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.notifications_active,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'การแจ้งเตือนล่าสุด',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      ClipOval(
+                        child: Image.network(
+                          box.read('clinicImage'),
+                          width: screenWidth * 0.2,
+                          height: screenWidth * 0.2,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: screenWidth * 0.2,
+                                height: screenWidth * 0.2,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 10),
                       Text(
-                        'ยังไม่ได้อ่าน $unreadCount รายการ',
+                        box.read('clinicName') ?? "ผู้ใช้งาน",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+                ListTile(
+                  leading: Icon(Icons.home, color: Color(0xFF916b44)),
+                  title: Text('หน้าหลัก'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => ClinicmainPage());
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.system_security_update,
+                      color: Color(0xFF916b44)),
+                  title: Text('คำขอฉีดยา'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => VaccineRequestsPage());
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.notifications, color: Color(0xFF916b44)),
+                  title: Text('แจ้งเตือน'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Notificationpage());
+                  },
+                ),
+                ListTile(
+                  leading:
+                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                  title: Text('ประวัติการฉีดยา'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Vaccinehistorypage());
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.supervised_user_circle,
+                      color: Color(0xFF916b44)),
+                  title: Text('หมอประจำคลินิก'),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => Cliniclistdoctors());
+                  },
+                ),
+                ListTile(
+                    leading:
+                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
+                    title: Text('เวลาปิด-เปิด'),
+                    onTap: () {
+                      Get.back();
 
-          // 📌 Filter Tabs
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildFilterTab('ทั้งหมด', currentFilter == 'ทั้งหมด'),
-                const SizedBox(width: 8),
-                _buildFilterTab('ยังไม่อ่าน', currentFilter == 'ยังไม่อ่าน'),
-                const SizedBox(width: 8),
-                _buildFilterTab('การจอง', currentFilter == 'การจอง'),
-              ],
-            ),
-          ),
+                      Get.to(() => Clinicopeninghours());
+                    }),
+                ListTile(
+                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                    title: Text('ตั้งค่า'),
+                    onTap: () {
+                      Get.back();
 
-          const SizedBox(height: 16),
-
-          // 📝 Notification List
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredNotifications.isEmpty
-                    ? const Center(child: Text('ไม่มีการแจ้งเตือน'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: filteredNotifications.length,
-                        itemBuilder: (context, index) {
-                          final notification = filteredNotifications[index];
-                          return _buildNotificationCard(notification);
+                      Get.to(() => Clinicsetting());
+                    }),
+                ListTile(
+                  leading:
+                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+                  title: Text('สลับโหมด'),
+                  onTap: () async {
+                    var resGeneral = await http.get(
+                        Uri.parse("$url/general/name/${box.read('email')}"));
+                    if (resGeneral.statusCode == 200) {
+                      showAlert(
+                        title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+                        message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
+                        onConfirm: () {
+                          box.write('type', 'general');
+                          box.write('generalName',
+                              jsonDecode(resGeneral.body)['username']);
+                          box.write('generalImage',
+                              jsonDecode(resGeneral.body)['image']);
+                          log('Name ${box.read('generalName')}');
+                          Get.offAll(() => GeneralmainPage());
                         },
-                      ),
+                      );
+                    } else {
+                      showAlert(
+                        title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+                        onConfirm: () {
+                          Get.back();
+                          Get.to(() => RegisterusergooglePage());
+                        },
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.logout, color: Colors.redAccent),
+                  title: Text('ออกจากระบบ'),
+                  onTap: () {
+                    showAlert(
+                      title: 'ออกจากระบบ?',
+                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                      onConfirm: () async {
+                        await FirebaseMessaging.instance.deleteToken();
+                        box.erase();
+                        Get.offAll(() => IndexPage());
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
+      body: _loadingData
+          ? SizedBox(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Column(
+              children: [
+                // 🔔 Summary Card
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF916B44), Color(0xFFDBA871)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF916B44).withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.notifications_active,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'การแจ้งเตือนล่าสุด',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'ยังไม่ได้อ่าน $unreadCount รายการ',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 📌 Filter Tabs
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildFilterTab('ทั้งหมด', currentFilter == 'ทั้งหมด'),
+                      const SizedBox(width: 8),
+                      _buildFilterTab(
+                          'ยังไม่อ่าน', currentFilter == 'ยังไม่อ่าน'),
+                      const SizedBox(width: 8),
+                      _buildFilterTab('การจอง', currentFilter == 'การจอง'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 📝 Notification List
+                Expanded(
+                  child: _loadingData
+                      ? const Center(child: CircularProgressIndicator())
+                      : filteredNotifications.isEmpty
+                          ? const Center(child: Text('ไม่มีการแจ้งเตือน'))
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: filteredNotifications.length,
+                              itemBuilder: (context, index) {
+                                final notification =
+                                    filteredNotifications[index];
+                                return _buildNotificationCard(notification);
+                              },
+                            ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -533,9 +723,11 @@ class _NotificationpageState extends State<Notificationpage> {
 
       setState(() {
         notifications = tempNotifications;
-        isLoading = false;
       });
     });
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
   }
 
   void stopRealTime() {
@@ -626,6 +818,146 @@ class _NotificationpageState extends State<Notificationpage> {
       log("❌ Exception while fetching dog info: $e");
       return null;
     }
+  }
+
+  void showAlert({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon with subtle animation potential
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD7CCC8),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 24,
+              color: const Color(0xFFA1887F),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Title with better typography
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Color(0xFF8D6E63),
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Message with improved readability
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFFA1887F),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 20),
+
+          // Enhanced button row
+          Row(
+            children: [
+              // Cancel button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  child: TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF8D6E63),
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: const Color(0xFFD7CCC8),
+                          width: 1,
+                        ),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ยกเลิก',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+              // Confirm button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color(0xFF795548),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFA1887F).withOpacity(0.3),
+                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ตกลง',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -20,7 +21,10 @@ import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/acceptRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/bookingDetailPage.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
@@ -52,8 +56,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   List<ReserveClinicFirebase> earlierList = [];
   var db = FirebaseFirestore.instance;
   List<String> messages = [];
-  bool isLoading = true;
+  // bool isLoading = true;
   bool _isPressed = false;
+  bool _loadingData = true;
 
   StreamSubscription? _reserveListener;
   final Color primaryBrown = const Color(0xFF916B44);
@@ -62,14 +67,25 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
   @override
   void initState() {
+    init();
     super.initState();
-    Configuration.getConfig().then((config) {
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      if (!mounted) return;
       url = config['apiEndPoint'];
-      // getReserve();
-      // fetchReserveData();
-      startRealtimeGet();
-      _init();
     });
+    startRealtimeGet();
+    setState(() {
+      _loadingData = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    stopRealTime(); // ปิด listener ตอน widget ถูกถอดออก
+    super.dispose();
   }
 
   @override
@@ -77,7 +93,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(
+            "คำขอฉีดวัคซีน",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: secondaryBrown,
+          iconTheme: IconThemeData(color: Colors.white),
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         drawer: Drawer(
           child: Container(
             decoration: BoxDecoration(
@@ -106,7 +139,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
+                      color: secondaryBrown,
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                       ),
@@ -150,6 +183,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                     leading: Icon(Icons.home, color: Color(0xFF916b44)),
                     title: Text('หน้าหลัก'),
                     onTap: () {
+                      Get.back();
                       Get.to(() => ClinicmainPage());
                     },
                   ),
@@ -158,35 +192,54 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         color: Color(0xFF916b44)),
                     title: Text('คำขอฉีดยา'),
                     onTap: () {
+                      Get.back();
                       Get.to(() => VaccineRequestsPage());
+                    },
+                  ),
+                  ListTile(
+                    leading:
+                        Icon(Icons.notifications, color: Color(0xFF916b44)),
+                    title: Text('แจ้งเตือน'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => Notificationpage());
                     },
                   ),
                   ListTile(
                     leading:
                         Icon(Icons.medical_services, color: Color(0xFF916b44)),
                     title: Text('ประวัติการฉีดยา'),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => Vaccinehistorypage());
+                    },
                   ),
                   ListTile(
                     leading: Icon(Icons.supervised_user_circle,
                         color: Color(0xFF916b44)),
                     title: Text('หมอประจำคลินิก'),
                     onTap: () {
+                      Get.back();
                       Get.to(() => Cliniclistdoctors());
                     },
                   ),
                   ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('เวลาปิด-เปิด'),
-                    onTap: () {
-                      Get.to(() => Clinicopeninghours());
-                    },
-                  ),
+                      leading: Icon(Icons.medical_services,
+                          color: Color(0xFF916b44)),
+                      title: Text('เวลาปิด-เปิด'),
+                      onTap: () {
+                        Get.back();
+
+                        Get.to(() => Clinicopeninghours());
+                      }),
                   ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                    title: Text('ตั้งค่า'),
-                    onTap: () {},
-                  ),
+                      leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+                      title: Text('ตั้งค่า'),
+                      onTap: () {
+                        Get.back();
+
+                        Get.to(() => Clinicsetting());
+                      }),
                   ListTile(
                     leading:
                         Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
@@ -199,12 +252,13 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
                           message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
                           onConfirm: () {
+                            box.write('type', 'general');
                             box.write('generalName',
                                 jsonDecode(resGeneral.body)['username']);
                             box.write('generalImage',
                                 jsonDecode(resGeneral.body)['image']);
                             log('Name ${box.read('generalName')}');
-                            Get.to(() => GeneralmainPage());
+                            Get.offAll(() => GeneralmainPage());
                           },
                         );
                       } else {
@@ -212,6 +266,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
                           message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
                           onConfirm: () {
+                            Get.back();
                             Get.to(() => RegisterusergooglePage());
                           },
                         );
@@ -225,7 +280,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       showAlert(
                         title: 'ออกจากระบบ?',
                         message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           box.erase();
                           Get.offAll(() => IndexPage());
                         },
@@ -237,116 +293,143 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             ),
           ),
         ),
-        body: Column(
-          children: [
-            // Toggle buttons (existing code)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE9CBAF).withOpacity(0.3),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isNormalSelected = true;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isNormalSelected
-                              ? const Color(0xFF916B44)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: isNormalSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF916B44)
-                                        .withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'การจองปกติ',
-                          style: TextStyle(
-                            color: isNormalSelected
-                                ? Colors.white
-                                : const Color(0xFF916B44),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
+        body: _loadingData
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFDBA871),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isNormalSelected = false;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isNormalSelected
-                              ? Colors.transparent
-                              : const Color(0xFF916B44),
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: !isNormalSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF916B44)
-                                        .withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'คำขอพิเศษ',
-                          style: TextStyle(
-                            color: isNormalSelected
-                                ? const Color(0xFF916B44)
-                                : Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
+                    SizedBox(height: 16),
+                    Text(
+                      'กำลังโหลด...',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              )
+            : Container(
+                color: Color(0xFFFAF8F5),
+                child: Column(
+                  children: [
+                    // Toggle buttons (existing code)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isNormalSelected = true;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isNormalSelected
+                                      ? const Color(0xFF916B44)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: isNormalSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'การจองปกติ',
+                                  style: TextStyle(
+                                    color: isNormalSelected
+                                        ? Colors.white
+                                        : const Color(0xFF916B44),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isNormalSelected = false;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isNormalSelected
+                                      ? Colors.transparent
+                                      : const Color(0xFF916B44),
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: !isNormalSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF916B44)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'คำขอพิเศษ',
+                                  style: TextStyle(
+                                    color: isNormalSelected
+                                        ? const Color(0xFF916B44)
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-            // Content with empty state handling
-            Expanded(
-              child: _buildBookingContent(),
-            ),
-          ],
-        ));
+                    // Content with empty state handling
+                    Expanded(
+                      child: _buildBookingContent(),
+                    ),
+                  ],
+                ),
+              ));
   }
 
 // Helper method to build content with empty state
@@ -487,6 +570,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   // }
 
   void startRealtimeGet() {
+    showLoadingDialog();
+
     stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
 
     _reserveListener = FirebaseFirestore.instance
@@ -495,6 +580,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         .snapshots()
         .listen((snapshot) async {
       try {
+        if (!mounted) return;
+
         List<ReserveClinicFirebase> allData = snapshot.docs
             .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
             .where((e) => e.status != 3)
@@ -517,17 +604,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           }
         }
 
-        setState(() {}); // อัปเดต UI
+        if (!mounted) return;
+        setState(() {}); // ✅ อัปเดตก็ต่อเมื่อ widget ยังอยู่
 
-        // ดึงข้อมูล reserveBook และ general จากรายการแรกที่มี
+        // ✅ ตรวจสอบ mounted ก่อนและหลัง await แต่ละตัว
         if (todayList.isNotEmpty) {
+          if (!mounted) return;
           await getReserveBook(todayList[0].docId);
+          if (!mounted) return;
           await getGeneral(todayList[0].generalEmail);
         } else if (yesterdayList.isNotEmpty) {
+          if (!mounted) return;
           await getReserveBook(yesterdayList[0].docId);
+          if (!mounted) return;
           await getGeneral(yesterdayList[0].generalEmail);
         } else if (earlierList.isNotEmpty) {
+          if (!mounted) return;
           await getReserveBook(earlierList[0].docId);
+          if (!mounted) return;
           await getGeneral(earlierList[0].generalEmail);
         } else {
           log("ℹ️ No reserve data found.");
@@ -536,6 +630,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         log("❌ Error in realtime listener: $e");
       }
     });
+
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
   }
 
   void stopRealTime() {
@@ -607,7 +705,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   onTapUp: (_) => setState(() => pressed = false),
                   onTapCancel: () => setState(() => pressed = false),
                   onTap: () async {
+                    showLoadingDialog();
+
                     final reserveData = await getReserveBook(docId);
+
                     if (reserveData != null) {
                       final generalEmail = reserveData['generalEmail'];
                       final dogDogIdRaw = reserveData['dogDogId'];
@@ -621,16 +722,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         await getGeneral(generalEmail);
                       }
 
+                      // ✅ ปิด loading ก่อนเปิด popup
+                      if (Get.isDialogOpen ?? false) {
+                        Get.back();
+                      }
+
                       _showAppointmentPopup(
                         context,
                         reserveData,
                         dogDetails,
-                        reserveData[
-                            'docId'], // ← ใช้ได้ เพราะ reserveData != null แล้ว
+                        reserveData['docId'],
                       );
                     } else {
+                      if (Get.isDialogOpen ?? false) {
+                        Get.back();
+                      }
+
                       log("⚠️ ไม่พบข้อมูล reserve สำหรับ docId: $docId");
-                      // อาจแสดง dialog หรือ snackbar เตือนผู้ใช้ก็ได้
+                      // สามารถใช้ Get.snackbar หรือแสดง AlertDialog แจ้งเตือนได้
                     }
                   },
                   child: AnimatedContainer(
@@ -1012,9 +1121,14 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           Expanded(
                             child: _buildPopupActionButton(
                               label: 'ปฏิเสธการจอง',
-                              onPressed: () {
+                              onPressed: () async {
                                 Navigator.pop(context);
-                                _showRejectDialog(docId);
+                                bool isConfirmed =
+                                    await RejectDialog(context, docId);
+                                if (!isConfirmed) {
+                                  log("ผู้ใช้ยกเลิกการบันทึก");
+                                  return;
+                                }
                               },
                               isPrimary: false,
                             ),
@@ -1023,9 +1137,15 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           Expanded(
                             child: _buildPopupActionButton(
                               label: 'ยืนยันการจอง',
-                              onPressed: () {
-                                _showAcceptDialog(docId);
+                              onPressed: () async {
                                 Navigator.pop(context);
+                                bool isConfirmed =
+                                    await confirmDialog(context, docId);
+                                if (!isConfirmed) {
+                                  log("ผู้ใช้ยกเลิกการบันทึก");
+                                  return;
+                                }
+                                // _showAcceptDialog(docId);
                               },
                               isPrimary: true,
                             ),
@@ -1044,6 +1164,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   }
 
   Future<void> acceptrequest(String docId, int status) async {
+    showLoadingDialog();
     if (status == 0 || status == 2) {
       try {
         await FirebaseFirestore.instance
@@ -1052,13 +1173,57 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             .update({
           'status': status,
         });
+        // 2. ดึงข้อมูลของ reserve
+        final doc = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .get();
 
+        if (doc.exists) {
+          final data = doc.data();
+          final generalEmail = data?['generalEmail'];
+          final clinicEmail = data?['clinicEmail'];
+
+          if (generalEmail != null) {
+            final generalUser = await getGeneral(generalEmail);
+            final userName = generalUser?.name;
+
+            if (userName != null) {
+              if (status == 2) {
+                await sendNotificationAccept(generalEmail, userName);
+                await sendClinicAcceptNotification(
+                    clinicEmail: clinicEmail,
+                    userName: box.read('clinicName'),
+                    date: data?['date'] ?? '',
+                    generalEmail: generalEmail);
+              } else if (status == 0) {
+                final doc = await FirebaseFirestore.instance
+                    .collection('reserve')
+                    .doc(docId)
+                    .delete();
+                await sendNotificationRefuse(generalEmail, userName);
+                await sendClinicRefuseNotification(
+                    clinicEmail: clinicEmail,
+                    userName: box.read('clinicName'),
+                    date: data?['date'] ?? '',
+                    generalEmail: generalEmail);
+              }
+            } else {
+              log("⚠️ Missing userName from getGeneral()");
+            }
+          } else {
+            log("⚠️ Missing generalEmail in document");
+          }
+        }
         log('Updated status to $status for docId=$docId');
       } catch (e) {
         log('❌ Failed to update status: $e');
       }
     } else {
       log('Status not allowed to update: $status');
+    }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
     }
   }
 
@@ -1102,12 +1267,24 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   }) {
     return Container(
       height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          if (isPrimary)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              offset: Offset(0, 4),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isPrimary ? primaryBrown : Colors.grey[100],
           foregroundColor: isPrimary ? Colors.white : Colors.grey[700],
-          elevation: 0,
+          elevation: 0, // ปิด elevation ของ ElevatedButton เอง
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: isPrimary
@@ -1121,198 +1298,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showAcceptDialog(String docId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Color(0xFF916B44).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Icon(
-                Icons.check,
-                color: Color(0xFF916B44),
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'คุณต้องการยืนยันการนัดหมายนี้หรือไม่?',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'เมื่อตกลง การนัดหมายนี้จะถือว่ายืนยันแล้ว',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'ยกเลิก',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // ปิด confirm dialog
-                      Navigator.pop(context);
-
-                      // แสดง loading dialog ด้วย rootNavigator
-                      showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        useRootNavigator: true,
-                        builder: (BuildContext loadingContext) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                                color: Color(0xFF916B44)),
-                          );
-                        },
-                      );
-
-                      try {
-                        // รอการบันทึกข้อมูล
-                        await acceptrequest(docId, 2);
-
-                        // รีโหลดข้อมูล (ถ้ามี)
-                        await _init();
-
-                        // ปิด loading dialog โดยใช้ rootNavigator ด้วย
-                        Navigator.of(context, rootNavigator: true).pop();
-
-                        // แจ้งผลสำเร็จ
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("ยืนยันการจองสำเร็จ")),
-                        );
-
-                        // กลับหน้าก่อน หรือส่งค่ากลับ
-                        Navigator.pop(context, true);
-                      } catch (e) {
-                        // ปิด loading dialog ถ้ามี error
-                        Navigator.of(context, rootNavigator: true).pop();
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF916B44),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('ตกลง'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRejectDialog(String docId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.red,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'คุณต้องการปฏิเสธการนัดหมายนี้หรือไม่?',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'โปรดทราบว่าการดำเนินการนี้ไม่สามารถย้อนกลับได้',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'ยกเลิก',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context, true);
-                      acceptrequest(docId, 0);
-                      // _rejectReservation();
-                      _init();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('ตกลง'),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
@@ -1374,7 +1359,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   Future<DogDetailsPost?> getdog(int dogId) async {
     try {
       log("🐶 Getting dog info for ID: $dogId");
-      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      var res = await http.get(Uri.parse("$url/dog/getdog/$dogId"));
       if (res.statusCode == 200) {
         final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
         if (dogList.isNotEmpty) {
@@ -1404,29 +1389,19 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return ''; // ไม่เจอชื่อ
   }
 
-  Future<void> getGeneral(String generalEmail) async {
+  Future<GeneralPost?> getGeneral(String generalEmail) async {
     try {
       var res = await http.get(Uri.parse("$url/general/$generalEmail"));
       if (res.statusCode == 200) {
-        generalList = generalPostFromJson(res.body);
-
-        if (generalList.isNotEmpty) {
-          // log(generalList[0].name);
-          // log(generalList[0].phone);
-          // log(generalList[0].image);
-        } else {
-          log("⚠️ generalList is empty");
-        }
-
-        setState(() {
-          isLoading = false;
-        });
-        // log("Loaded successfully: ${res.statusCode}");
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return GeneralPost.fromJson(jsonMap);
       } else {
-        log("Failed to load: ${res.statusCode}");
+        log("❌ Failed to load: ${res.statusCode}");
+        return null;
       }
     } catch (e) {
       log("Error: $e");
+      return null;
     }
   }
 
@@ -1553,12 +1528,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return '$day $month $year';
   }
 
-  Future<void> _init() async {
-    final config = await Configuration.getConfig();
-    url = config['apiEndPoint'];
-    // await getReserve();
-  }
-
   Future<void> _openBookingDetail(String docid) async {
     final result = await Navigator.push(
       context,
@@ -1567,6 +1536,427 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     if (result == true) {
       // await getReserve();
       setState(() {});
+    }
+  }
+
+  Future<bool> confirmDialog(BuildContext context, String docId) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการขอจอง",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).pop(true);
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 2);
+                    // _rejectReservation();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<bool> RejectDialog(BuildContext context, String docId) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: const Color.fromARGB(255, 203, 22, 9),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ปฏิเสธการขอจอง!!!",
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color.fromARGB(255, 203, 22, 9),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: const Color.fromARGB(255, 203, 22, 9),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 203, 22, 9)
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).pop(true);
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 0);
+                    // _rejectReservation();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<void> sendClinicAcceptNotification({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required String date,
+  }) async {
+    final apiUrl = Uri.parse("$url/reserve/notify/clinicaccept/clinic-request");
+
+    final Map<String, dynamic> data = {
+      'clinicEmail': clinicEmail,
+      'generalEmail': generalEmail,
+      'userName': userName,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ ส่งแจ้งเตือนสำเร็จ: ${response.body}');
+      } else {
+        print('❌ เกิดข้อผิดพลาด: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
+    }
+  }
+
+  Future<void> sendClinicRefuseNotification({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required String date,
+  }) async {
+    final apiUrl = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+
+    final Map<String, dynamic> data = {
+      'clinicEmail': clinicEmail,
+      'generalEmail': generalEmail,
+      'userName': userName,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ ส่งแจ้งเตือนสำเร็จ: ${response.body}');
+      } else {
+        print('❌ เกิดข้อผิดพลาด: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
+    }
+  }
+
+  Future<void> sendNotificationAccept(
+      String generalEmail, String userName) async {
+    final sql = Uri.parse("$url/reserve/notify/accept/general-reponse");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'generalEmail': generalEmail,
+          'userName': userName,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
+    }
+  }
+
+  Future<void> sendNotificationRefuse(
+      String generalEmail, String userName) async {
+    final sql = Uri.parse("$url/reserve/notify/refuse/general-reponse");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'generalEmail': generalEmail,
+          'userName': userName,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
     }
   }
 

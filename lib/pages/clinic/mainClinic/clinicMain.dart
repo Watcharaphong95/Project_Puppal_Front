@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
@@ -65,6 +66,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   List<ReserveClinicFirebase> reservebookingListAll = [];
   StreamSubscription? _reserveListener;
   bool _isDisposed = false;
+  bool _loadingData = true;
 
   @override
   void initState() {
@@ -83,8 +85,12 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     if (_isDisposed) return;
     startRealtimeGet();
 
-    if (_isDisposed) return;
-    box.write('type', 'clinic');
+    // if (_isDisposed) return;
+    // box.write('type', 'clinic');
+
+    setState(() {
+      _loadingData = false;
+    });
   }
 
   @override
@@ -93,7 +99,25 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "PUPPAL",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: secondaryBrown,
+        iconTheme: IconThemeData(color: Colors.white),
+
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
+      ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -122,7 +146,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -237,7 +261,8 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       showAlert(
                         title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
                         message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-                        onConfirm: () {
+                        onConfirm: () async {
+                          await FirebaseMessaging.instance.deleteToken();
                           Get.back();
                           Get.to(() => RegisterusergooglePage());
                         },
@@ -264,18 +289,32 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          Container(
-            child: isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
-                      strokeWidth: 3,
+      body: _loadingData
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
                     ),
-                  )
-                : Column(
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลด...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Stack(
+              children: [
+                Container(
+                  color: Color(0xFFFAF8F5),
+                  child: Column(
                     children: [
                       // Calendar Section with Modern Card Design
                       Padding(
@@ -294,7 +333,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                       normalizeDate(e.date!) ==
                                           normalizeDate(selected))
                                   .toList();
-                              isLoading = false;
                             });
                           },
                           onPageChanged: (focused) {
@@ -305,17 +343,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                           eventLoader: getEventsForDay,
                         ),
                       ),
-                      if (isLoading)
-                        Container(
-                          color: Colors.black.withOpacity(0.3),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF916B44)),
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        ),
+
                       // Section Header
                       Container(
                         margin:
@@ -397,14 +425,14 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                       margin: EdgeInsets.only(bottom: 16),
                                       child: InkWell(
                                         onTap: () async {
+                                          showLoadingDialog();
+
                                           final reserveData =
                                               await getReserveBook(item.docId);
                                           final generalEmail =
                                               reserveData?['generalEmail'];
 
                                           if (reserveData != null) {
-                                            final generalEmail =
-                                                reserveData['generalEmail'];
                                             final dogDogIdRaw =
                                                 reserveData['dogDogId'];
 
@@ -416,15 +444,22 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                       : int.tryParse(dogDogIdRaw
                                                               .toString()) ??
                                                           0;
+
                                               final dogDetails =
                                                   await getdog(dogDogId);
                                               final generalData =
                                                   await getGeneral(
                                                       generalEmail);
+
                                               if (generalData != null) {
                                                 final docIdStr =
                                                     reserveData['docId']
                                                         .toString();
+
+                                                // ✅ ปิด loading ก่อนแสดง popup
+                                                if (Get.isDialogOpen ?? false) {
+                                                  Get.back();
+                                                }
 
                                                 _showAppointmentPopup(
                                                   context,
@@ -433,8 +468,23 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                   docIdStr,
                                                   generalData,
                                                 );
+                                              } else {
+                                                if (Get.isDialogOpen ?? false) {
+                                                  Get.back();
+                                                }
+                                                log("⚠️ ไม่พบข้อมูล general สำหรับ email: $generalEmail");
                                               }
+                                            } else {
+                                              if (Get.isDialogOpen ?? false) {
+                                                Get.back();
+                                              }
+                                              log("⚠️ generalEmail ว่าง หรือเป็น null");
                                             }
+                                          } else {
+                                            if (Get.isDialogOpen ?? false) {
+                                              Get.back();
+                                            }
+                                            log("⚠️ ไม่พบข้อมูล reserve สำหรับ docId: ${item.docId}");
                                           }
                                         },
                                         borderRadius: BorderRadius.circular(20),
@@ -1049,9 +1099,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       SizedBox(height: 16),
                     ],
                   ),
-          )
-        ],
-      ),
+                )
+              ],
+            ),
     );
   }
 
@@ -1186,7 +1236,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 child: dogDetails.image.isNotEmpty
                                     ? Image.network(
-                                        dogDetails.image,
+                                        dogDetails.image ?? '-',
                                         height: 90,
                                         width: 120,
                                         fit: BoxFit.cover,
@@ -1305,9 +1355,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     // จัดการ result หลังจาก dialog ปิดแล้ว
     if (result == 'cancel' && mounted && !_isDisposed) {
       // รอ frame ถัดไปก่อนแสดง reject dialog
-      await Future.delayed(Duration(milliseconds: 100));
+
       if (mounted && !_isDisposed) {
-        _showRejectDialog(docId, 0);
+        handleReject(context, docId, 0);
       }
     } else if (result == 'record' && mounted && !_isDisposed) {
       Get.to(() => AddVaccinationRecordPage(docId: reserveList[0].docId));
@@ -1546,8 +1596,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
           final dayOnly = DateTime(day.year, day.month, day.day);
 
           final dayEvents = reservebookingListAll.where((item) {
-            final bookingDate =
-                DateTime.parse(item.date.toString()).toLocal(); // <-- แก้ตรงนี้
+            final bookingDate = item.date;
             final bookingDateOnly =
                 DateTime(bookingDate.year, bookingDate.month, bookingDate.day);
             return bookingDateOnly == dayOnly;
@@ -1639,10 +1688,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     if (_isDisposed || !mounted) return;
 
     try {
-      setState(() {
-        isLoading = true;
-      });
-
       List<ReserveClinicFirebase> allData = snapshot.docs
           .map((doc) => ReserveClinicFirebase.fromJson(doc.data(), doc.id))
           .where((data) => data.status != 3)
@@ -1690,15 +1735,15 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
       if (_isDisposed || !mounted) return;
       setState(() {
         events = filteredList;
-        isLoading = false;
       });
     } catch (e) {
       log("❌ Error during snapshot handling: $e");
 
       if (_isDisposed || !mounted) return;
-      setState(() {
-        isLoading = false;
-      });
+      setState(() {});
+    }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
     }
   }
 
@@ -1722,17 +1767,19 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   }
 
   Future<DogDetailsPost?> getdog(int dogId) async {
+    log("Fetching dog info for ID: $dogId");
     try {
-      // log("🐶 Getting dog info for ID: $dogId");
-      var res = await http.get(Uri.parse("$url/dog/data/$dogId"));
+      final res = await http.get(Uri.parse("$url/dog/getdog/$dogId"));
       if (res.statusCode == 200) {
         final List<DogDetailsPost> dogList = dogDetailsPostFromJson(res.body);
         if (dogList.isNotEmpty) {
           return dogList.first;
+        } else {
+          log("No dog data found for ID: $dogId");
+          return null;
         }
-        return null; // กรณีไม่มีข้อมูล
       } else {
-        log("❌ Failed to load dog: ${res.statusCode}");
+        log("❌ Failed to load dog info, status code: ${res.statusCode}");
         return null;
       }
     } catch (e) {
@@ -1822,125 +1869,360 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   }
 
   Future<void> updatestatus(String docId, int status) async {
-    showLoadingDialog();
-    if (status == 0) {
-      try {
+    try {
+      showLoadingDialog();
+
+      if (status == 0) {
         await FirebaseFirestore.instance
             .collection('reserve')
             .doc(docId)
-            .update({
-          'status': status,
-        });
+            .update({'status': status});
+        // 2. ดึงข้อมูลของ reserve
+        final doc = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .get();
 
+        if (doc.exists) {
+          final data = doc.data();
+          final generalEmail = data?['generalEmail'];
+          final clinicEmail = data?['clinicEmail'];
+          final date = data?['date'];
+
+          if (generalEmail != null) {
+            final generalUser = await getGeneral(generalEmail);
+            final userName = generalUser?.name;
+            final dateRaw = data?['date'];
+            DateTime? date;
+
+            if (dateRaw is Timestamp) {
+              date = dateRaw.toDate();
+            } else if (dateRaw is String) {
+              date = DateTime.tryParse(dateRaw);
+            }
+
+            if (userName != null && clinicEmail != null && date != null) {
+              await sendNotificationRefuse(
+                clinicEmail: clinicEmail,
+                generalEmail: generalEmail,
+                userName: userName,
+                date: date,
+              );
+              await sendClinicRefuseNotification(
+                clinicEmail: clinicEmail,
+                userName: box.read('clinicName'),
+                date: date.toString(),
+                generalEmail: generalEmail,
+              );
+            } else {
+              log("⚠️ Missing required data for notification");
+            }
+          } else {
+            log("⚠️ Missing generalEmail in document");
+          }
+        }
         log('✅ Updated status to $status for docId=$docId');
-        Get.back();
-      } catch (e) {
-        log('❌ Failed to update status: $e');
+      } else {
+        log('⚠️ Status not allowed to update: $status');
       }
-    } else {
-      log('⚠️ Status not allowed to update: $status');
+    } catch (e) {
+      log('❌ Failed to update status: $e');
+    } finally {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
     }
   }
 
-  void _showRejectDialog(String docid, int status) {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // ป้องกันการปิด dialog โดยไม่ตั้งใจ
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.red,
-                size: 32,
+  Future<void> sendNotificationRefuse({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required DateTime date,
+  }) async {
+    final sql = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+
+    try {
+      final res = await http.post(
+        sql,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'clinicEmail': clinicEmail,
+          'generalEmail': generalEmail,
+          'userName': userName,
+          'date': date
+              .toIso8601String(), // สำคัญ ต้องเป็น ISO format เช่น "2025-07-23T14:00:00.000Z"
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        log("✅ Notification sent successfully");
+      } else {
+        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
+      }
+    } catch (e) {
+      log("❌ Error sending notification: $e");
+    }
+  }
+
+  Future<void> sendClinicRefuseNotification({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required String date,
+  }) async {
+    final apiUrl = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+
+    final Map<String, dynamic> data = {
+      'clinicEmail': clinicEmail,
+      'generalEmail': generalEmail,
+      'userName': userName,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ ส่งแจ้งเตือนสำเร็จ: ${response.body}');
+      } else {
+        print('❌ เกิดข้อผิดพลาด: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
+    }
+  }
+
+  Future<bool> RejectDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color.fromARGB(255, 203, 22, 9),
+                width: 2,
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'คุณต้องการปฏิเสธการนัดหมายนี้หรือไม่?',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'โปรดทราบว่าการดำเนินการนี้ไม่สามารถย้อนกลับได้',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
-                      // ปิดแค่ reject dialog เท่านั้น
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      'ยกเลิก',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // ปิด reject dialog
-                      Navigator.of(context).pop();
-
-                      // รอให้ dialog ปิดสมบูรณ์
-                      await Future.delayed(Duration(milliseconds: 100));
-
-                      // อัพเดท status
-                      await updatestatus(docid, 0);
-
-                      // เรียก _rejectReservation ถ้ามี
-                      if (mounted && !_isDisposed) {
-                        _rejectReservation();
-                      }
-
-                      // แสดง snackbar หรือ toast เพื่อแจ้งผลการยกเลิก (ถ้าต้องการ)
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('ยกเลิกการจองเรียบร้อยแล้ว'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: const Text('ตกลง'),
+                const SizedBox(height: 16),
+                const Text(
+                  "ปฏิเสธการขอจอง!!!",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 203, 22, 9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 203, 22, 9),
+                    fontSize: 16,
+                    height: 1.4,
                   ),
                 ),
               ],
             ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color.fromARGB(255, 203, 22, 9),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: const Color.fromARGB(255, 203, 22, 9),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 203, 22, 9)
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> ShowDeleteSuccessDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // กดข้างนอกไม่ได้ ต้องกดปุ่มปิด
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(
+            color: Color(0xFF916B44),
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Color(0xFF916B44),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "ลบเสร็จเรียบร้อย",
+              style: TextStyle(
+                color: Color(0xFF916B44),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "ข้อมูลได้ถูกลบเรียบร้อยแล้ว",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF916B44),
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
           ],
         ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: Color(0xFF916B44),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                "ปิด",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> handleReject(
+      BuildContext context, String docId, int status) async {
+    bool confirm = await RejectDialog(context);
+    if (!mounted) return; // ตรวจสอบว่า widget ยังไม่ถูก dispose
+
+    if (confirm) {
+      await updatestatus(docId, 0);
+
+      if (!mounted) return; // ตรวจสอบอีกครั้งก่อนแสดง dialog
+
+      await ShowDeleteSuccessDialog(context);
+    } else {
+      log('ผู้ใช้ยกเลิกการบันทึก');
+    }
   }
 
   void _rejectReservation() {

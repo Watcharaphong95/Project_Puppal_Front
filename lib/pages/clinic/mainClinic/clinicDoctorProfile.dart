@@ -34,7 +34,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
   final doctor = Get.find<registerDoctorCtl>();
   String url = "";
   List<DoctorPost> doctorsList = [];
-  bool isLoading = true;
+  bool _loadingData = true;
   List<String> selectedSpecialty = [];
   List<SpecialPost> special = [];
 
@@ -45,6 +45,9 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
       url = config['apiEndPoint'];
       searcheDoctor(this.widget.name ?? '');
       getSpecialData();
+      setState(() {
+        _loadingData = false;
+      });
     });
   }
 
@@ -53,450 +56,348 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        drawer: Drawer(
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    offset: Offset(2, 2),
-                  ),
-                ],
-              ),
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF916b44),
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipOval(
-                          child: Image.network(
-                            box.read('clinicImage'),
-                            width: screenWidth * 0.2,
-                            height: screenWidth * 0.2,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: screenWidth * 0.2,
-                                  height: screenWidth * 0.2,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          box.read('clinicName') ?? "ผู้ใช้งาน",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                    title: Text('หน้าหลัก'),
-                    onTap: () {
-                      Get.to(() => ClinicmainPage());
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.system_security_update,
-                        color: Color(0xFF916b44)),
-                    title: Text('คำขอฉีดยา'),
-                    onTap: () {
-                      Get.to(() => VaccineRequestsPage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('ประวัติการฉีดยา'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.supervised_user_circle,
-                        color: Color(0xFF916b44)),
-                    title: Text('หมอประจำคลินิก'),
-                    onTap: () {
-                      Get.to(() => Cliniclistdoctors());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('เวลาปิด-เปิด'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                    title: Text('ตั้งค่า'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.logout, color: Colors.redAccent),
-                    title: Text('ออกจากระบบ'),
-                    onTap: () {
-                      showAlert(
-                        context: context,
-                        title: 'ออกจากระบบ?',
-                        message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () {
-                          box.erase();
-                          Get.to(() => IndexPage());
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
+        appBar: AppBar(
+          backgroundColor: Color(0xFFDBA871),
+          elevation: 0,
+          centerTitle: true,
+          title: const Text(
+            "โปรไฟล์คุณหมอ",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
             ),
           ),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black),
-        ),
-        body: SingleChildScrollView(
-          child: Container(
-            decoration: BoxDecoration(),
-            child: Column(
-              children: doctorsList.map((doctors) {
-                return Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        body: _loadingData
+            ? SizedBox(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : SingleChildScrollView(
+                child: Container(
+                  decoration: BoxDecoration(),
                   child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      // Profile Header with Pet Theme
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          // color: Colors.white,
-                          boxShadow: [
-                            // BoxShadow(
-                            //   color: Colors.black.withOpacity(0.1),
-                            //   blurRadius: 10,
-                            //   spreadRadius: 2,
-                            // ),
-                          ],
-                        ),
+                    children: doctorsList.map((doctors) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         child: Column(
                           children: [
-                            // Profile Image with Pet Border
+                            const SizedBox(height: 20),
+                            // Profile Header with Pet Theme
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white,
+                                // color: Colors.white,
                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
+                                  // BoxShadow(
+                                  //   color: Colors.black.withOpacity(0.1),
+                                  //   blurRadius: 10,
+                                  //   spreadRadius: 2,
+                                  // ),
                                 ],
                               ),
-                              child: ClipOval(
-                                child: doctors.image.isNotEmpty
-                                    ? Image.network(
-                                        doctors.image,
-                                        height: 120,
-                                        width: 120,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                          if (loadingProgress == null)
-                                            return child;
-                                          return Shimmer.fromColors(
-                                            baseColor: Color(0xFFE9CBAF),
-                                            highlightColor: Colors.white,
-                                            child: Container(
+                              child: Column(
+                                children: [
+                                  // Profile Image with Pet Border
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipOval(
+                                      child: doctors.image.isNotEmpty
+                                          ? Image.network(
+                                              doctors.image,
+                                              height: 120,
+                                              width: 120,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return Shimmer.fromColors(
+                                                  baseColor: Color(0xFFE9CBAF),
+                                                  highlightColor: Colors.white,
+                                                  child: Container(
+                                                    width: 120,
+                                                    height: 120,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      color: Colors.white,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              errorBuilder: (context, error,
+                                                      stackTrace) =>
+                                                  Container(
+                                                width: 120,
+                                                height: 120,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.grey,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.pets,
+                                                  size: 50,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
                                               width: 120,
                                               height: 120,
                                               decoration: const BoxDecoration(
-                                                color: Colors.white,
                                                 shape: BoxShape.circle,
+                                                color: Colors.grey,
+                                              ),
+                                              child: const Icon(
+                                                Icons.pets,
+                                                size: 50,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                          );
-                                        },
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Container(
-                                          width: 120,
-                                          height: 120,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+                                  // Veterinarian Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.medical_services,
+                                            color: Color(0xFF916B44), size: 25),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          doctors.careerNo,
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF916B44),
                                           ),
-                                          child: const Icon(
-                                            Icons.pets,
-                                            size: 50,
-                                            color: Colors.white,
-                                          ),
                                         ),
-                                      )
-                                    : Container(
-                                        width: 120,
-                                        height: 120,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.grey,
-                                        ),
-                                        child: const Icon(
-                                          Icons.pets,
-                                          size: 50,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            // Veterinarian Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.medical_services,
-                                      color: Color(0xFF916B44), size: 25),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    doctors.careerNo,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF916B44),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
 
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                      // Information Card
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Color(0xFFE9CBAF),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFFDBA871).withOpacity(0.2),
-                              offset: const Offset(0, 6),
-                              blurRadius: 16,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Name Field
-                            _buildInfoField(
-                              icon: Icons.person,
-                              label: 'ชื่อ',
-                              value: doctors.name,
-                              screenHeight: screenHeight,
-                            ),
+                            // Information Card
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Color(0xFFE9CBAF),
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFFDBA871).withOpacity(0.2),
+                                    offset: const Offset(0, 6),
+                                    blurRadius: 16,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Name Field
+                                  _buildInfoField(
+                                    icon: Icons.person,
+                                    label: 'ชื่อ',
+                                    value: doctors.name,
+                                    screenHeight: screenHeight,
+                                  ),
 
-                            const SizedBox(height: 20),
+                                  const SizedBox(height: 20),
 
-                            // Surname Field
-                            _buildInfoField(
-                              icon: Icons.badge,
-                              label: 'นามสกุล',
-                              value: doctors.surname,
-                              screenHeight: screenHeight,
-                            ),
+                                  // Surname Field
+                                  _buildInfoField(
+                                    icon: Icons.badge,
+                                    label: 'นามสกุล',
+                                    value: doctors.surname,
+                                    screenHeight: screenHeight,
+                                  ),
 
-                            const SizedBox(height: 20),
+                                  const SizedBox(height: 20),
 
-                            // Specialty Field
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Color(0xFFE9CBAF).withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.star,
-                                        color: Color(0xFF916B44),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                  // Specialty Field
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          Text(
-                                            'ความเชี่ยวชาญ',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFE9CBAF)
+                                                  .withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(
+                                              Icons.star,
                                               color: Color(0xFF916B44),
+                                              size: 20,
                                             ),
                                           ),
-                                          Text(
-                                            '(เช่น การผ่าตัด, การรักษาด้วยยา)',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey[600],
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'ความเชี่ยวชาญ',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF916B44),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '(เช่น การผ่าตัด, การรักษาด้วยยา)',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Material(
-                                  elevation: 2,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: InkWell(
-                                    // onTap: _showSelectSpecialty,
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Color(0xFFE9CBAF).withOpacity(0.1),
+                                      const SizedBox(height: 12),
+                                      Material(
+                                        elevation: 2,
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Color(0xFFDBA871)
-                                              .withOpacity(0.5),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              special[0].name.isEmpty
-                                                  ? 'เลือกความเชี่ยวชาญ'
-                                                  : selectedSpecialty
-                                                      .toSet()
-                                                      .map((e) => e.toString())
-                                                      .join(', '),
-                                              style: TextStyle(
-                                                color: selectedSpecialty.isEmpty
-                                                    ? Colors.grey[600]
-                                                    : Color(0xFF916B44),
-                                                fontSize: 16,
-                                                fontWeight:
-                                                    selectedSpecialty.isEmpty
-                                                        ? FontWeight.normal
-                                                        : FontWeight.w500,
+                                        child: InkWell(
+                                          // onTap: _showSelectSpecialty,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFE9CBAF)
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Color(0xFFDBA871)
+                                                    .withOpacity(0.5),
+                                                width: 1,
                                               ),
                                             ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    special[0].name.isEmpty
+                                                        ? 'เลือกความเชี่ยวชาญ'
+                                                        : selectedSpecialty
+                                                            .toSet()
+                                                            .map((e) =>
+                                                                e.toString())
+                                                            .join(', '),
+                                                    style: TextStyle(
+                                                      color: selectedSpecialty
+                                                              .isEmpty
+                                                          ? Colors.grey[600]
+                                                          : Color(0xFF916B44),
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          selectedSpecialty
+                                                                  .isEmpty
+                                                              ? FontWeight
+                                                                  .normal
+                                                              : FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 30),
+
+                            // Edit Button with Pet Theme
+                            Container(
+                              width: double.infinity,
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Get.to(() => Clinicdoctoreditprofile(
+                                      name: doctors.name));
+                                },
+                                icon: Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                                label: Text(
+                                  "แก้ไขข้อมูล",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
-                              ],
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF916B44),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 24),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor:
+                                      Color(0xFF916B44).withOpacity(0.4),
+                                ),
+                              ),
                             ),
+
+                            const SizedBox(height: 30),
                           ],
                         ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Edit Button with Pet Theme
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.symmetric(horizontal: 24),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Get.to(() =>
-                                Clinicdoctoreditprofile(name: doctors.name));
-                          },
-                          icon: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          label: Text(
-                            "แก้ไขข้อมูล",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF916B44),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16, horizontal: 24),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 8,
-                            shadowColor: Color(0xFF916B44).withOpacity(0.4),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-                    ],
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-        ));
+                ),
+              ));
   }
 
   Widget _buildInfoField({
@@ -585,6 +486,8 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
       json.decode(str).map((x) => DoctorPost.fromJson(x)));
 
   Future<void> searcheDoctor(name) async {
+    showLoadingDialog();
+
     final keyword = name.trim();
     // log("Keyword: $keyword");
     if (keyword.isEmpty) return;
@@ -603,17 +506,20 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
         }
         setState(() {
           doctorsList = data;
-          isLoading = false;
+          _loadingData = false;
         });
       } else {
         setState(() {
-          isLoading = false;
+          _loadingData = false;
         });
       }
     } catch (e) {
       setState(() {
-        isLoading = false;
+        _loadingData = false;
       });
+    }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
     }
   }
 
@@ -847,6 +753,56 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
 
     // log("STATUS: ${res.statusCode}");
     // log("BODY: ${res.body}");
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void showAlert({

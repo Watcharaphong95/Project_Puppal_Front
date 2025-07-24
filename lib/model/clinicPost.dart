@@ -17,8 +17,6 @@ class ClinicPost {
   String lat;
   String lng;
   String image;
-  String open;
-  String close;
   int numPerTime;
   String? fcmToken;
 
@@ -30,8 +28,6 @@ class ClinicPost {
     required this.lat,
     required this.lng,
     required this.image,
-    required this.open,
-    required this.close,
     required this.numPerTime,
     fcmToken,
   });
@@ -44,8 +40,6 @@ class ClinicPost {
         lat: json["lat"],
         lng: json["lng"],
         image: json["image"],
-        open: json["open"],
-        close: json["close"],
         numPerTime: json["numPerTime"],
         fcmToken: json["fcmToken"],
       );
@@ -58,8 +52,6 @@ class ClinicPost {
         "lat": lat,
         "lng": lng,
         "image": image,
-        "open": open,
-        "close": close,
         "numPerTime": numPerTime,
         "fcmToken": fcmToken,
       };
