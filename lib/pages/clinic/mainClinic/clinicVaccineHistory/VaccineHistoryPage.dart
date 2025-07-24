@@ -407,6 +407,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                       borderRadius: BorderRadius.circular(20),
                                       child: Container(
                                         decoration: BoxDecoration(
+                                          color: Colors.white,
                                           // gradient: LinearGradient(
                                           //   begin: Alignment.topLeft,
                                           //   end: Alignment.bottomRight,
