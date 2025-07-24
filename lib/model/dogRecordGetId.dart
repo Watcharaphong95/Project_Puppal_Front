@@ -27,23 +27,23 @@ class DogsRecordIdGet {
   String injectionDate;
   String vaccineLabel;
   int recordType;
-  String careerNo;
-  String doctorName;
-  String doctorSurname;
-  String doctorImage;
+  dynamic careerNo;
+  dynamic doctorName;
+  dynamic doctorSurname;
+  dynamic doctorImage;
   String clinicEmail;
   String clinicName;
   String phone;
   String address;
+  String clinicImage;
   String open;
   String close;
-  String clinicImage;
   int? oldAid;
   String? oldDate;
   String? oldVaccine;
-  int? nextAid;
-  String? nextDate;
-  String? nextVaccine;
+  int nextAid;
+  String nextDate;
+  String nextVaccine;
 
   DogsRecordIdGet({
     required this.dogName,
@@ -69,9 +69,9 @@ class DogsRecordIdGet {
     required this.clinicName,
     required this.phone,
     required this.address,
+    required this.clinicImage,
     required this.open,
     required this.close,
-    required this.clinicImage,
     required this.oldAid,
     required this.oldDate,
     required this.oldVaccine,
@@ -105,9 +105,9 @@ class DogsRecordIdGet {
         clinicName: json["clinicName"],
         phone: json["phone"],
         address: json["address"],
+        clinicImage: json["clinic_image"],
         open: json["open"],
         close: json["close"],
-        clinicImage: json["clinic_image"],
         oldAid: json["old_aid"],
         oldDate: json["old_date"],
         oldVaccine: json["old_vaccine"],
@@ -140,9 +140,9 @@ class DogsRecordIdGet {
         "clinicName": clinicName,
         "phone": phone,
         "address": address,
+        "clinic_image": clinicImage,
         "open": open,
         "close": close,
-        "clinic_image": clinicImage,
         "old_aid": oldAid,
         "old_date": oldDate,
         "old_vaccine": oldVaccine,

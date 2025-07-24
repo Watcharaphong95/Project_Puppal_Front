@@ -11,6 +11,7 @@ import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
+import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
 import 'package:puppal_application/pages/login/loginTypeSelect.dart';
 
 class LoginPage extends StatefulWidget {
@@ -236,6 +237,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
+    showLoadingDialog();
 
     UserPost req = UserPost(
         email: emailCtl.text,
@@ -274,6 +276,7 @@ class _LoginPageState extends State<LoginPage> {
           log('Name ${box.read('generalName')}');
           Get.offAll(() => GeneralmainPage());
         } else {
+          Get.back();
           Get.snackbar(
             'ข้อผิดพลาด',
             'กรุณาลองใหม่อีกครั้ง',
@@ -308,6 +311,7 @@ class _LoginPageState extends State<LoginPage> {
           log('Name ${box.read('clinicName')}');
           Get.offAll(() => ClinicmainPage());
         } else {
+          Get.back();
           Get.snackbar(
             'ข้อผิดพลาด',
             'กรุณาลองใหม่อีกครั้ง',
@@ -324,6 +328,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } else {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกอีเมลและรหัสผ่านที่ถูกต้อง',
@@ -340,5 +345,57 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void forgetPasswordButton() {}
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void forgetPasswordButton() {
+    Get.to(() => RecoverypasswordPage());
+  }
 }

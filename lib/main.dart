@@ -8,11 +8,14 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/loadingCheck.dart';
 import 'package:puppal_application/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -36,6 +39,9 @@ Future<void> main() async {
   Get.put(registerDogCtl());
   Get.put(RegisterDogInjectionCtl());
   Get.put(injectionRecordList());
+  Get.put(MainNavigationController());
+  Get.put(GeneralMainBottomNavigateController());
+  AppNavigation.initialize();
 
   runApp(ChangeNotifierProvider(
     create: (_) => AppData(),

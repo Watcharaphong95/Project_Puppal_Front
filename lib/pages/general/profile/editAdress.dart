@@ -142,45 +142,6 @@ class _EditadressPageState extends State<EditadressPage> {
                             ),
                     ),
                   ),
-                  // THIS IS THE LAT LNG FOR ONLY DEBUGGING PURPOSES
-                  // Padding(
-                  //   padding: EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
-                  //   child: SizedBox(
-                  //     width: screenWidth,
-                  //     child: Column(
-                  //       crossAxisAlignment: CrossAxisAlignment.center,
-                  //       children: [
-                  //         SizedBox(
-                  //           width: screenWidth * 0.5,
-                  //           child: Card(
-                  //             color: Color(0xFF916B44),
-                  //             child: Padding(
-                  //               padding: const EdgeInsets.all(20.0),
-                  //               child: Column(
-                  //                 children: [
-                  //                   Text(
-                  //                     selectedLatLng != null
-                  //                         ? 'Lat: ${selectedLatLng!.latitude.toStringAsFixed(4)}'
-                  //                         : 'กรุณาเลือกตำแหน่ง',
-                  //                     style: TextStyle(
-                  //                         fontSize: 16, color: Colors.white),
-                  //                   ),
-                  //                   Text(
-                  //                     selectedLatLng != null
-                  //                         ? 'Lng: ${selectedLatLng!.longitude.toStringAsFixed(4)}'
-                  //                         : 'กรุณาเลือกตำแหน่ง',
-                  //                     style: TextStyle(
-                  //                         fontSize: 16, color: Colors.white),
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(0, screenHeight * 0.075, 0, 0),
                     child: SizedBox(

@@ -65,14 +65,15 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'ตั้งค่า',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     'ตั้งค่า',
+      //     style: TextStyle(color: Colors.white),
+      //   ),
+      //   centerTitle: true,
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      // ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -101,7 +102,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
@@ -256,13 +257,13 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
             )
           : Container(
               height: screenHeight,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/indexBg.png'),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                        Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-              ),
+              // decoration: BoxDecoration(
+              //   image: DecorationImage(
+              //       image: AssetImage('assets/images/indexBg.png'),
+              //       fit: BoxFit.cover,
+              //       colorFilter: ColorFilter.mode(
+              //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+              // ),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
@@ -390,45 +391,45 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
-                                height: screenHeight * 0.075,
-                                width: screenWidth * 0.8,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Get.to(() => EditadressPage());
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.pin_drop,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'เปลี่ยนที่อยู่',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(
-                                        FontAwesomeIcons.chevronRight,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                            // Padding(
+                            //   padding: const EdgeInsets.symmetric(vertical: 5),
+                            //   child: SizedBox(
+                            //     height: screenHeight * 0.075,
+                            //     width: screenWidth * 0.8,
+                            //     child: ElevatedButton(
+                            //       onPressed: () {
+                            //         Get.to(() => EditadressPage());
+                            //       },
+                            //       child: Row(
+                            //         mainAxisAlignment:
+                            //             MainAxisAlignment.spaceBetween,
+                            //         children: [
+                            //           Row(
+                            //             children: [
+                            //               Icon(
+                            //                 Icons.pin_drop,
+                            //                 size: screenWidth * 0.10,
+                            //                 color: Color(0xFF916b44),
+                            //               ),
+                            //               const SizedBox(width: 8),
+                            //               const Text(
+                            //                 'เปลี่ยนที่อยู่',
+                            //                 style: TextStyle(
+                            //                     fontSize: 20,
+                            //                     color: Colors.black),
+                            //               ),
+                            //             ],
+                            //           ),
+                            //           const Icon(
+                            //             FontAwesomeIcons.chevronRight,
+                            //             size: 20,
+                            //             color: Colors.grey,
+                            //           ),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //   ),
+                            // ),
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 5),
                               child: SizedBox(

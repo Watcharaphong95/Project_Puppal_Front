@@ -14,17 +14,20 @@ import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
 import 'package:puppal_application/model/reserveDogList.dart';
 import 'package:puppal_application/model/reserveDogListPostReq.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DogselectPage extends StatefulWidget {
   final DateTime date;
   final Map<DateTime, List<Dog>> dogData;
+  final List<int> dogHasAppointment;
 
   const DogselectPage({
     super.key,
     required this.date,
     required this.dogData,
+    required this.dogHasAppointment,
   });
 
   @override
@@ -50,6 +53,7 @@ class _DogselectPageState extends State<DogselectPage> {
     log(widget.date.toString());
     // log(jsonEncode(widget.dogData.map((date, dogs) => MapEntry(
     //     date.toIso8601String(), dogs.map((d) => d.toJson()).toList()))));
+    log('dogHasAppointment JSON: ${jsonEncode(widget.dogHasAppointment)}');
     init();
     super.initState();
   }
@@ -60,6 +64,8 @@ class _DogselectPageState extends State<DogselectPage> {
     });
     await getDogData();
     await addDogData(widget.dogData);
+    filterDogs
+        .removeWhere((dog) => widget.dogHasAppointment.contains(dog.dogId));
     setState(() => isLoading = false);
   }
 
@@ -68,174 +74,179 @@ class _DogselectPageState extends State<DogselectPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color(0xFF916B44),
-        ),
+        // appBar: AppBar(
+        //   backgroundColor: Color(0xFFDBA871),
+        //   centerTitle: true,
+        //   title: Text(
+        //     'เลือกสุนัข',
+        //     style: TextStyle(
+        //         fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+        //   ),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        // ),
         body: Container(
-          child: isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(color: Color(0xFFDBA871)),
-                      SizedBox(height: 16),
-                      Text(
-                        'กำลังโหลดข้อมูลสุนัข...',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+      child: isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFFDBA871)),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลดข้อมูลสุนัข...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
                   ),
-                )
-              : Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.grey.shade50,
-                        Colors.white,
+                ],
+              ),
+            )
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.grey.shade50,
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Search Header Section
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'เลือกสุนัขของคุณ',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFDBA871),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'เลือกสุนัขที่ต้องการจองฉีดวัคซีน',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+
+                        // Search Bar
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: TextField(
+                            controller: searchDogCtl,
+                            onChanged: (value) {
+                              setState(() {
+                                if (value.isEmpty) {
+                                  filterDogs = allDogs;
+                                } else {
+                                  filterDogs = allDogs.where((dog) {
+                                    return dog.name
+                                        .toLowerCase()
+                                        .contains(value.toLowerCase());
+                                  }).toList();
+                                }
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'ค้นหาชื่อสุนัข...',
+                              hintStyle: TextStyle(color: Colors.grey.shade500),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              prefixIcon: Container(
+                                padding: EdgeInsets.all(12),
+                                child: Icon(
+                                  FontAwesomeIcons.magnifyingGlass,
+                                  color: Color(0xFFDBA871),
+                                  size: 20,
+                                ),
+                              ),
+                              suffixIcon: searchDogCtl.text.isNotEmpty
+                                  ? Container(
+                                      margin: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.grey.shade600,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          searchDogCtl.clear();
+                                          FocusScope.of(context).unfocus();
+                                          setState(() {
+                                            filterDogs =
+                                                List<ReserveDoglist>.from(
+                                                    allDogs);
+                                          });
+                                        },
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      // Search Header Section
-                      Container(
-                        padding: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'เลือกสุนัขของคุณ',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFDBA871),
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'เลือกสุนัขที่ต้องการจองฉีดวัคซีน',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            SizedBox(height: 16),
 
-                            // Search Bar
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.grey.shade200),
-                              ),
-                              child: TextField(
-                                controller: searchDogCtl,
-                                onChanged: (value) {
-                                  setState(() {
-                                    if (value.isEmpty) {
-                                      filterDogs = allDogs;
-                                    } else {
-                                      filterDogs = allDogs.where((dog) {
-                                        return dog.name
-                                            .toLowerCase()
-                                            .contains(value.toLowerCase());
-                                      }).toList();
-                                    }
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  hintText: 'ค้นหาชื่อสุนัข...',
-                                  hintStyle:
-                                      TextStyle(color: Colors.grey.shade500),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 16,
+                  // Content Section
+                  Expanded(
+                    child: isLoading
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                    color: Color(0xFFDBA871)),
+                                SizedBox(height: 16),
+                                Text(
+                                  'กำลังค้นหา...',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 16,
                                   ),
-                                  prefixIcon: Container(
-                                    padding: EdgeInsets.all(12),
-                                    child: Icon(
-                                      FontAwesomeIcons.magnifyingGlass,
-                                      color: Color(0xFFDBA871),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  suffixIcon: searchDogCtl.text.isNotEmpty
-                                      ? Container(
-                                          margin: EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade300,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: IconButton(
-                                            icon: Icon(
-                                              Icons.clear,
-                                              color: Colors.grey.shade600,
-                                              size: 18,
-                                            ),
-                                            onPressed: () {
-                                              searchDogCtl.clear();
-                                              FocusScope.of(context).unfocus();
-                                              setState(() {
-                                                filterDogs =
-                                                    List<ReserveDoglist>.from(
-                                                        allDogs);
-                                              });
-                                            },
-                                          ),
-                                        )
-                                      : null,
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-
-                      // Content Section
-                      Expanded(
-                        child: isLoading
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircularProgressIndicator(
-                                        color: Color(0xFFDBA871)),
-                                    SizedBox(height: 16),
-                                    Text(
-                                      'กำลังค้นหา...',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : filterDogs.isEmpty
-                                ? _buildEmptyState()
-                                : _buildDogList(),
-                      ),
-                    ],
+                          )
+                        : filterDogs.isEmpty
+                            ? _buildEmptyState()
+                            : _buildDogList(),
                   ),
-                ),
-        ));
+                ],
+              ),
+            ),
+    ));
   }
 
   Widget _buildEmptyState() {
@@ -354,22 +365,24 @@ class _DogselectPageState extends State<DogselectPage> {
                   ? null
                   : isPast
                       ? () {
-                          Get.to(() => ClinicsearchPage(
-                                dogId: dog.dogId,
-                                vaccineName: dog.vaccine,
-                                date: widget.date,
-                                aid: dog.aid,
-                                reserveId: dog.reserveId,
-                              ));
+                          AppNavigation.toWidget(ClinicsearchPage(
+                            dogId: dog.dogId,
+                            vaccineName: dog.vaccine,
+                            date: widget.date,
+                            aid: dog.aid,
+                            reserveId: dog.reserveId,
+                            dogData: null,
+                          ));
                         }
                       : () {
-                          Get.to(() => ClinicsearchPage(
-                                dogId: dog.dogId,
-                                vaccineName: '',
-                                date: widget.date,
-                                aid: [0],
-                                reserveId: null,
-                              ));
+                          AppNavigation.toWidget(ClinicsearchPage(
+                            dogId: dog.dogId,
+                            vaccineName: '',
+                            date: widget.date,
+                            aid: [0],
+                            reserveId: null,
+                            dogData: null,
+                          ));
                         },
               borderRadius: BorderRadius.circular(16),
               child: Padding(

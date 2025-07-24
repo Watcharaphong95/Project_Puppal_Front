@@ -67,27 +67,29 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'สุนัขของฉัน',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Color(0xFF916B44),
-        actions: [
-          IconButton(
-              onPressed: () {
-                Get.to(() => RegisterdogPage());
-              },
-              icon: CircleAvatar(
-                backgroundColor: Color(0xFFDBA871),
-                child: Icon(
-                  FontAwesomeIcons.plus,
-                  color: Colors.white,
-                ),
-              ))
-        ],
-      ),
+      // appBar: AppBar(
+      //   centerTitle: true,
+      //   title: const Text(
+      //     'สุนัขของฉัน',
+      //     style: TextStyle(
+      //         color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+      //   ),
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      //   actions: [
+      //     IconButton(
+      //         onPressed: () {
+      //           Get.to(() => RegisterdogPage());
+      //         },
+      //         icon: CircleAvatar(
+      //           backgroundColor: Color(0xFFE9CBAF),
+      //           child: Icon(
+      //             FontAwesomeIcons.plus,
+      //             color: Colors.white,
+      //           ),
+      //         ))
+      //   ],
+      // ),
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -116,7 +118,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Color(0xFF916b44),
+                    color: Color(0xFFDBA871),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                     ),
