@@ -9,6 +9,7 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
@@ -57,20 +58,21 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color(0xFFDBA871),
-          elevation: 0,
-          centerTitle: true,
-          title: const Text(
-            "โปรไฟล์คุณหมอ",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
+        // appBar: AppBar(
+        //   backgroundColor: Color(0xFFDBA871),
+        //   elevation: 0,
+        //   centerTitle: true,
+        //   title: const Text(
+        //     "โปรไฟล์คุณหมอ",
+        //     style: TextStyle(
+        //       fontWeight: FontWeight.w600,
+        //       fontSize: 24,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        // ),
+
         body: _loadingData
             ? SizedBox(
                 child: Center(child: CircularProgressIndicator()),
@@ -360,8 +362,9 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  Get.to(() => Clinicdoctoreditprofile(
-                                      name: doctors.name));
+                                  AppNavigation.toWidget(
+                                    Clinicdoctoreditprofile(name: doctors.name),
+                                  );
                                 },
                                 icon: Icon(
                                   Icons.edit,

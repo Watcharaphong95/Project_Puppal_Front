@@ -19,6 +19,7 @@ import 'package:puppal_application/model/reserveGeneralPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
@@ -229,7 +230,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         //               title: Text('เวลาปิด-เปิด'),
         //               onTap: () {
         //                 Get.back();
-
         //                 Get.to(() => Clinicopeninghours());
         //               }),
         //           ListTile(
@@ -237,7 +237,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         //               title: Text('ตั้งค่า'),
         //               onTap: () {
         //                 Get.back();
-
         //                 Get.to(() => Clinicsetting());
         //               }),
         //           ListTile(
@@ -849,7 +848,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           ),
                           // arrow button
                           GestureDetector(
-                            onTap: () => _openBookingDetail(docId),
+                            onTap: () {
+                              AppNavigation.toWidget(
+                                  BookingdetailPage(docid: docId));
+                            },
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(

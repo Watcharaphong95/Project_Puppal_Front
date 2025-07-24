@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
@@ -275,7 +276,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                       // Header Section with Profile
                       SafeArea(
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(24, 40, 24, 40),
+                          padding: EdgeInsets.fromLTRB(24, 40, 24, 0),
                           child: Column(
                             children: [
                               // Profile Image
@@ -371,7 +372,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'แก้ไขโปรไฟล์',
                               subtitle: 'จัดการข้อมูลส่วนตัว',
                               onTap: () {
-                                Get.to(() => Clinicprofile());
+                                AppNavigation.toWidget(Clinicprofile());
                               },
                               screenWidth: screenWidth,
                             ),
@@ -384,7 +385,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'เปลี่ยนรหัสผ่าน',
                               subtitle: 'อัปเดตรหัสผ่านของคุณ',
                               onTap: () {
-                                Get.to(() => RecoverypasswordPage());
+                                AppNavigation.toWidget(RecoverypasswordPage());
                               },
                               screenWidth: screenWidth,
                             ),

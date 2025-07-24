@@ -16,6 +16,7 @@ import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/bookingdetails/CalendarBookingDetailPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
@@ -86,7 +87,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         //   ),
         //   backgroundColor: secondaryBrown,
         //   iconTheme: IconThemeData(color: Colors.white),
-
         //   elevation: 0,
         //   centerTitle: true,
         //   // leading: IconButton(
@@ -212,7 +212,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         //               title: Text('เวลาปิด-เปิด'),
         //               onTap: () {
         //                 Get.back();
-
         //                 Get.to(() => Clinicopeninghours());
         //               }),
         //           ListTile(
@@ -220,7 +219,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         //               title: Text('ตั้งค่า'),
         //               onTap: () {
         //                 Get.back();
-
         //                 Get.to(() => Clinicsetting());
         //               }),
         //           ListTile(
@@ -276,7 +274,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         //     ),
         //   ),
         // ),
-
         body: _loadingData
             ? Center(
                 child: Column(
@@ -983,7 +980,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                 ),
                                                 child: InkWell(
                                                   onTap: () {
-                                                    Get.to(() =>
+                                                    AppNavigation.toWidget(
                                                         Vaccinehistorydetailspage(
                                                             docId: item.docId));
                                                   },

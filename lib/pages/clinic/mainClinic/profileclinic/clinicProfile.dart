@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/model/clinicEditProfilePost.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicEditProfile.dart';
 import 'package:shimmer/shimmer.dart';
@@ -58,25 +59,24 @@ class _ClinicprofileState extends State<Clinicprofile> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "ข้อมูลคลินิก",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 24,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Color(0xFFDBA871),
-        iconTheme: IconThemeData(color: Colors.white),
-
-        elevation: 0,
-        centerTitle: true,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
-      ),
+      // appBar: AppBar(
+      //   title: const Text(
+      //     "ข้อมูลคลินิก",
+      //     style: TextStyle(
+      //       fontWeight: FontWeight.w600,
+      //       fontSize: 24,
+      //       color: Colors.white,
+      //     ),
+      //   ),
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      //   elevation: 0,
+      //   centerTitle: true,
+      //   // leading: IconButton(
+      //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+      //   //   onPressed: () => Navigator.pop(context),
+      //   // ),
+      // ),
       body: _loadingData
           ? Center(
               child: Column(
@@ -396,7 +396,7 @@ class _ClinicprofileState extends State<Clinicprofile> {
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             child: ElevatedButton(
                               onPressed: () {
-                                Get.to(() => EitprofilePage());
+                                AppNavigation.toWidget(EitprofilePage());
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFF916B44),

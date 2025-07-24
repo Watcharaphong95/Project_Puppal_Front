@@ -8,6 +8,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:http/http.dart' as http;
@@ -448,10 +449,10 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       elevation: 2,
                                                     ),
                                                     onPressed: () {
-                                                      Get.to(() =>
-                                                          Clinicdoctorprofile(
-                                                              name:
-                                                                  doctor.name));
+                                                      AppNavigation.toWidget(
+                                                        Clinicdoctorprofile(
+                                                            name: doctor.name),
+                                                      );
                                                     },
                                                     child: const Text(
                                                       'ดูประวัติ',

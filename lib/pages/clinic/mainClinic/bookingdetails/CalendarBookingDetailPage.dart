@@ -14,6 +14,7 @@ import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
@@ -108,25 +109,24 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     screenHeight = MediaQuery.of(context).size.height;
     final combinedList = [...(clinicRecord ?? []), ...(vaccineHistory ?? [])];
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "รายละเอียดคำขอ",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: Color(0xFFDBA871),
-          iconTheme: IconThemeData(color: Colors.white),
-
-          elevation: 0,
-          centerTitle: true,
-          // leading: IconButton(
-          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-          //   onPressed: () => Navigator.pop(context),
-          // ),
-        ),
+        // appBar: AppBar(
+        //   title: const Text(
+        //     "รายละเอียดคำขอ",
+        //     style: TextStyle(
+        //       fontWeight: FontWeight.w600,
+        //       fontSize: 24,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        //   backgroundColor: Color(0xFFDBA871),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        //   elevation: 0,
+        //   centerTitle: true,
+        //   // leading: IconButton(
+        //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   //   onPressed: () => Navigator.pop(context),
+        //   // ),
+        // ),
         body: _loadingData
             ? Center(
                 child: Column(
@@ -793,7 +793,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                         child: _buildPopupActionButton(
                                           label: "บันทึกประวัติ",
                                           onPressed: () {
-                                            Get.to(() =>
+                                            AppNavigation.toWidget(
                                                 AddVaccinationRecordPage(
                                                     docId: widget.docId));
                                           },
