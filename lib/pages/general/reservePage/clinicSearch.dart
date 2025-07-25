@@ -15,7 +15,7 @@ import 'package:puppal_application/model/clinicSearch.dart';
 import 'package:puppal_application/model/clinicSearchRes.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/model/specialDoctorRes.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicTimeSelect.dart';
 import 'package:readmore/readmore.dart';
@@ -145,7 +145,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
               ),
             )
           : Container(
-              height: screenHeight * 0.9,
+              // height: screenHeight * 0.7,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -360,10 +360,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
   SafeArea showClinicResult() {
     return SafeArea(
+      bottom: false,
       child: SizedBox(
-        height: _isDogInfoExpanded
-            ? screenHeight * 0.5
-            : screenHeight * 0.5 - MediaQuery.of(context).padding.bottom,
+        height: _isDogInfoExpanded ? screenHeight * 0.5 : screenHeight * 0.5,
         child: clinics.isEmpty
             ? Center(
                 child: Column(
@@ -444,7 +443,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                         borderRadius: BorderRadius.circular(16),
                         onTap: isClinicInteractable
                             ? () {
-                                AppNavigation.toWidget(ClinictimeselectPage(
+                                GeneralAppNavigation.toWidget(
+                                    ClinictimeselectPage(
                                   email: clinic.userEmail,
                                   dogId: widget.dogId,
                                   distance: clinic.distanceKm,

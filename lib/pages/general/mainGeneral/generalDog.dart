@@ -59,7 +59,9 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
     });
     await getDogData();
     filterDogs = List<DogsGetEmail>.from(dogs);
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -323,9 +325,11 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                           onPressed: () {
                             searchDogCtl.clear();
                             FocusScope.of(context).unfocus();
-                            setState(() {
-                              filterDogs = List<DogsGetEmail>.from(dogs);
-                            });
+                            if (mounted) {
+                              setState(() {
+                                filterDogs = List<DogsGetEmail>.from(dogs);
+                              });
+                            }
                           },
                         ),
                       ),

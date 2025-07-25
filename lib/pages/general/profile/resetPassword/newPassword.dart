@@ -7,6 +7,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPasswordChange.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -199,6 +200,7 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
               Get.offAll(() => IndexPage());
             } else {
               if (box.read('type') == 'general') {
+                GeneralAppNavigation.offAll(1);
                 Get.offAll(() => GeneralprofilePage());
               } else if (box.read('type') == 'clinic') {
                 // ADD PAGE TO CLINIC PROFILE

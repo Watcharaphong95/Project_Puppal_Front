@@ -19,6 +19,7 @@ import 'package:puppal_application/model/generalLocationPut.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/generalProfilePost.dart';
 import 'package:puppal_application/model/userPost.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -541,7 +542,10 @@ class _EditprofilePageState extends State<EditprofilePage> {
           title: 'อัพเดทเสร็จสิ้น',
           message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
           onConfirm: () {
-            Get.off(() => GeneralprofilePage());
+            while (Get.isDialogOpen ?? false) {
+              Get.back();
+            }
+            GeneralAppNavigation.off(5);
           });
     } else {
       showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');

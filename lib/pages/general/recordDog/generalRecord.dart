@@ -84,15 +84,15 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'ประวัติการฉีดยา',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        backgroundColor: Color(0xFFDBA871),
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     'ประวัติการฉีดยา',
+      //     style: TextStyle(color: Colors.white),
+      //   ),
+      //   centerTitle: true,
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      // ),
       body: isLoading
           ? Center(
               child: Column(

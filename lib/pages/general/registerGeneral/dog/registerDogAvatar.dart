@@ -10,6 +10,7 @@ import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/model/dogPost.dart';
 import 'package:puppal_application/model/injectionRecordPost.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -217,7 +218,10 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
             title: 'เพิ่มสุนัขสำเร็จแล้ว',
             message: 'กดตกลงเพื่อกลับไปยังหน้าสุนัขของคุณ',
             onConfirm: () {
-              Get.to(() => GeneraldogPage());
+              while (Get.isDialogOpen ?? false) {
+                Get.back();
+              }
+              GeneralAppNavigation.offAll(0);
             });
       } else {
         showAlertNoClose(

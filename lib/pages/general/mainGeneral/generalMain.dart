@@ -18,7 +18,7 @@ import 'package:puppal_application/model/dogAppointmentEmailGet.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
 import 'package:puppal_application/model/dogsIdGet.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -88,7 +88,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     log('focusDay ${box.read('focusedDay')}');
     log(box.read('generalImage'));
     init();
-    startRealtimeGet();
+
     super.initState();
   }
 
@@ -104,10 +104,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     });
     await getAppointmentEmail();
     events = getEventsForDay(_selectedDay);
-    if (!mounted) return;
-    setState(() {
-      _loadingData = false;
-    });
+    await startRealtimeGet();
+    if (mounted) {
+      setState(() {
+        _loadingData = false;
+      });
+    }
   }
 
   @override
@@ -353,12 +355,14 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 return isSameDay(_selectedDay, day);
                               },
                               onDaySelected: (selectedDay, focusedDay) {
-                                setState(() {
-                                  _focusedDay = focusedDay;
-                                  _selectedDay = selectedDay;
-                                  box.write('focusedDay', focusedDay);
-                                  events = getEventsForDay(_selectedDay);
-                                });
+                                if (mounted) {
+                                  setState(() {
+                                    _focusedDay = focusedDay;
+                                    _selectedDay = selectedDay;
+                                    box.write('focusedDay', focusedDay);
+                                    events = getEventsForDay(_selectedDay);
+                                  });
+                                }
                               },
                               onPageChanged: (focusedDay) {
                                 _focusedDay = focusedDay;
@@ -470,7 +474,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                   showReserveInfoAlert(
                                                       context, e);
                                                 } else {
-                                                  AppNavigation.toWidget(
+                                                  GeneralAppNavigation.toWidget(
                                                       ClinicsearchPage(
                                                     dogId: e.dogId,
                                                     vaccineName:
@@ -547,7 +551,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                         _selectedDay.month,
                                         _selectedDay.day,
                                       );
-                                      AppNavigation.toWidget(
+                                      GeneralAppNavigation.toWidget(
                                         DogselectPage(
                                             date: _selectedDay,
                                             dogHasAppointment:
@@ -767,11 +771,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  void startRealtimeGet() {
-    stopRealTime(); // stop any previous listener
+  Future<void> startRealtimeGet() async {
+    await stopRealTime(); // stop any previous listener
 
     final colRef = db.collection("reserve").where("generalEmail",
         isEqualTo: box.read("email")); // collection, not doc
+
+    log('🔔 Listener is Started');
 
     context.read<AppData>().listener = colRef.snapshots().listen(
       (querySnapshot) async {
@@ -781,8 +787,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
           if (change.type == DocumentChangeType.removed) {
             await getAppointmentEmail();
-            if (!mounted) return;
-            setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
             log("🔄 Change type: ${change.type}");
@@ -790,7 +797,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               for (int i = 0; i < dogList.length; i++) {
                 if (dogList[i].reserveId == docId) {
                   dogList[i].status = newStatus;
-                  setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                  }
+
                   break;
                 }
               }
@@ -802,7 +812,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  void stopRealTime() {
+  Future<void> stopRealTime() async {
     if (appData.listener != null) {
       appData.listener?.cancel().then((_) {
         log('🔕 Listener is stopped');
@@ -1367,8 +1377,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     // }
 
     buildEventMap(appointmentAll);
-    if (!mounted) return;
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     // log("🔄 appointmentAll updated with ${appointmentAll.length} items");
   }
 
@@ -1707,8 +1718,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     //     log('  Dog: ${dog.toString()}');
     //   }
     // });
-    if (!mounted) return;
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   String getDogAge(String birthday) {

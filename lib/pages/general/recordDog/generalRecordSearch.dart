@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -511,10 +512,13 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                                                 height: 36,
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    Get.to(
-                                                        () => GeneralrecordPage(
+                                                    GeneralAppNavigation
+                                                        .toWidget(
+                                                            GeneralrecordPage(
                                                               index: dog.dogId,
-                                                            ));
+                                                            ),
+                                                            title:
+                                                                'ประวัติการฉีดยา');
                                                   },
                                                   style:
                                                       ElevatedButton.styleFrom(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
 
-class AppNavigation {
+class GeneralAppNavigation {
   static final List<int> _navigationStack = [];
   static MainNavigationController? _navController;
 

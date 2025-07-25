@@ -14,7 +14,7 @@ import 'package:puppal_application/model/appointmentGetEmail.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
 import 'package:puppal_application/model/reserveDogList.dart';
 import 'package:puppal_application/model/reserveDogListPostReq.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicSearch.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -365,7 +365,7 @@ class _DogselectPageState extends State<DogselectPage> {
                   ? null
                   : isPast
                       ? () {
-                          AppNavigation.toWidget(ClinicsearchPage(
+                          GeneralAppNavigation.toWidget(ClinicsearchPage(
                             dogId: dog.dogId,
                             vaccineName: dog.vaccine,
                             date: widget.date,
@@ -375,7 +375,7 @@ class _DogselectPageState extends State<DogselectPage> {
                           ));
                         }
                       : () {
-                          AppNavigation.toWidget(ClinicsearchPage(
+                          GeneralAppNavigation.toWidget(ClinicsearchPage(
                             dogId: dog.dogId,
                             vaccineName: '',
                             date: widget.date,
