@@ -243,16 +243,17 @@ class _GeneralguidePageState extends State<GeneralguidePage> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFF8E1),
-              Color(0xFFF5F5DC),
-            ],
-          ),
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: LinearGradient(
+        //     begin: Alignment.topCenter,
+        //     end: Alignment.bottomCenter,
+        //     colors: [
+        //       Color(0xFFFFF8E1),
+        //       Color(0xFFF5F5DC),
+        //     ],
+        //   ),
+        // ),
+        color: Color(0xFFFAF8F5),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16),
           child: Column(

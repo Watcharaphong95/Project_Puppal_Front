@@ -103,16 +103,17 @@ class _DogselectPageState extends State<DogselectPage> {
               ),
             )
           : Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey.shade50,
-                    Colors.white,
-                  ],
-                ),
-              ),
+              // decoration: BoxDecoration(
+              //   gradient: LinearGradient(
+              //     begin: Alignment.topCenter,
+              //     end: Alignment.bottomCenter,
+              //     colors: [
+              //       Colors.grey.shade50,
+              //       Colors.white,
+              //     ],
+              //   ),
+              // ),
+              color: Color(0xFFFAF8F5),
               child: Column(
                 children: [
                   // Search Header Section

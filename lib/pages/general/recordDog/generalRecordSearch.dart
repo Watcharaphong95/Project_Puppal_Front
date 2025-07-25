@@ -254,16 +254,17 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
         ),
         body: Container(
           height: screenHeight * 0.89,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFF8F9FA),
-                Color(0xFFE9ECEF),
-              ],
-            ),
-          ),
+          // decoration: BoxDecoration(
+          //   gradient: LinearGradient(
+          //     begin: Alignment.topCenter,
+          //     end: Alignment.bottomCenter,
+          //     colors: [
+          //       Color(0xFFF8F9FA),
+          //       Color(0xFFE9ECEF),
+          //     ],
+          //   ),
+          // ),
+          color: Color(0xFFFAF8F5),
           child: Column(
             children: [
               // Header Section

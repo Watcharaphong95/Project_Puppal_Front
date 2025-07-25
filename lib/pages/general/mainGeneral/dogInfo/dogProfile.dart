@@ -16,6 +16,7 @@ import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/dogUpdateDataPut.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -284,451 +285,692 @@ class _DogprofilePageState extends State<DogprofilePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-            title: Text(
-              'โปรไฟล์สุนัข',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600),
-            ),
-            centerTitle: true,
-            backgroundColor: Color(0xFFDBA871)),
-        body: _loadingData
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFDBA871),
-                      ),
+      appBar: AppBar(
+          title: Text(
+            'โปรไฟล์สุนัข',
+            style: TextStyle(
+                color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          centerTitle: true,
+          backgroundColor: Color(0xFFDBA871)),
+      body: _loadingData
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      'กำลังโหลด...',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 16,
-                      ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลด...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
                     ),
-                  ],
-                ),
-              )
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    spacing: 16,
-                    children: [
-                      GestureDetector(
-                        onTap: selectImage,
-                        child: _imageFile == null
-                            ? ClipOval(
-                                child: Image.network(
-                                  imageCtl.text,
-                                  width: screenWidth * 0.35,
-                                  height: screenWidth * 0.35,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Shimmer.fromColors(
-                                      baseColor: Colors.grey[300]!,
-                                      highlightColor: Colors.grey[100]!,
-                                      child: Container(
-                                        width: screenWidth * 0.35,
-                                        height: screenWidth * 0.35,
-                                        color: Colors.white,
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Container(
+                decoration: BoxDecoration(color: Color(0xFFFAF8F5)),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 20.0),
+                    child: Column(
+                      children: [
+                        // Header Section
+                        Container(
+                          margin: EdgeInsets.only(bottom: 32),
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: selectImage,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            Color(0xFF916B44).withOpacity(0.3),
+                                        blurRadius: 15,
+                                        spreadRadius: 2,
                                       ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : ClipOval(
-                                child: Image.file(
-                                  _imageFile!,
-                                  width: screenWidth * 0.35,
-                                  height: screenWidth * 0.35,
-                                  fit: BoxFit.cover,
+                                    ],
+                                  ),
+                                  child: _imageFile == null
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            imageCtl.text,
+                                            width: screenWidth * 0.35,
+                                            height: screenWidth * 0.35,
+                                            fit: BoxFit.cover,
+                                            loadingBuilder: (context, child,
+                                                loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return Shimmer.fromColors(
+                                                baseColor: Colors.grey[300]!,
+                                                highlightColor:
+                                                    Colors.grey[100]!,
+                                                child: Container(
+                                                  width: screenWidth * 0.35,
+                                                  height: screenWidth * 0.35,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : ClipOval(
+                                          child: Image.file(
+                                            _imageFile!,
+                                            width: screenWidth * 0.35,
+                                            height: screenWidth * 0.35,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
                                 ),
                               ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ชื่อ',
-                            style: TextStyle(fontSize: 20),
+                              SizedBox(height: 16),
+                              Text(
+                                'โปรไฟล์สุนัข',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF916B44),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'แก้ไขข้อมูลส่วนตัว',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF916B44).withOpacity(0.7),
+                                ),
+                              ),
+                            ],
                           ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
+                        ),
+
+                        Container(
+                          child: Column(
+                            children: [
+                              // Name Field
+                              _buildModernTextField(
+                                label: 'ชื่อ',
+                                controller: nameCtl,
+                                icon: Icons.pets_outlined,
+                                screenHeight: screenHeight,
                                 onChanged: (value) {
                                   _dataChange =
                                       value.trim() != dog[0].name.trim();
                                 },
-                                controller: nameCtl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'พันธุ์',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
-                                onTap: _showSelectBreed,
-                                // onChanged: (value) {
-                                //   if (breedCtl.text != dog[0].breed) {
-                                //     _dataChange = true;
-                                //   } else {
-                                //     _dataChange = false;
-                                //   }
-                                // },
-                                readOnly: true,
+
+                              SizedBox(height: 24),
+
+                              // Breed Field
+                              _buildBreedField(
+                                label: 'พันธุ์',
                                 controller: breedCtl,
-                                decoration: InputDecoration(
-                                  hintText: 'เลือกพันธุ์',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  suffixIcon: const Icon(FontAwesomeIcons.paw),
-                                ),
+                                icon: Icons.category_outlined,
+                                hintText: 'กรอกหรือเลือกพันธุ์',
+                                onTap: _showSelectBreed,
+                                screenHeight: screenHeight,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'เพศ',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
-                                onTap: _showSelectGender,
-                                readOnly: true,
+
+                              SizedBox(height: 24),
+
+                              // Gender Field
+                              _buildSelectField(
+                                label: 'เพศ',
                                 controller: genderCtl,
-                                decoration: InputDecoration(
-                                  hintText: 'เลือกเพศ',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  suffixIcon: const Icon(FontAwesomeIcons.mars),
-                                ),
+                                icon: Icons.wc_outlined,
+                                hintText: 'เลือกเพศ',
+                                onTap: _showSelectGender,
+                                screenHeight: screenHeight,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'สี',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
+
+                              SizedBox(height: 24),
+
+                              // Color Field
+                              _buildModernTextField(
+                                label: 'สี',
+                                controller: colorCtl,
+                                icon: Icons.palette_outlined,
+                                screenHeight: screenHeight,
                                 onChanged: (value) {
                                   _dataChange =
                                       value.trim() != dog[0].color.trim();
                                 },
-                                controller: colorCtl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ลักษณะขน',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
+
+                              SizedBox(height: 24),
+
+                              // Hair Field
+                              _buildModernTextField(
+                                label: 'ลักษณะขน',
+                                controller: hairCtl,
+                                icon: Icons.brush_outlined,
+                                screenHeight: screenHeight,
                                 onChanged: (value) {
                                   _dataChange =
                                       value.trim() != dog[0].hair.trim();
                                 },
-                                controller: hairCtl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'ตำหนิ',
-                                style: TextStyle(fontSize: 20),
-                              ),
-                              Text(
-                                '(ถ้ามี)',
-                                style:
-                                    TextStyle(fontSize: 20, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
-                                onChanged: (value) {
-                                  _dataChange =
-                                      value.trim() != dog[0].defect.trim();
-                                },
+
+                              SizedBox(height: 24),
+
+                              // Defect Field
+                              _buildModernTextField(
+                                label: 'ตำหนิ',
+                                subtitle: '(ถ้ามี)',
                                 controller: defectCtl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'วันเกิด',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
-                                controller: birthdayCtl,
-                                readOnly: true,
-                                onTap: () {
-                                  _showDatePicker(context);
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: 'เลือกวันเกิด',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  suffixIcon: const Icon(Icons.calendar_today),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'โรคประจำตัว',
-                                style: TextStyle(fontSize: 20),
-                              ),
-                              Text(
-                                '(ถ้ามี)',
-                                style:
-                                    TextStyle(fontSize: 20, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
+                                icon: Icons.info_outline,
+                                screenHeight: screenHeight,
+                                isOptional: true,
                                 onChanged: (value) {
                                   _dataChange =
                                       value.trim() != dog[0].defect.trim();
                                 },
+                              ),
+
+                              SizedBox(height: 24),
+
+                              // Birthday Field
+                              _buildSelectField(
+                                label: 'วันเกิด',
+                                controller: birthdayCtl,
+                                icon: Icons.cake_outlined,
+                                hintText: 'เลือกวันเกิด',
+                                onTap: () => _showDatePicker(context),
+                                screenHeight: screenHeight,
+                              ),
+
+                              SizedBox(height: 24),
+
+                              // Disease Field
+                              _buildModernTextField(
+                                label: 'โรคประจำตัว',
+                                subtitle: '(ถ้ามี)',
                                 controller: diseaseCtl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
+                                icon: Icons.local_hospital_outlined,
+                                screenHeight: screenHeight,
+                                isOptional: true,
+                                onChanged: (value) {
+                                  _dataChange = value.trim() !=
+                                      dog[0].congentialDisease.trim();
+                                },
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'การทำหมัน',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              height: screenHeight * 0.055,
-                              child: TextField(
-                                onTap: _showSelectSterilization,
-                                readOnly: true,
+
+                              SizedBox(height: 24),
+
+                              // Sterilization Field
+                              _buildSelectField(
+                                label: 'การทำหมัน',
                                 controller: sterilizationCtl,
-                                decoration: InputDecoration(
-                                  hintText: 'เลือกสถานะการทำหมัน',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  suffixIcon: const Icon(FontAwesomeIcons.dna),
-                                ),
+                                icon: Icons.medical_services_outlined,
+                                hintText: 'เลือกสถานะการทำหมัน',
+                                onTap: _showSelectSterilization,
+                                screenHeight: screenHeight,
                               ),
-                            ),
+
+                              SizedBox(height: 40),
+                            ],
                           ),
-                        ],
-                      ),
-                      Padding(
-                        padding:
-                            EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        ),
+
+                        // Action Buttons Row
+                        Row(
                           children: [
-                            SizedBox(
-                              width: screenWidth * 0.4,
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      backgroundColor: Color(0xFFEF4444)),
+                            // Delete Button
+                            Expanded(
+                              child: Container(
+                                height: 56,
+                                margin: EdgeInsets.only(right: 8),
+                                child: ElevatedButton(
                                   onPressed: () {
                                     showAlert(
-                                        title: 'คุณต้องการลบสุนัขของคุณ?',
-                                        message:
-                                            'ข้อมูลสุนัขของคุณจะหายไปอย่างถาวร',
-                                        onConfirm: () {
-                                          dogDelete();
-                                        });
+                                      title: 'คุณต้องการลบสุนัขของคุณ?',
+                                      message:
+                                          'ข้อมูลสุนัขของคุณจะหายไปอย่างถาวร',
+                                      onConfirm: () {
+                                        dogDelete();
+                                      },
+                                    );
                                   },
-                                  child: Text(
-                                    'ลบสุนัข',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold),
-                                  )),
-                            ),
-                            SizedBox(
-                              width: screenWidth * 0.4,
-                              child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                    backgroundColor: Color(0xFFEF4444),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    shadowColor:
+                                        Color(0xFFEF4444).withOpacity(0.3),
+                                  ).copyWith(
+                                    elevation: MaterialStateProperty
+                                        .resolveWith<double>(
+                                      (Set<MaterialState> states) {
+                                        if (states.contains(
+                                            MaterialState.pressed)) return 0;
+                                        return 8;
+                                      },
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                        color: Colors.white,
                                       ),
-                                      backgroundColor: Color(0xFF916b44)),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'ลบสุนัข',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Update Button
+                            Expanded(
+                              child: Container(
+                                height: 56,
+                                margin: EdgeInsets.only(left: 8),
+                                child: ElevatedButton(
                                   onPressed: _dataChange
                                       ? () {
                                           showAlert(
-                                              title: 'อัพเดทข้อมูลสุนัข?',
-                                              message:
-                                                  'ข้อมูลเก่าจะหายอย่างถาวร!',
-                                              onConfirm: () {
-                                                dogUpdate();
-                                              });
+                                            title: 'อัพเดทข้อมูลสุนัข?',
+                                            message:
+                                                'ข้อมูลเก่าจะหายอย่างถาวร!',
+                                            onConfirm: () {
+                                              dogUpdate();
+                                            },
+                                          );
                                         }
                                       : null,
-                                  child: Text(
-                                    'แก้ไข',
-                                    style: TextStyle(
-                                        fontSize: 20,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _dataChange
+                                        ? Color(0xFF916B44)
+                                        : Color(0xFF916B44).withOpacity(0.5),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    shadowColor:
+                                        Color(0xFF916B44).withOpacity(0.3),
+                                  ).copyWith(
+                                    elevation: MaterialStateProperty
+                                        .resolveWith<double>(
+                                      (Set<MaterialState> states) {
+                                        if (states.contains(
+                                                MaterialState.pressed) ||
+                                            states.contains(
+                                                MaterialState.disabled))
+                                          return 0;
+                                        return 8;
+                                      },
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.save_outlined,
+                                        size: 18,
                                         color: Colors.white,
-                                        fontWeight: FontWeight.bold),
-                                  )),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'แก้ไข',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      )
-                    ],
+
+                        SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
-              ));
+              ),
+            ),
+    );
+  }
+
+  // Modern Text Field Widget
+  Widget _buildModernTextField({
+    required String label,
+    String? subtitle,
+    required TextEditingController controller,
+    required IconData icon,
+    required double screenHeight,
+    bool isOptional = false,
+    Function(String)? onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF916B44),
+                ),
+              ),
+              if (subtitle != null) ...[
+                SizedBox(width: 8),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF916B44).withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            onChanged: onChanged,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              border: InputBorder.none,
+              hintText: isOptional ? 'กรอก$label (ถ้ามี)' : 'กรอก$label',
+              hintStyle: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.5),
+                fontSize: 16,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+// Select Field Widget (for dropdown-like fields)
+  Widget _buildSelectField({
+    required String label,
+    String? subtitle,
+    required TextEditingController controller,
+    required IconData icon,
+    required String hintText,
+    required VoidCallback onTap,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF916B44),
+                ),
+              ),
+              if (subtitle != null) ...[
+                SizedBox(width: 8),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF916B44).withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 16),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    controller.text.isNotEmpty ? controller.text : hintText,
+                    style: TextStyle(
+                      color: controller.text.isNotEmpty
+                          ? Color(0xFF916B44)
+                          : Color(0xFF916B44).withOpacity(0.5),
+                      fontSize: 16,
+                      fontWeight: controller.text.isNotEmpty
+                          ? FontWeight.w500
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xFFDBA871),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Breed Field Widget (allows both typing and selecting)
+  Widget _buildBreedField({
+    required String label,
+    String? subtitle,
+    required TextEditingController controller,
+    required IconData icon,
+    required String hintText,
+    required VoidCallback onTap,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF916B44),
+                ),
+              ),
+              if (subtitle != null) ...[
+                SizedBox(width: 8),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF916B44).withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              suffixIcon: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  margin: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFDBA871).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+              ),
+              border: InputBorder.none,
+              hintText: hintText,
+              hintStyle: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.5),
+                fontSize: 16,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> uploadImage() async {
@@ -788,7 +1030,10 @@ class _DogprofilePageState extends State<DogprofilePage> {
           title: 'สุนัขของคุณถูกลบแล้ว',
           message: '',
           onConfirm: () {
-            Get.offAll(() => GeneraldogPage());
+            while (Get.isDialogOpen ?? false) {
+              Get.back();
+            }
+            GeneralAppNavigation.offAll(0);
           });
     } else {
       showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
@@ -901,7 +1146,10 @@ class _DogprofilePageState extends State<DogprofilePage> {
         title: 'อัพเดทเสร็จสิ้น',
         message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
         onConfirm: () {
-          Get.to(() => GeneraldogPage());
+          while (Get.isDialogOpen ?? false) {
+            Get.back();
+          }
+          GeneralAppNavigation.offAll(0);
         });
   }
 

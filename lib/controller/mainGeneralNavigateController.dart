@@ -99,11 +99,12 @@ class MainNavigationController extends GetxController {
     if (index <= 2) {
       // For valid bottom nav indices, set normally
       notchBottomBarController.index = index;
+      // notchBottomBarController.jumpTo(index);
     } else {
       // For drawer pages, create a new controller with no selection
       // This forces all items to show as inactive
-      notchBottomBarController.dispose();
-      notchBottomBarController = NotchBottomBarController(index: -1);
+      // notchBottomBarController.dispose();
+      notchBottomBarController.index = -1;
     }
   }
 

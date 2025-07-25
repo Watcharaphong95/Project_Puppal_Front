@@ -14,7 +14,6 @@ import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:shimmer/shimmer.dart';

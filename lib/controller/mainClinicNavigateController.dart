@@ -1,7 +1,6 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
 
 class Mainclinicnavigatecontroller extends GetxController {
@@ -99,11 +98,13 @@ class Mainclinicnavigatecontroller extends GetxController {
     if (index <= 2) {
       // For valid bottom nav indices, set normally
       notchBottomBarController.index = index;
+      // notchBottomBarController.jumpTo(index);
     } else {
       // For drawer pages, create a new controller with no selection
       // This forces all items to show as inactive
-      notchBottomBarController.dispose();
-      notchBottomBarController = NotchBottomBarController(index: -1);
+      // notchBottomBarController.dispose();
+      // notchBottomBarController = NotchBottomBarController(index: -1);
+      notchBottomBarController.index = -1;
     }
   }
 

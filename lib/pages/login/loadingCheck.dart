@@ -59,7 +59,7 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
       if (userType == 'general') {
         Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
       } else if (userType == 'clinic') {
-        Get.offAll(() => Clinicmainbottomnavigate(indexPage: 2));
+        Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
       } else {
         // กรณีอื่นๆ หรือ default page
         Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));

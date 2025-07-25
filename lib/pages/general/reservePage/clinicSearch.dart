@@ -60,7 +60,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
   bool _loadingData = true;
   bool _loadingSearchData = true;
 
-  bool _currentPosition = true;
+  bool _currentPosition = false;
   bool _isDogInfoExpanded = false;
 
   bool _hasLatestClinic = false;
@@ -146,23 +146,24 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
             )
           : Container(
               // height: screenHeight * 0.7,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.blue.shade50,
-                    Colors.white,
-                    Colors.orange.shade50,
-                  ],
-                ),
-                image: DecorationImage(
-                  image: AssetImage('assets/images/indexBg.png'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(0.1), BlendMode.dstATop),
-                ),
-              ),
+              // decoration: BoxDecoration(
+              //   gradient: LinearGradient(
+              //     begin: Alignment.topCenter,
+              //     end: Alignment.bottomCenter,
+              //     colors: [
+              //       Colors.blue.shade50,
+              //       Colors.white,
+              //       Colors.orange.shade50,
+              //     ],
+              //   ),
+              //   image: DecorationImage(
+              //     image: AssetImage('assets/images/indexBg.png'),
+              //     fit: BoxFit.cover,
+              //     colorFilter: ColorFilter.mode(
+              //         Colors.white.withOpacity(0.1), BlendMode.dstATop),
+              //   ),
+              // ),
+              color: Color(0xFFFAF8F5),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                 child: SizedBox(

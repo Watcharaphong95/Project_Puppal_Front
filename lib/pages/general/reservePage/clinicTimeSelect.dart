@@ -151,11 +151,12 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                 // Main Content
                 SliverToBoxAdapter(
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
+                    // decoration: BoxDecoration(
+                    //   color: Colors.white,
+                    //   borderRadius:
+                    //       BorderRadius.vertical(top: Radius.circular(24)),
+                    // ),
+                    color: Color(0xFFFAF8F5),
                     child: Padding(
                       padding: EdgeInsets.all(20),
                       child: Column(

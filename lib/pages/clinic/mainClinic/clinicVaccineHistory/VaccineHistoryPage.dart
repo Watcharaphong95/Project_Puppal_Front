@@ -16,7 +16,6 @@ import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/bookingdetails/CalendarBookingDetailPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';

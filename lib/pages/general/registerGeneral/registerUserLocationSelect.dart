@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserAvatar.dart';
 
@@ -60,13 +61,14 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
       body: SingleChildScrollView(
         child: Container(
           height: screenHeight * 0.89,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-          ),
+          // decoration: BoxDecoration(
+          //   image: DecorationImage(
+          //       image: AssetImage('assets/images/indexBg.png'),
+          //       fit: BoxFit.cover,
+          //       colorFilter: ColorFilter.mode(
+          //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          // ),
+          color: Color(0xFFFAF8F5),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -74,6 +76,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
               children: [
                 SizedBox(height: 10),
                 Material(
+                  color: Colors.white,
                   elevation: 5,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
@@ -82,7 +85,26 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: selectedLatLng == null
-                        ? Center(child: CircularProgressIndicator())
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFDBA871),
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'กำลังโหลด...',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
                         : ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: Stack(children: [
@@ -173,11 +195,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
                                   backgroundColor: Color(0xFF916b44)),
                               onPressed: () {
                                 if (selectedLatLng != null) {
-                                  showAlert(
-                                      title: 'ยืนยันการเลือกตำแหน่ง',
-                                      message:
-                                          'คุณต้องการยืนยันตำแหน่งนี้หรือไม่?',
-                                      onConfirm: onConfirmLocation);
+                                  confirmDialog(context);
                                 } else {
                                   showAlertNoClose(
                                       title: 'ผิดพลาด',
@@ -205,6 +223,133 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
   }
 
   // Function to confirm location //
+
+  Future<bool> confirmDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    MdiIcons.home,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันที่อยู่",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันที่อยู่นี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    onConfirmLocation();
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+
+                    // _rejectReservation();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
 
   void onConfirmLocation() {
     // ตรวจสอบว่า selectedLatLng ไม่เป็น null ก่อน

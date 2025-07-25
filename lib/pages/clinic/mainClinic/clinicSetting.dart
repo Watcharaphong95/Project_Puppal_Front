@@ -9,7 +9,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
@@ -386,7 +385,8 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'เปลี่ยนรหัสผ่าน',
                               subtitle: 'อัปเดตรหัสผ่านของคุณ',
                               onTap: () {
-                                AppNavigation.toWidget(RecoverypasswordPage());
+                                Clinicappnavigator.toWidget(
+                                    RecoverypasswordPage());
                               },
                               screenWidth: screenWidth,
                             ),

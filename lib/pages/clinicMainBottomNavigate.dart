@@ -11,7 +11,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/mainClinicNavigateController.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
@@ -20,6 +19,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDog.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
@@ -113,7 +113,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
     currentIndex = widget.indexPage;
 
     // Use the controller's method to update the index properly
-    navController.updateIndex(currentIndex);
+    navController.notchBottomBarController.jumpTo(currentIndex);
   }
 
   void init() async {
@@ -163,7 +163,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                 ? [
                     IconButton(
                       onPressed: () {
-                        Get.to(() => (Clinicadddoctor()));
+                        Clinicappnavigator.toWidget(Clinicadddoctor());
                       },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xFFE9CBAF),
@@ -360,7 +360,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (!didPop) {
-                final handled = AppNavigation.handleSystemBack();
+                final handled = Clinicappnavigator.handleSystemBack();
                 if (!handled) {
                   showAlert(
                     title: 'คุณต้องการออกจากแอปใช่หรือไม่',

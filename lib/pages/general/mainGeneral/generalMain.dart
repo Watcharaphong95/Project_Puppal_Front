@@ -104,7 +104,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     });
     await getAppointmentEmail();
     events = getEventsForDay(_selectedDay);
-    await startRealtimeGet();
+    startRealtimeGet();
     if (mounted) {
       setState(() {
         _loadingData = false;
@@ -306,14 +306,15 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               )
             : SingleChildScrollView(
                 child: Container(
-                  height: screenHeight * 0.9,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                        image: AssetImage('assets/images/indexBg.png'),
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                            Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-                  ),
+                  height: screenHeight * 0.83,
+                  // decoration: BoxDecoration(
+                  //   image: DecorationImage(
+                  //       image: AssetImage('assets/images/indexBg.png'),
+                  //       fit: BoxFit.cover,
+                  //       colorFilter: ColorFilter.mode(
+                  //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                  // ),
+                  color: Color(0xFFFAF8F5),
                   child: Column(
                     children: [
                       SizedBox(
@@ -771,25 +772,23 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Future<void> startRealtimeGet() async {
-    await stopRealTime(); // stop any previous listener
+  void startRealtimeGet() {
+    // stopRealTime();
+    // if (!mounted) return;
 
     final colRef = db.collection("reserve").where("generalEmail",
         isEqualTo: box.read("email")); // collection, not doc
 
     log('🔔 Listener is Started');
 
-    context.read<AppData>().listener = colRef.snapshots().listen(
-      (querySnapshot) async {
+    appData.listener = colRef.snapshots().listen(
+      (querySnapshot) {
         for (var change in querySnapshot.docChanges) {
           var docId = change.doc.id;
           var data = change.doc.data();
 
           if (change.type == DocumentChangeType.removed) {
-            await getAppointmentEmail();
-            if (mounted) {
-              setState(() {});
-            }
+            fireStoreRemoveListen();
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
             log("🔄 Change type: ${change.type}");
@@ -800,7 +799,6 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                   if (mounted) {
                     setState(() {});
                   }
-
                   break;
                 }
               }
@@ -812,7 +810,14 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Future<void> stopRealTime() async {
+  Future<void> fireStoreRemoveListen() async {
+    await getAppointmentEmail();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void stopRealTime() {
     if (appData.listener != null) {
       appData.listener?.cancel().then((_) {
         log('🔕 Listener is stopped');

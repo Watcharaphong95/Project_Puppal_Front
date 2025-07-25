@@ -106,26 +106,24 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
   @override
   void initState() {
     log(widget.indexPage.toString());
-    init();
     super.initState();
     currentIndex = widget.indexPage;
-
-    // Use the controller's method to update the index properly
-    navController.updateIndex(currentIndex);
+    init();
   }
 
   void init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    navController.notchBottomBarController.jumpTo(currentIndex);
   }
 
-  @override
-  void dispose() {
-    // Don't dispose here since we're using the controller's instance
-    // notchBottomBarController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   // Don't dispose here since we're using the controller's instance
+  //   // notchBottomBarController.dispose();
+  //   super.dispose();
+  // }
 
   void onTap(int index) {
     setState(() {

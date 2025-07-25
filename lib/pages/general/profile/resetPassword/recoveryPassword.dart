@@ -48,13 +48,14 @@ class _RecoverypasswordPageState extends State<RecoverypasswordPage> {
       body: SingleChildScrollView(
         child: Container(
           height: screenHeight * 0.89,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-          ),
+          // decoration: BoxDecoration(
+          //   image: DecorationImage(
+          //       image: AssetImage('assets/images/indexBg.png'),
+          //       fit: BoxFit.cover,
+          //       colorFilter: ColorFilter.mode(
+          //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          // ),
+          color: Color(0xFFFAF8F5),
           child: Padding(
             padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
