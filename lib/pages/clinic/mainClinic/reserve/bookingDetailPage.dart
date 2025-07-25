@@ -257,12 +257,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                             vertical: 8,
                                           ),
                                           decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                const Color(0xFF916B44),
-                                                const Color(0xFFDBA871),
-                                              ],
-                                            ),
+                                            color: Color(0xFF916B44),
                                             borderRadius:
                                                 BorderRadius.circular(25),
                                             boxShadow: [

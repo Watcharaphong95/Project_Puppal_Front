@@ -5,12 +5,14 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
+import 'package:puppal_application/model/notificationModelRes.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
@@ -41,9 +43,12 @@ class _NotificationpageState extends State<Notificationpage> {
   List<ReserveClinicFirebase> reservebookingListAll = [];
   List<ReserveClinicFirebase> reserveList = [];
   StreamSubscription<QuerySnapshot>? _reserveListener;
+
   bool _isMounted = true;
   List<NotificationItem> notifications = [];
   Set<int> readNotificationIds = {};
+  List<NotifyModel> notifyList = [];
+
   List<NotificationItem> get unreadNotifications =>
       notifications.where((n) => !readNotificationIds.contains(n.id)).toList();
   String currentFilter = 'ทั้งหมด';
@@ -80,6 +85,7 @@ class _NotificationpageState extends State<Notificationpage> {
       _loadingData = false;
     });
     startRealtimeGet();
+    // getNotification();
     box.write('type', 'clinic');
     _isMounted = true;
     final storedIds = box.read<List>('readNotificationIds') ?? [];
@@ -303,108 +309,224 @@ class _NotificationpageState extends State<Notificationpage> {
       // ),
 
       body: _loadingData
-          ? SizedBox(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : Column(
-              children: [
-                // 🔔 Summary Card
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF916B44), Color(0xFFDBA871)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFDBA871),
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF916B44).withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_active,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'การแจ้งเตือนล่าสุด',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                  SizedBox(height: 16),
+                  Text(
+                    'กำลังโหลด...',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Container(
+              height: screenHeight * 0.9,
+              // decoration: BoxDecoration(
+              //   image: DecorationImage(
+              //     image: AssetImage('assets/images/indexBg.png'),
+              //     fit: BoxFit.cover,
+              //     colorFilter: ColorFilter.mode(
+              //         Colors.white.withOpacity(0.2), BlendMode.dstATop),
+              //   ),
+              // ),
+              color: Color(0xFFFAF8F5),
+              child: notifyList.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: EdgeInsets.all(16),
+                      itemCount: notifyList.length,
+                      itemBuilder: (context, index) {
+                        final notification = notifyList[index];
+
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              // Handle notification tap if needed
+                              // _showNotificationDetail(notification);
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Notification Icon
+                                      Container(
+                                        padding: EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFFDBA871)
+                                              .withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Icon(
+                                          FontAwesomeIcons.bell,
+                                          color: Color(0xFF916B44),
+                                          size: 18,
+                                        ),
+                                      ),
+
+                                      SizedBox(width: 12),
+
+                                      // Content
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Title/Sender info
+                                            if (notification.receiverEmail !=
+                                                null)
+                                              Text(
+                                                'จาก: ${notification.receiverEmail}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF916B44)
+                                                      .withOpacity(0.7),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+
+                                            SizedBox(height: 4),
+
+                                            // Message
+                                            Text(
+                                              notification.message,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Color(0xFF5D4037),
+                                                fontWeight: FontWeight.w500,
+                                                height: 1.4,
+                                              ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+
+                                            SizedBox(height: 8),
+
+                                            // Timestamp
+                                            Text(
+                                              _formatDateTime(
+                                                  notification.createAt),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // More options or read status
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        color:
+                                            Color(0xFF916B44).withOpacity(0.5),
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'ยังไม่ได้อ่าน $unreadCount รายการ',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                          ),
+                        );
+                      },
+                    )),
+    );
+  }
 
-                // 📌 Filter Tabs
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      _buildFilterTab('ทั้งหมด', currentFilter == 'ทั้งหมด'),
-                      const SizedBox(width: 8),
-                      _buildFilterTab(
-                          'ยังไม่อ่าน', currentFilter == 'ยังไม่อ่าน'),
-                      const SizedBox(width: 8),
-                      _buildFilterTab('การจอง', currentFilter == 'การจอง'),
-                    ],
-                  ),
-                ),
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
 
-                const SizedBox(height: 16),
+    // Format time as HH:MM
+    String formatTime(DateTime dt) {
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    }
 
-                // 📝 Notification List
-                Expanded(
-                  child: _loadingData
-                      ? const Center(child: CircularProgressIndicator())
-                      : filteredNotifications.isEmpty
-                          ? const Center(child: Text('ไม่มีการแจ้งเตือน'))
-                          : ListView.builder(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: filteredNotifications.length,
-                              itemBuilder: (context, index) {
-                                final notification =
-                                    filteredNotifications[index];
-                                return _buildNotificationCard(notification);
-                              },
-                            ),
-                ),
-              ],
+    if (difference.inDays > 0) {
+      if (difference.inDays == 1) {
+        return 'เมื่อวาน ${formatTime(dateTime)}';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} วันที่แล้ว';
+      } else {
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${formatTime(dateTime)}';
+      }
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ชั่วโมงที่แล้ว';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} นาทีที่แล้ว';
+    } else {
+      return 'เมื่อสักครู่';
+    }
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Color(0xFFDBA871).withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(
+              FontAwesomeIcons.bell,
+              size: 48,
+              color: Color(0xFF916B44).withOpacity(0.5),
+            ),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'ไม่มีการแจ้งเตือน',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF5D4037),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'คุณจะได้รับการแจ้งเตือนที่นี่\nเมื่อมีข้อมูลสำคัญ',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -702,38 +824,52 @@ class _NotificationpageState extends State<Notificationpage> {
   void startRealtimeGet() {
     stopRealTime();
 
-    final email = box.read("email");
-    if (email == null) return;
+    final userEmail = box.read('email');
+    if (userEmail == null) {
+      log('User email is null. Cannot fetch notifications.');
+      return;
+    }
+
+    log('Start listening realtime notifications for user: $userEmail');
 
     _reserveListener = FirebaseFirestore.instance
         .collection('clinicNotifications')
-        .where('receiverEmail', isEqualTo: email)
+        .where('receiverEmail', isEqualTo: userEmail)
         .orderBy('createAt', descending: true)
+        .limit(5)
         .snapshots()
         .listen((snapshot) {
-      if (!_isMounted) return;
+      log('Realtime update - total notifications: ${snapshot.docs.length}');
 
-      final dataList = snapshot.docs.map((doc) => doc.data()).toList();
+      notifyList = snapshot.docs.map((doc) {
+        log('Doc ID: ${doc.id}');
+        log('Doc data: ${doc.data()}');
+        return NotifyModel.fromMap(doc.data());
+      }).toList();
 
-      List<NotificationItem> tempNotifications = [];
-      for (int i = 0; i < dataList.length; i++) {
-        final dataMap = Map<String, dynamic>.from(dataList[i]);
-        final n = mapFirebaseToNotification(dataMap, i + 1);
-        tempNotifications.add(n);
+      for (var n in notifyList) {
+        log('Notification message: ${n.message}');
+        log('Notification created at: ${n.createAt}');
       }
 
-      setState(() {
-        notifications = tempNotifications;
-      });
+      // ถ้าคุณต้องการให้ UI รีเฟรช ให้เรียก setState() ใน StatefulWidget หรือแจ้ง listener ที่เหมาะสมที่นี่
+    }, onError: (error) {
+      log('Error listening to notifications: $error');
     });
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
-    }
   }
 
   void stopRealTime() {
     _reserveListener?.cancel();
     _reserveListener = null;
+    log('Stopped realtime notification listener.');
+  }
+
+  String _cleanMessageText(String message) {
+    // Replace timestamps like "11:00:00.000" with "11:00"
+    return message.replaceAllMapped(
+      RegExp(r'(\d{1,2}):(\d{2}):\d{2}\.\d{3}'),
+      (match) => '${match.group(1)}:${match.group(2)}',
+    );
   }
 
   String formatThaiDateTime(DateTime date) {

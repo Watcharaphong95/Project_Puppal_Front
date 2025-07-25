@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -340,7 +341,8 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
                 color: const Color(0xFF916B44),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.info_outline, color: Colors.white),
+              child:
+                  const Icon(FontAwesomeIcons.userDoctor, color: Colors.white),
             ),
             const SizedBox(height: 16),
             Text(
