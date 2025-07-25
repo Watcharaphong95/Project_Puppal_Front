@@ -62,55 +62,33 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
     screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "เพิ่มคุณหมอ",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
+      ),
       body: Container(
-        color: const Color(0xFFE9CBAF).withOpacity(0.1),
+        color: const Color(0xFFFAF8F5),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
               // Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF916B44),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.medical_services,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'เพิ่มหมอ',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF916B44),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
               const SizedBox(height: 20),
 
               // Doctor List
@@ -297,7 +275,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
               return;
             }
 
-            showAlert(
+            showAlertConfirm(
                 context: context,
                 title: 'สมัครสมาชิก?',
                 message: 'คุณหมอสามารถเพิ่มภายหลังได้',
@@ -582,29 +560,55 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "สมัครสมาชิกสำเร็จ",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF795548), width: 1.5),
+          ),
+          title: Center(
+            child: Text(
+              "สมัครสมาชิกสำเร็จ",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                color: Color(0xFF795548),
+              ),
             ),
           ),
-          content: Text(
-            "สมัครสมาชิกคลินิกและเพิ่มหมอสำเร็จแล้ว",
-            style: const TextStyle(color: Colors.black87),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              SizedBox(height: 8),
+              Icon(Icons.check_circle, color: Color(0xFF795548), size: 50),
+              SizedBox(height: 16),
+              Text(
+                "สมัครสมาชิกคลินิกและเพิ่มหมอสำเร็จแล้ว",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.only(bottom: 12),
           actions: [
             ElevatedButton(
               onPressed: () {
-                Get.to(() => IndexPage());
+                Get.offAll(() => IndexPage());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF795548),
                 foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               child: const Text('ตกลง'),
             ),
@@ -798,38 +802,188 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF3F3),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548),
-          ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF916B44), width: 2),
         ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
-            child: const Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF795548),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF916B44),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.info_outline, color: Colors.white),
             ),
-            child: const Text('ตกลง'),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF916B44),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF916B44),
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: const Color(0xFF916B44),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF916B44).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (onConfirm != null) onConfirm();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                'ตกลง',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showAlertConfirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+    required VoidCallback onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF916B44), width: 2),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF916B44),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.help_outline, color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF916B44),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF916B44),
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+        actions: [
+          // ยกเลิก
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Color(0xFF916B44), width: 1.5),
+            ),
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF916B44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                'ยกเลิก',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // ยืนยัน
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: const Color(0xFF916B44),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF916B44).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                'ยืนยัน',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
           ),
         ],
       ),

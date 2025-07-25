@@ -850,8 +850,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           // arrow button
                           GestureDetector(
                             onTap: () {
-                              Clinicappnavigator.toWidget(
-                                BookingdetailPage(docid: docId),
+                              Get.to(
+                                () => BookingdetailPage(docid: docId),
                               );
                             },
                             child: Container(

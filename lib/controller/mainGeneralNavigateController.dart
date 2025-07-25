@@ -145,4 +145,8 @@ class MainNavigationController extends GetxController {
     AppNavigation.clearStack();
     super.onClose();
   }
+
+  String getTitleForCurrentIndex() {
+    return pageTitles[currentIndex.value] ?? 'PUPPAL';
+  }
 }

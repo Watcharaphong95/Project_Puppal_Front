@@ -981,7 +981,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                 ),
                                                 child: InkWell(
                                                   onTap: () {
-                                                    Clinicappnavigator.toWidget(
+                                                    Get.to(() =>
                                                         Vaccinehistorydetailspage(
                                                             docId: item.docId));
                                                   },

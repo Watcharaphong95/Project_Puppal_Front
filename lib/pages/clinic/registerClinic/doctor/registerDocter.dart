@@ -47,176 +47,390 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'เพิ่มหมอ',
+        title: const Text(
+          "เพิ่มคุณหมอ",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+        elevation: 0,
         centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: SizedBox(
-            height: screenHeight * 0.85,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  spacing: 16,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+              // gradient: LinearGradient(
+              //   begin: Alignment.topCenter,
+              //   end: Alignment.bottomCenter,
+              //   colors: [
+              //     Color(0xFFFAF8F5),
+              //     Colors.white,
+              //   ],
+              // ),
+              color: Color(0xFFFAF8F5)),
+          child: SafeArea(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: Column(
+                children: [
+                  // Header Section
+                  Container(
+                    margin: EdgeInsets.only(bottom: 32),
+                    child: Column(
                       children: [
-                        Text(
-                          'ชื่อ',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Material(
-                          elevation: 5,
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            height: screenHeight * 0.055,
-                            child: TextField(
-                              controller: nameCtl,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF916B44),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF916B44).withOpacity(0.3),
+                                blurRadius: 15,
+                                spreadRadius: 2,
                               ),
-                            ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.medical_services_outlined,
+                            color: Colors.white,
+                            size: 32,
                           ),
                         ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        SizedBox(height: 16),
                         Text(
-                          'นามสกุล',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Material(
-                          elevation: 5,
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            height: screenHeight * 0.055,
-                            child: TextField(
-                              controller: surnameCtl,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'ความเชี่ยวชาญ',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Text(
-                              '(เช่น ผ่าตัด, ยา)',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Material(
-                          elevation: 5,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                              onTap: _showSelectSpecialty,
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                height: screenHeight * 0.055,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  selectedSpecialty.isEmpty
-                                      ? 'เลือกความเชี่ยวชาญ'
-                                      : selectedSpecialty.join(', '),
-                                  style: TextStyle(
-                                    color: selectedSpecialty.isEmpty
-                                        ? Colors.grey
-                                        : Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              )),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'เลขใบอนุญาตประกอบวิชาชีพ',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Material(
-                          elevation: 5,
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            height: screenHeight * 0.055,
-                            child: TextField(
-                              controller: careerNoCtl,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.05),
-                  child: SizedBox(
-                    width: screenWidth * 0.5,
-                    child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            backgroundColor: Color(0xFF916b44)),
-                        onPressed: doctorAddNextButton,
-                        child: Text(
-                          'ถัดไป',
+                          'ข้อมูลสัตวแพทย์',
                           style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
-                        )),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF916B44),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'กรุณากรอกข้อมูลให้ครบถ้วน',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF916B44).withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )
-              ],
+
+                  // แก้ตรงนี้ 👇
+                  Container(
+                    // กำหนด max width ได้ถ้าต้องการ
+                    child: Column(
+                      children: [
+                        // Name Field
+                        _buildModernTextField(
+                          label: 'ชื่อ',
+                          controller: nameCtl,
+                          icon: Icons.person_outline,
+                          screenHeight: screenHeight,
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // Surname Field
+                        _buildModernTextField(
+                          label: 'นามสกุล',
+                          controller: surnameCtl,
+                          icon: Icons.person_outline,
+                          screenHeight: screenHeight,
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // Specialty Field
+                        _buildSpecialtyField(
+                          label: 'ความเชี่ยวชาญ',
+                          subtitle: '(เช่น ผ่าตัด, ยา)',
+                          selectedSpecialty: selectedSpecialty,
+                          onTap: _showSelectSpecialty,
+                          screenHeight: screenHeight,
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // License Number Field
+                        _buildModernTextField(
+                          label: 'เลขใบอนุญาตประกอบวิชาชีพ',
+                          controller: careerNoCtl,
+                          icon: Icons.assignment_outlined,
+                          screenHeight: screenHeight,
+                        ),
+
+                        SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+
+                  // Next Button
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    margin: EdgeInsets.only(bottom: 20),
+                    child: ElevatedButton(
+                      onPressed: doctorAddNextButton,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF916B44),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        shadowColor: Color(0xFF916B44).withOpacity(0.3),
+                      ).copyWith(
+                        elevation: MaterialStateProperty.resolveWith<double>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.pressed))
+                              return 0;
+                            return 8;
+                          },
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'ถัดไป',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  // Modern Text Field Widget
+  Widget _buildModernTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              border: InputBorder.none,
+              hintText: 'กรอก$label',
+              hintStyle: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.5),
+                fontSize: 16,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+// Specialty Field Widget
+  Widget _buildSpecialtyField({
+    required String label,
+    required String subtitle,
+    required List<String> selectedSpecialty,
+    required VoidCallback onTap,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF916B44),
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF916B44).withOpacity(0.6),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 16),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.medical_information_outlined,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (selectedSpecialty.isEmpty)
+                        Text(
+                          'เลือกความเชี่ยวชาญ',
+                          style: TextStyle(
+                            color: Color(0xFF916B44).withOpacity(0.5),
+                            fontSize: 16,
+                          ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: selectedSpecialty.map((specialty) {
+                            return Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF916B44).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Color(0xFF916B44).withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                specialty,
+                                style: TextStyle(
+                                  color: Color(0xFF916B44),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xFFDBA871),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
