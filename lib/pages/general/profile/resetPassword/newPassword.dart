@@ -7,6 +7,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPasswordChange.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
@@ -48,13 +50,14 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
       body: SingleChildScrollView(
         child: Container(
           height: screenHeight,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-          ),
+          // decoration: BoxDecoration(
+          //   image: DecorationImage(
+          //       image: AssetImage('assets/images/indexBg.png'),
+          //       fit: BoxFit.cover,
+          //       colorFilter: ColorFilter.mode(
+          //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+          // ),
+          color: Color(0xFFFAF8F5),
           child: Padding(
             padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
@@ -199,9 +202,15 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
               Get.offAll(() => IndexPage());
             } else {
               if (box.read('type') == 'general') {
-                Get.offAll(() => GeneralprofilePage());
+                while (Get.isDialogOpen ?? false) {
+                  Get.back();
+                }
+                GeneralAppNavigation.offAll(1);
               } else if (box.read('type') == 'clinic') {
-                // ADD PAGE TO CLINIC PROFILE
+                while (Get.isDialogOpen ?? false) {
+                  Get.back();
+                }
+                Clinicappnavigator.offAll(1);
               }
             }
           });

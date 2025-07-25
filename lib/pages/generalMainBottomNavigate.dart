@@ -10,7 +10,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -106,26 +106,24 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
   @override
   void initState() {
     log(widget.indexPage.toString());
-    init();
     super.initState();
     currentIndex = widget.indexPage;
-
-    // Use the controller's method to update the index properly
-    navController.updateIndex(currentIndex);
+    init();
   }
 
   void init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    navController.notchBottomBarController.jumpTo(currentIndex);
   }
 
-  @override
-  void dispose() {
-    // Don't dispose here since we're using the controller's instance
-    // notchBottomBarController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   // Don't dispose here since we're using the controller's instance
+  //   // notchBottomBarController.dispose();
+  //   super.dispose();
+  // }
 
   void onTap(int index) {
     setState(() {
@@ -367,7 +365,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (!didPop) {
-                final handled = AppNavigation.handleSystemBack();
+                final handled = GeneralAppNavigation.handleSystemBack();
                 if (!handled) {
                   showAlert(
                       title: 'คุณต้องการออกจากแอปใช่หรือไม่',

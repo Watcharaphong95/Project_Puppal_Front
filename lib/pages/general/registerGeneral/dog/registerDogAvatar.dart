@@ -10,6 +10,7 @@ import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/model/dogPost.dart';
 import 'package:puppal_application/model/injectionRecordPost.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -58,9 +59,10 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
         ),
         backgroundColor: Color(0xFFDBA871),
       ),
-      body: SizedBox(
+      body: Container(
         width: screenWidth,
         height: screenHeight,
+        color: Color(0xFFFAF8F5),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -165,17 +167,9 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
       log("Public image URL: $publicUrl");
       dogCtl.image.value = publicUrl;
 
-      await insertDogAndInjectRecord();
+      await dogInsert();
     } catch (e) {
       log("Error during upload: $e");
-    }
-  }
-
-  Future<void> insertDogAndInjectRecord() async {
-    await dogInsert();
-    if (recordListCtl.recordList.isNotEmpty) {
-      await recordInsert();
-      recordListCtl.recordList.clear();
     }
   }
 
@@ -217,7 +211,10 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
             title: 'เพิ่มสุนัขสำเร็จแล้ว',
             message: 'กดตกลงเพื่อกลับไปยังหน้าสุนัขของคุณ',
             onConfirm: () {
-              Get.to(() => GeneraldogPage());
+              while (Get.isDialogOpen ?? false) {
+                Get.back();
+              }
+              GeneralAppNavigation.offAll(0);
             });
       } else {
         showAlertNoClose(
@@ -259,98 +256,6 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
     if (month == null) return ''; // ถ้าเดือนไม่ตรงกับที่กำหนด
 
     return "$year-$month-$day";
-  }
-
-  Future<void> recordInsert() async {
-    var resCode = "";
-    for (var re in recordListCtl.recordList) {
-      InjectionRecordPost req = InjectionRecordPost(
-          dogId: dogID,
-          clinicName: re.clinicName,
-          vaccineType: re.vaccineType,
-          date: re.date,
-          status: re.status);
-      log(injectionRecordPostToJson(req));
-      var res = await http.post(
-        Uri.parse("$url/injectionRecord"),
-        headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: injectionRecordPostToJson(req),
-      );
-
-      log(res.statusCode.toString());
-      resCode = res.statusCode.toString();
-    }
-    Get.back();
-    if (resCode == '201') {
-      showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "เพิ่มสุนัขสำเร็จ",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "เพิ่มสุนัขสำเร็จแล้ว",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.to(() => GeneraldogPage());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF3F3),
-          title: Text(
-            "เกิดข้อผิดพลาด",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF795548),
-            ),
-          ),
-          content: Text(
-            "ไม่สามารถเพิ่มสุนัขได้ กรุณาลองใหม่อีกครั้ง",
-            style: const TextStyle(color: Colors.black87),
-          ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('ตกลง'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   void showLoadingDialog({String? message}) {

@@ -15,7 +15,7 @@ import 'package:puppal_application/model/clinicSearch.dart';
 import 'package:puppal_application/model/clinicSearchRes.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
 import 'package:puppal_application/model/specialDoctorRes.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/reservePage/clinicTimeSelect.dart';
 import 'package:readmore/readmore.dart';
@@ -60,7 +60,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
   bool _loadingData = true;
   bool _loadingSearchData = true;
 
-  bool _currentPosition = true;
+  bool _currentPosition = false;
   bool _isDogInfoExpanded = false;
 
   bool _hasLatestClinic = false;
@@ -145,24 +145,25 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
               ),
             )
           : Container(
-              height: screenHeight * 0.9,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.blue.shade50,
-                    Colors.white,
-                    Colors.orange.shade50,
-                  ],
-                ),
-                image: DecorationImage(
-                  image: AssetImage('assets/images/indexBg.png'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(0.1), BlendMode.dstATop),
-                ),
-              ),
+              // height: screenHeight * 0.7,
+              // decoration: BoxDecoration(
+              //   gradient: LinearGradient(
+              //     begin: Alignment.topCenter,
+              //     end: Alignment.bottomCenter,
+              //     colors: [
+              //       Colors.blue.shade50,
+              //       Colors.white,
+              //       Colors.orange.shade50,
+              //     ],
+              //   ),
+              //   image: DecorationImage(
+              //     image: AssetImage('assets/images/indexBg.png'),
+              //     fit: BoxFit.cover,
+              //     colorFilter: ColorFilter.mode(
+              //         Colors.white.withOpacity(0.1), BlendMode.dstATop),
+              //   ),
+              // ),
+              color: Color(0xFFFAF8F5),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                 child: SizedBox(
@@ -360,10 +361,9 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
 
   SafeArea showClinicResult() {
     return SafeArea(
+      bottom: false,
       child: SizedBox(
-        height: _isDogInfoExpanded
-            ? screenHeight * 0.5
-            : screenHeight * 0.5 - MediaQuery.of(context).padding.bottom,
+        height: _isDogInfoExpanded ? screenHeight * 0.5 : screenHeight * 0.5,
         child: clinics.isEmpty
             ? Center(
                 child: Column(
@@ -444,7 +444,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                         borderRadius: BorderRadius.circular(16),
                         onTap: isClinicInteractable
                             ? () {
-                                AppNavigation.toWidget(ClinictimeselectPage(
+                                GeneralAppNavigation.toWidget(
+                                    ClinictimeselectPage(
                                   email: clinic.userEmail,
                                   dogId: widget.dogId,
                                   distance: clinic.distanceKm,

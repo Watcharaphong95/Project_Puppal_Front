@@ -264,6 +264,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
               //       colorFilter: ColorFilter.mode(
               //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
               // ),
+              color: Color(0xFFFAF8F5),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.symmetric(

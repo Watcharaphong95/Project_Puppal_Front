@@ -18,7 +18,7 @@ import 'package:puppal_application/model/dogAppointmentEmailGet.dart';
 import 'package:puppal_application/model/dogRecordGetId.dart';
 import 'package:puppal_application/model/dogsIdGet.dart';
 import 'package:puppal_application/model/fireStoreReserveGet.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -88,7 +88,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     log('focusDay ${box.read('focusedDay')}');
     log(box.read('generalImage'));
     init();
-    startRealtimeGet();
+
     super.initState();
   }
 
@@ -104,10 +104,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     });
     await getAppointmentEmail();
     events = getEventsForDay(_selectedDay);
-    if (!mounted) return;
-    setState(() {
-      _loadingData = false;
-    });
+    startRealtimeGet();
+    if (mounted) {
+      setState(() {
+        _loadingData = false;
+      });
+    }
   }
 
   @override
@@ -304,14 +306,15 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               )
             : SingleChildScrollView(
                 child: Container(
-                  height: screenHeight * 0.9,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                        image: AssetImage('assets/images/indexBg.png'),
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                            Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-                  ),
+                  height: screenHeight * 0.83,
+                  // decoration: BoxDecoration(
+                  //   image: DecorationImage(
+                  //       image: AssetImage('assets/images/indexBg.png'),
+                  //       fit: BoxFit.cover,
+                  //       colorFilter: ColorFilter.mode(
+                  //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                  // ),
+                  color: Color(0xFFFAF8F5),
                   child: Column(
                     children: [
                       SizedBox(
@@ -353,12 +356,14 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 return isSameDay(_selectedDay, day);
                               },
                               onDaySelected: (selectedDay, focusedDay) {
-                                setState(() {
-                                  _focusedDay = focusedDay;
-                                  _selectedDay = selectedDay;
-                                  box.write('focusedDay', focusedDay);
-                                  events = getEventsForDay(_selectedDay);
-                                });
+                                if (mounted) {
+                                  setState(() {
+                                    _focusedDay = focusedDay;
+                                    _selectedDay = selectedDay;
+                                    box.write('focusedDay', focusedDay);
+                                    events = getEventsForDay(_selectedDay);
+                                  });
+                                }
                               },
                               onPageChanged: (focusedDay) {
                                 _focusedDay = focusedDay;
@@ -470,7 +475,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                   showReserveInfoAlert(
                                                       context, e);
                                                 } else {
-                                                  AppNavigation.toWidget(
+                                                  GeneralAppNavigation.toWidget(
                                                       ClinicsearchPage(
                                                     dogId: e.dogId,
                                                     vaccineName:
@@ -547,7 +552,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                         _selectedDay.month,
                                         _selectedDay.day,
                                       );
-                                      AppNavigation.toWidget(
+                                      GeneralAppNavigation.toWidget(
                                         DogselectPage(
                                             date: _selectedDay,
                                             dogHasAppointment:
@@ -768,21 +773,22 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   void startRealtimeGet() {
-    stopRealTime(); // stop any previous listener
+    // stopRealTime();
+    // if (!mounted) return;
 
     final colRef = db.collection("reserve").where("generalEmail",
         isEqualTo: box.read("email")); // collection, not doc
 
-    context.read<AppData>().listener = colRef.snapshots().listen(
-      (querySnapshot) async {
+    log('🔔 Listener is Started');
+
+    appData.listener = colRef.snapshots().listen(
+      (querySnapshot) {
         for (var change in querySnapshot.docChanges) {
           var docId = change.doc.id;
           var data = change.doc.data();
 
           if (change.type == DocumentChangeType.removed) {
-            await getAppointmentEmail();
-            if (!mounted) return;
-            setState(() {});
+            fireStoreRemoveListen();
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
             log("🔄 Change type: ${change.type}");
@@ -790,7 +796,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               for (int i = 0; i < dogList.length; i++) {
                 if (dogList[i].reserveId == docId) {
                   dogList[i].status = newStatus;
-                  setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                  }
                   break;
                 }
               }
@@ -800,6 +808,13 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       },
       onError: (error) => log("❌ Listen failed: $error"),
     );
+  }
+
+  Future<void> fireStoreRemoveListen() async {
+    await getAppointmentEmail();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void stopRealTime() {
@@ -1367,8 +1382,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     // }
 
     buildEventMap(appointmentAll);
-    if (!mounted) return;
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     // log("🔄 appointmentAll updated with ${appointmentAll.length} items");
   }
 
@@ -1707,8 +1723,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     //     log('  Dog: ${dog.toString()}');
     //   }
     // });
-    if (!mounted) return;
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   String getDogAge(String birthday) {

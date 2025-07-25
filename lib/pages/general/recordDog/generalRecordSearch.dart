@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/dogsGetEmail.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
@@ -253,16 +254,17 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
         ),
         body: Container(
           height: screenHeight * 0.89,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFF8F9FA),
-                Color(0xFFE9ECEF),
-              ],
-            ),
-          ),
+          // decoration: BoxDecoration(
+          //   gradient: LinearGradient(
+          //     begin: Alignment.topCenter,
+          //     end: Alignment.bottomCenter,
+          //     colors: [
+          //       Color(0xFFF8F9FA),
+          //       Color(0xFFE9ECEF),
+          //     ],
+          //   ),
+          // ),
+          color: Color(0xFFFAF8F5),
           child: Column(
             children: [
               // Header Section
@@ -511,10 +513,13 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                                                 height: 36,
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    Get.to(
-                                                        () => GeneralrecordPage(
+                                                    GeneralAppNavigation
+                                                        .toWidget(
+                                                            GeneralrecordPage(
                                                               index: dog.dogId,
-                                                            ));
+                                                            ),
+                                                            title:
+                                                                'ประวัติการฉีดยา');
                                                   },
                                                   style:
                                                       ElevatedButton.styleFrom(

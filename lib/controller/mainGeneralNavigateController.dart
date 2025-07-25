@@ -2,7 +2,7 @@ import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_not
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 
 class MainNavigationController extends GetxController {
   // Current page index
@@ -99,11 +99,12 @@ class MainNavigationController extends GetxController {
     if (index <= 2) {
       // For valid bottom nav indices, set normally
       notchBottomBarController.index = index;
+      // notchBottomBarController.jumpTo(index);
     } else {
       // For drawer pages, create a new controller with no selection
       // This forces all items to show as inactive
-      notchBottomBarController.dispose();
-      notchBottomBarController = NotchBottomBarController(index: -1);
+      // notchBottomBarController.dispose();
+      notchBottomBarController.index = -1;
     }
   }
 
@@ -115,7 +116,7 @@ class MainNavigationController extends GetxController {
   // Clean up dynamic pages (call when needed to free memory)
   void cleanupDynamicPages() {
     // Remove pages that are not in the navigation stack
-    List<int> stackIndices = AppNavigation.getNavigationStack();
+    List<int> stackIndices = GeneralAppNavigation.getNavigationStack();
     List<int> toRemove = [];
 
     dynamicPages.forEach((index, page) {
@@ -131,18 +132,18 @@ class MainNavigationController extends GetxController {
 
   // Handle back navigation
   void handleBack() {
-    AppNavigation.back();
+    GeneralAppNavigation.back();
   }
 
   // Check if current page can go back
   bool canGoBack() {
-    return AppNavigation.canGoBack() || currentIndex.value != 1;
+    return GeneralAppNavigation.canGoBack() || currentIndex.value != 1;
   }
 
   @override
   void onClose() {
     notchBottomBarController.dispose();
-    AppNavigation.clearStack();
+    GeneralAppNavigation.clearStack();
     super.onClose();
   }
 

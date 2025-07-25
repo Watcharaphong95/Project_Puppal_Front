@@ -9,7 +9,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/model/clinicEditProfilePost.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicEditProfile.dart';
 import 'package:shimmer/shimmer.dart';

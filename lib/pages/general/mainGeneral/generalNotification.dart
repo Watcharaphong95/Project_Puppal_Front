@@ -273,14 +273,15 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
             )
           : Container(
               height: screenHeight * 0.9,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/indexBg.png'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(0.2), BlendMode.dstATop),
-                ),
-              ),
+              // decoration: BoxDecoration(
+              //   image: DecorationImage(
+              //     image: AssetImage('assets/images/indexBg.png'),
+              //     fit: BoxFit.cover,
+              //     colorFilter: ColorFilter.mode(
+              //         Colors.white.withOpacity(0.2), BlendMode.dstATop),
+              //   ),
+              // ),
+              color: Color(0xFFFAF8F5),
               child: notifyList.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(

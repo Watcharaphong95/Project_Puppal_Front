@@ -261,9 +261,7 @@ class _IndexPageState extends State<IndexPage> {
             if (tokenUpdate.statusCode == 201) {
               log('Name ${box.read('generalName')}');
               Get.back();
-              Get.offAll(() => GeneralMainBottomNavigate(
-                    indexPage: 1,
-                  ));
+              Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
             } else {
               Get.snackbar(
                 'ข้อผิดพลาด',
@@ -299,7 +297,7 @@ class _IndexPageState extends State<IndexPage> {
               log('Name ${box.read('clinicName')}');
               Get.back();
               Get.offAll(() => Clinicmainbottomnavigate(
-                    indexPage: 2,
+                    indexPage: 1,
                   ));
             } else {
               Get.snackbar(
@@ -521,7 +519,7 @@ class _IndexPageState extends State<IndexPage> {
           box.write('generalName', jsonDecode(resGeneral.body)['username']);
           box.write('generalImage', jsonDecode(resGeneral.body)['image']);
           log('Name ${box.read('generalName')}');
-          Get.offAll(() => GeneralmainPage());
+          Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
         } else if (user.clinic == 1) {
           var resClinic = await http
               .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
@@ -529,7 +527,7 @@ class _IndexPageState extends State<IndexPage> {
           box.write('clinicName', jsonDecode(resClinic.body)['name']);
           box.write('clinicImage', jsonDecode(resClinic.body)['image']);
           log('Name ${box.read('clinicName')}');
-          Get.offAll(() => ClinicmainPage());
+          Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
         }
       }
     }

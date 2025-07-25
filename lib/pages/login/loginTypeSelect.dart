@@ -8,8 +8,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:http/http.dart' as http;
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 
 class LogintypeselectPage extends StatefulWidget {
   const LogintypeselectPage({super.key});
@@ -122,7 +124,7 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
     );
     if (tokenUpdate.statusCode == 201) {
       log('Name ${box.read('clinicName')}');
-      Get.offAll(() => ClinicmainPage());
+      Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
     } else {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -159,7 +161,7 @@ class _LogintypeselectPageState extends State<LogintypeselectPage> {
     );
     if (tokenUpdate.statusCode == 201) {
       log('Name ${box.read('generalName')}');
-      Get.offAll(() => GeneralmainPage());
+      Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
     } else {
       Get.snackbar(
         'ข้อผิดพลาด',

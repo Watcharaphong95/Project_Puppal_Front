@@ -10,8 +10,10 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/fcmTokenPost.dart';
 import 'package:puppal_application/model/userPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/loginTypeSelect.dart';
 
 class LoginPage extends StatefulWidget {
@@ -98,20 +100,40 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(fontSize: 20),
                                 ),
                                 Material(
-                                  elevation: 5,
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: SizedBox(
-                                    height: screenHeight * 0.055,
-                                    child: TextField(
-                                      controller: emailCtl,
-                                      decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          borderSide: BorderSide.none,
-                                        ),
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(16),
+                                  shadowColor: Colors.black12,
+                                  child: TextField(
+                                    controller: emailCtl,
+                                    style: const TextStyle(
+                                        color: Color(0xFF916B44)),
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(Icons.email,
+                                          color: Color(0xFF916B44)),
+                                      hintText: 'กรอกอีเมลของคุณ',
+                                      hintStyle: TextStyle(
+                                          color: Color(0xFF916B44)
+                                              .withOpacity(0.6)),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 18.0, horizontal: 16.0),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFE9CBAF)),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFE9CBAF)),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFF916B44),
+                                            width: 1.5),
                                       ),
                                     ),
                                   ),
@@ -132,37 +154,61 @@ class _LoginPageState extends State<LoginPage> {
                                       style: TextStyle(fontSize: 20),
                                     ),
                                     Material(
-                                      elevation: 5,
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: SizedBox(
-                                        height: screenHeight * 0.055,
-                                        child: TextField(
-                                          controller: passwordCtl,
-                                          obscureText: _obscurePassword,
-                                          decoration: InputDecoration(
-                                            filled: true,
-                                            fillColor: Colors.white,
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              borderSide: BorderSide.none,
+                                      elevation: 4,
+                                      borderRadius: BorderRadius.circular(16),
+                                      shadowColor: Colors.black12,
+                                      child: TextField(
+                                        controller: passwordCtl,
+                                        obscureText: _obscurePassword,
+                                        style: const TextStyle(
+                                            color: Color(0xFF916B44)),
+                                        decoration: InputDecoration(
+                                          prefixIcon: const Icon(Icons.lock,
+                                              color: Color(0xFF916B44)),
+                                          hintText: 'กรอกรหัสผ่านของคุณ',
+                                          hintStyle: TextStyle(
+                                              color: Color(0xFF916B44)
+                                                  .withOpacity(0.6)),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 18.0,
+                                                  horizontal: 16.0),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE9CBAF)),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFFE9CBAF)),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            borderSide: const BorderSide(
+                                                color: Color(0xFF916B44),
+                                                width: 1.5),
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                              color: const Color(0xFF916B44),
                                             ),
-                                            suffixIcon: IconButton(
-                                              icon: Icon(
-                                                _obscurePassword
-                                                    ? Icons.visibility_off
-                                                    : Icons.visibility,
-                                              ),
-                                              onPressed: () {
-                                                setState(() =>
-                                                    _obscurePassword =
-                                                        !_obscurePassword);
-                                              },
-                                            ),
+                                            onPressed: () {
+                                              setState(() => _obscurePassword =
+                                                  !_obscurePassword);
+                                            },
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    )
                                   ],
                                 ),
                               ),
@@ -274,7 +320,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         if (tokenUpdate.statusCode == 201) {
           log('Name ${box.read('generalName')}');
-          Get.offAll(() => GeneralmainPage());
+          Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
         } else {
           Get.back();
           Get.snackbar(
@@ -309,7 +355,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         if (tokenUpdate.statusCode == 201) {
           log('Name ${box.read('clinicName')}');
-          Get.offAll(() => ClinicmainPage());
+          Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
         } else {
           Get.back();
           Get.snackbar(

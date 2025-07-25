@@ -19,7 +19,6 @@ import 'package:puppal_application/model/reserveGeneralPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';

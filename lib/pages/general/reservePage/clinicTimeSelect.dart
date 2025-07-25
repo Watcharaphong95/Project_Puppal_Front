@@ -15,7 +15,7 @@ import 'package:puppal_application/model/clinicSlotPost.dart';
 import 'package:puppal_application/model/clinicSlotsReq.dart';
 import 'package:puppal_application/model/clinicSlotsRes.dart';
 import 'package:puppal_application/model/reserveSpecialCheck.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -151,11 +151,12 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                 // Main Content
                 SliverToBoxAdapter(
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
+                    // decoration: BoxDecoration(
+                    //   color: Colors.white,
+                    //   borderRadius:
+                    //       BorderRadius.vertical(top: Radius.circular(24)),
+                    // ),
+                    color: Color(0xFFFAF8F5),
                     child: Padding(
                       padding: EdgeInsets.all(20),
                       child: Column(
@@ -900,7 +901,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
               while (Get.isDialogOpen ?? false) {
                 Get.back();
               }
-              AppNavigation.offAll(1);
+              GeneralAppNavigation.offAll(1);
             });
       }
       var notifyData = {
@@ -1012,7 +1013,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                 while (Get.isDialogOpen ?? false) {
                   Get.back();
                 }
-                AppNavigation.offAll(1);
+                GeneralAppNavigation.offAll(1);
               });
         } else {
           showAlertNoClose(

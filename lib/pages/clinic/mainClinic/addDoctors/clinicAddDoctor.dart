@@ -9,7 +9,6 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/specialPost.dart';
-import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddAvatar.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';

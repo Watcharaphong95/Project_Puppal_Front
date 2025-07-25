@@ -19,6 +19,7 @@ import 'package:puppal_application/model/generalLocationPut.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/generalProfilePost.dart';
 import 'package:puppal_application/model/userPost.dart';
+import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -100,18 +101,34 @@ class _EditprofilePageState extends State<EditprofilePage> {
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _loadingData
-          ? Center(
-              child: CircularProgressIndicator(),
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Color(0xFFDBA871),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'กำลังโหลด...',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             )
           : SingleChildScrollView(
               child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage('assets/images/indexBg.png'),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-                ),
+                // decoration: BoxDecoration(
+                //   image: DecorationImage(
+                //       image: AssetImage('assets/images/indexBg.png'),
+                //       fit: BoxFit.cover,
+                //       colorFilter: ColorFilter.mode(
+                //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
+                // ),
+                color: Color(0xFFFAF8F5),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                       horizontal: screenWidth * 0.05,
@@ -377,6 +394,7 @@ class _EditprofilePageState extends State<EditprofilePage> {
                               children: [
                                 SizedBox(height: 10),
                                 Material(
+                                  color: Colors.white,
                                   elevation: 5,
                                   borderRadius: BorderRadius.circular(10),
                                   child: Container(
@@ -386,7 +404,28 @@ class _EditprofilePageState extends State<EditprofilePage> {
                                     ),
                                     child: selectedLatLng == null
                                         ? Center(
-                                            child: CircularProgressIndicator())
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                CircularProgressIndicator(
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                          Color>(
+                                                    Color(0xFFDBA871),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Text(
+                                                  'กำลังโหลด...',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          )
                                         : ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(10),
@@ -541,7 +580,10 @@ class _EditprofilePageState extends State<EditprofilePage> {
           title: 'อัพเดทเสร็จสิ้น',
           message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
           onConfirm: () {
-            Get.off(() => GeneralprofilePage());
+            while (Get.isDialogOpen ?? false) {
+              Get.back();
+            }
+            GeneralAppNavigation.off(5);
           });
     } else {
       showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
