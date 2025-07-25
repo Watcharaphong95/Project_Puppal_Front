@@ -9,44 +9,44 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/controller/mainClinicNavigateController.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
-import 'package:puppal_application/pages/generalAppNavigator.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalGuide.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalNotification.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
-import 'package:puppal_application/pages/general/recordDog/generalRecordSearch.dart';
-import 'package:http/http.dart' as http;
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDog.dart';
+import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:http/http.dart' as http;
 
-class GeneralMainBottomNavigate extends StatefulWidget {
+class Clinicmainbottomnavigate extends StatefulWidget {
   final int indexPage;
 
-  const GeneralMainBottomNavigate({
-    super.key,
-    required this.indexPage,
-  });
+  const Clinicmainbottomnavigate({super.key, required this.indexPage});
 
   @override
-  State<GeneralMainBottomNavigate> createState() =>
-      _GeneralMainBottomNavigateState();
+  State<Clinicmainbottomnavigate> createState() =>
+      _ClinicmainbottomnavigateState();
 }
 
-class GeneralMainBottomNavigateController extends GetxController {
-  final MainNavigationController navController =
-      Get.find<MainNavigationController>();
+class ClinicmainbottomnavigateController extends GetxController {
+  final Mainclinicnavigatecontroller navController =
+      Get.find<Mainclinicnavigatecontroller>();
 
   int addDynamicPage(Widget page, {String? title}) {
     return navController.addDynamicPage(page, title: title);
   }
 }
 
-class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
+class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
   late double screenWidth;
   late double screenHeight;
   final box = GetStorage();
@@ -59,32 +59,34 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
   // late NotchBottomBarController notchBottomBarController;
   int currentIndex = 1;
 
+  final notchBottomBarController =
+      NotchBottomBarController(index: 1); // <<== เพิ่มตรงนี้ด้วย
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   final List<Widget> pages = [
-    GeneraldogPage(),
-    GeneralmainPage(),
-    GeneralnotificationPage(),
-    GeneralrecordsearchPage(),
-    GeneralguidePage(),
-    GeneralprofilePage(),
+    VaccineRequestsPage(),
+    ClinicmainPage(),
+    Notificationpage(),
+    Cliniclistdoctors(),
+    Vaccinehistorypage(),
+    Clinicsetting(),
   ];
 
   final List<String> appBarTitles = [
-    'สุนัขของฉัน',
+    'คำขอ',
     'PUPPAL',
     'การแจ้งเตือน',
+    'หมอ',
     'ประวัติการฉีดยา',
-    'คู่มือ',
     'ตั้งค่า',
   ];
 
   final List<BottomBarItem> bottomBarItems = [
     BottomBarItem(
       inActiveItem:
-          Center(child: Icon(FontAwesomeIcons.dog, color: Colors.white)),
-      activeItem: Icon(FontAwesomeIcons.dog, color: Color(0xFFDBA871)),
-      itemLabel: 'สุนัข',
+          Center(child: Icon(FontAwesomeIcons.syringe, color: Colors.white)),
+      activeItem: Icon(FontAwesomeIcons.syringe, color: Color(0xFFDBA871)),
+      itemLabel: 'คำขอ',
     ),
     BottomBarItem(
       inActiveItem:
@@ -137,8 +139,10 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
 
   @override
   Widget build(BuildContext context) {
-    screenWidth = MediaQuery.of(context).size.width;
-    screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final name = box.read('clinicName') ?? 'ผู้ใช้งาน';
+    final image = box.read('clinicImage') ?? 'default_image_url_or_placeholder';
 
     return Obx(() => Scaffold(
           appBar: AppBar(
@@ -146,17 +150,20 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
             centerTitle: true,
             iconTheme: IconThemeData(color: Colors.white),
             title: Text(
-              navController.getPageTitle(navController.currentIndex.value),
+              navController.currentIndex.value < appBarTitles.length
+                  ? appBarTitles[navController.currentIndex.value]
+                  : '',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600),
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            actions: navController.currentIndex.value == 0
+            actions: navController.currentIndex.value == 3
                 ? [
                     IconButton(
                       onPressed: () {
-                        Get.to(() => RegisterdogPage());
+                        AppNavigation.toWidget(Clinicadddoctor());
                       },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xFFE9CBAF),
@@ -206,42 +213,29 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           ClipOval(
-                            child: (box.read('generalImage') != null &&
-                                    (box.read('generalImage') as String)
-                                        .isNotEmpty)
-                                ? Image.network(
-                                    box.read('generalImage'),
+                            child: Image.network(
+                              image,
+                              width: screenWidth * 0.2,
+                              height: screenWidth * 0.2,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
                                     width: screenWidth * 0.2,
                                     height: screenWidth * 0.2,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Shimmer.fromColors(
-                                        baseColor: Colors.grey[300]!,
-                                        highlightColor: Colors.grey[100]!,
-                                        child: Container(
-                                          width: screenWidth * 0.2,
-                                          height: screenWidth * 0.2,
-                                          color: Colors.white,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    width: screenWidth * 0.2,
-                                    height: screenWidth * 0.2,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Icon(Icons.person,
-                                        size: 40, color: Colors.white),
+                                    color: Colors.white,
                                   ),
+                                );
+                              },
+                            ),
                           ),
                           SizedBox(height: 10),
                           Text(
-                            box.read('generalName') ?? "ผู้ใช้งาน",
+                            name,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -254,7 +248,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                     ListTile(
                       leading: Icon(FontAwesomeIcons.syringe,
                           color: Color(0xFF916b44)),
-                      title: Text('ประวัติการฉีดยา'),
+                      title: Text('หมอประจำคลินิก'),
                       onTap: () {
                         setState(() {
                           Get.back();
@@ -264,7 +258,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                     ),
                     ListTile(
                       leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
-                      title: Text('คู่มือ'),
+                      title: Text('ประวัติการฉีดวัคซีน'),
                       onTap: () {
                         setState(() {
                           Get.back();
@@ -288,29 +282,29 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                           color: Color(0xFF916b44)),
                       title: Text('สลับโหมด'),
                       onTap: () async {
-                        var resClinic = await http.get(
-                            Uri.parse("$url/clinic/name/${box.read('email')}"));
-                        if (resClinic.statusCode == 200) {
+                        var resGeneral = await http.get(Uri.parse(
+                            "$url/general/name/${box.read('email')}"));
+                        if (resGeneral.statusCode == 200) {
                           showAlert(
-                            title: 'สลับไปยังบัญชีคลินิก?',
-                            message: 'กด ตกลง เพื่อไปยังบัญชีคลินิก',
+                            title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+                            message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
                             onConfirm: () {
-                              box.write('type', 'clinic');
-                              box.write('clinicName',
-                                  jsonDecode(resClinic.body)['name']);
-                              box.write('clinicImage',
-                                  jsonDecode(resClinic.body)['image']);
-                              log('Name ${box.read('clinicName')}');
-                              Get.offAll(() => ClinicmainPage());
+                              box.write('type', 'general');
+                              box.write('generalName',
+                                  jsonDecode(resGeneral.body)['username']);
+                              box.write('generalImage',
+                                  jsonDecode(resGeneral.body)['image']);
+                              Get.offAll(() => GeneralmainPage());
                             },
                           );
                         } else {
                           showAlert(
-                            title: 'คุณยังไม่มีบัญชีคลินิก!',
-                            message: 'กด ตกลง เพื่อไปยังหน้าสมัครคลินิก',
-                            onConfirm: () {
+                            title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+                            message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+                            onConfirm: () async {
+                              await FirebaseMessaging.instance.deleteToken();
                               Get.back();
-                              Get.to(() => RegisterclinicgooglePage());
+                              Get.to(() => RegisterusergooglePage());
                             },
                           );
                         }
@@ -351,7 +345,6 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
               notchBottomBarController: navController.notchBottomBarController,
               bottomBarItems: bottomBarItems,
               onTap: (index) {
-                // Only handle taps for valid bottom nav indices (0-2)
                 if (index <= 2) {
                   onTap(index);
                 }
@@ -367,21 +360,24 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (!didPop) {
-                final handled = GeneralAppNavigation.handleSystemBack();
+                final handled = AppNavigation.handleSystemBack();
                 if (!handled) {
                   showAlert(
-                      title: 'คุณต้องการออกจากแอปใช่หรือไม่',
-                      message: '',
-                      onConfirm: () {
-                        Get.back();
-                      });
+                    title: 'คุณต้องการออกจากแอปใช่หรือไม่',
+                    message: '',
+                    onConfirm: () {
+                      Get.back();
+                    },
+                  );
                 }
               }
             },
             child: Container(
               margin: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.075),
               child: SafeArea(
-                  bottom: false, child: Container(child: getCurrentPage())),
+                bottom: false,
+                child: getCurrentPage(),
+              ),
             ),
           ),
         ));
@@ -394,23 +390,25 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
     if (navController.dynamicPages.containsKey(index)) {
       return navController.dynamicPages[index]!;
     }
-
+    if (index >= 0 && index < pages.length) {
+      return pages[index];
+    }
     // Regular pages
     switch (index) {
       case 0:
-        return GeneraldogPage();
+        return VaccineRequestsPage();
       case 1:
-        return GeneralmainPage();
+        return ClinicmainPage();
       case 2:
-        return GeneralnotificationPage();
+        return Notificationpage();
       case 3:
-        return GeneralrecordsearchPage();
+        return Cliniclistdoctors();
       case 4:
-        return GeneralguidePage();
+        return Vaccinehistorypage();
       case 5:
-        return GeneralprofilePage();
+        return Clinicsetting();
       default:
-        return GeneralmainPage();
+        return ClinicmainPage();
     }
   }
 

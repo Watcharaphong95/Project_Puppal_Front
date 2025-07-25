@@ -15,6 +15,7 @@ import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
 import 'package:puppal_application/pages/generalAppNavigator.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/loadingCheck.dart';
 import 'package:puppal_application/services/notification_service.dart';
@@ -42,6 +43,7 @@ Future<void> main() async {
   Get.put(MainNavigationController());
   Get.put(GeneralMainBottomNavigateController());
   GeneralAppNavigation.initialize();
+  Clinicappnavigator.initialize();
 
   runApp(ChangeNotifierProvider(
     create: (_) => AppData(),

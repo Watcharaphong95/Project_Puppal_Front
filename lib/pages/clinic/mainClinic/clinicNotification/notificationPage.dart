@@ -102,205 +102,206 @@ class _NotificationpageState extends State<Notificationpage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text(
-          "คำขอฉีดวัคซีน",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 24,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Color(0xFFDBA871),
-        iconTheme: IconThemeData(color: Colors.white),
-        elevation: 0,
-        centerTitle: true,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
-      ),
-      drawer: Drawer(
-        child: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/indexBg.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(2, 2),
-                ),
-              ],
-            ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFFDBA871),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          box.read('clinicImage'),
-                          width: screenWidth * 0.2,
-                          height: screenWidth * 0.2,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                width: screenWidth * 0.2,
-                                height: screenWidth * 0.2,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        box.read('clinicName') ?? "ผู้ใช้งาน",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                  title: Text('หน้าหลัก'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => ClinicmainPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.system_security_update,
-                      color: Color(0xFF916b44)),
-                  title: Text('คำขอฉีดยา'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => VaccineRequestsPage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.notifications, color: Color(0xFF916b44)),
-                  title: Text('แจ้งเตือน'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Notificationpage());
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                  title: Text('ประวัติการฉีดยา'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Vaccinehistorypage());
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.supervised_user_circle,
-                      color: Color(0xFF916b44)),
-                  title: Text('หมอประจำคลินิก'),
-                  onTap: () {
-                    Get.back();
-                    Get.to(() => Cliniclistdoctors());
-                  },
-                ),
-                ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('เวลาปิด-เปิด'),
-                    onTap: () {
-                      Get.back();
+      // appBar: AppBar(
+      //   title: const Text(
+      //     "คำขอฉีดวัคซีน",
+      //     style: TextStyle(
+      //       fontWeight: FontWeight.w600,
+      //       fontSize: 24,
+      //       color: Colors.white,
+      //     ),
+      //   ),
+      //   backgroundColor: Color(0xFFDBA871),
+      //   iconTheme: IconThemeData(color: Colors.white),
+      //   elevation: 0,
+      //   centerTitle: true,
+      //   // leading: IconButton(
+      //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+      //   //   onPressed: () => Navigator.pop(context),
+      //   // ),
+      // ),
+      // drawer: Drawer(
+      //   child: Container(
+      //     decoration: BoxDecoration(
+      //       image: DecorationImage(
+      //         image: AssetImage('assets/images/indexBg.png'),
+      //         fit: BoxFit.cover,
+      //       ),
+      //     ),
+      //     child: Container(
+      //       decoration: BoxDecoration(
+      //         color: Colors.white.withOpacity(0.85),
+      //         borderRadius: BorderRadius.only(
+      //           topRight: Radius.circular(30),
+      //           bottomRight: Radius.circular(30),
+      //         ),
+      //         boxShadow: [
+      //           BoxShadow(
+      //             color: Colors.black.withOpacity(0.15),
+      //             blurRadius: 10,
+      //             offset: Offset(2, 2),
+      //           ),
+      //         ],
+      //       ),
+      //       child: ListView(
+      //         padding: EdgeInsets.zero,
+      //         children: [
+      //           DrawerHeader(
+      //             decoration: BoxDecoration(
+      //               color: Color(0xFFDBA871),
+      //               borderRadius: BorderRadius.only(
+      //                 topRight: Radius.circular(30),
+      //               ),
+      //             ),
+      //             child: Column(
+      //               crossAxisAlignment: CrossAxisAlignment.center,
+      //               children: [
+      //                 ClipOval(
+      //                   child: Image.network(
+      //                     box.read('clinicImage'),
+      //                     width: screenWidth * 0.2,
+      //                     height: screenWidth * 0.2,
+      //                     fit: BoxFit.cover,
+      //                     loadingBuilder: (context, child, loadingProgress) {
+      //                       if (loadingProgress == null) return child;
+      //                       return Shimmer.fromColors(
+      //                         baseColor: Colors.grey[300]!,
+      //                         highlightColor: Colors.grey[100]!,
+      //                         child: Container(
+      //                           width: screenWidth * 0.2,
+      //                           height: screenWidth * 0.2,
+      //                           color: Colors.white,
+      //                         ),
+      //                       );
+      //                     },
+      //                   ),
+      //                 ),
+      //                 SizedBox(height: 10),
+      //                 Text(
+      //                   box.read('clinicName') ?? "ผู้ใช้งาน",
+      //                   style: TextStyle(
+      //                     color: Colors.white,
+      //                     fontSize: 20,
+      //                     fontWeight: FontWeight.bold,
+      //                   ),
+      //                 ),
+      //               ],
+      //             ),
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.home, color: Color(0xFF916b44)),
+      //             title: Text('หน้าหลัก'),
+      //             onTap: () {
+      //               Get.back();
+      //               Get.to(() => ClinicmainPage());
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.system_security_update,
+      //                 color: Color(0xFF916b44)),
+      //             title: Text('คำขอฉีดยา'),
+      //             onTap: () {
+      //               Get.back();
+      //               Get.to(() => VaccineRequestsPage());
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.notifications, color: Color(0xFF916b44)),
+      //             title: Text('แจ้งเตือน'),
+      //             onTap: () {
+      //               Get.back();
+      //               Get.to(() => Notificationpage());
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading:
+      //                 Icon(Icons.medical_services, color: Color(0xFF916b44)),
+      //             title: Text('ประวัติการฉีดยา'),
+      //             onTap: () {
+      //               Get.back();
+      //               Get.to(() => Vaccinehistorypage());
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.supervised_user_circle,
+      //                 color: Color(0xFF916b44)),
+      //             title: Text('หมอประจำคลินิก'),
+      //             onTap: () {
+      //               Get.back();
+      //               Get.to(() => Cliniclistdoctors());
+      //             },
+      //           ),
+      //           ListTile(
+      //               leading:
+      //                   Icon(Icons.medical_services, color: Color(0xFF916b44)),
+      //               title: Text('เวลาปิด-เปิด'),
+      //               onTap: () {
+      //                 Get.back();
 
-                      Get.to(() => Clinicopeninghours());
-                    }),
-                ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                    title: Text('ตั้งค่า'),
-                    onTap: () {
-                      Get.back();
+      //                 Get.to(() => Clinicopeninghours());
+      //               }),
+      //           ListTile(
+      //               leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+      //               title: Text('ตั้งค่า'),
+      //               onTap: () {
+      //                 Get.back();
 
-                      Get.to(() => Clinicsetting());
-                    }),
-                ListTile(
-                  leading:
-                      Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                  title: Text('สลับโหมด'),
-                  onTap: () async {
-                    var resGeneral = await http.get(
-                        Uri.parse("$url/general/name/${box.read('email')}"));
-                    if (resGeneral.statusCode == 200) {
-                      showAlert(
-                        title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
-                        message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
-                        onConfirm: () {
-                          box.write('type', 'general');
-                          box.write('generalName',
-                              jsonDecode(resGeneral.body)['username']);
-                          box.write('generalImage',
-                              jsonDecode(resGeneral.body)['image']);
-                          log('Name ${box.read('generalName')}');
-                          Get.offAll(() => GeneralmainPage());
-                        },
-                      );
-                    } else {
-                      showAlert(
-                        title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
-                        message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-                        onConfirm: () {
-                          Get.back();
-                          Get.to(() => RegisterusergooglePage());
-                        },
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.redAccent),
-                  title: Text('ออกจากระบบ'),
-                  onTap: () {
-                    showAlert(
-                      title: 'ออกจากระบบ?',
-                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                      onConfirm: () async {
-                        await FirebaseMessaging.instance.deleteToken();
-                        box.erase();
-                        Get.offAll(() => IndexPage());
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      //                 Get.to(() => Clinicsetting());
+      //               }),
+      //           ListTile(
+      //             leading:
+      //                 Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+      //             title: Text('สลับโหมด'),
+      //             onTap: () async {
+      //               var resGeneral = await http.get(
+      //                   Uri.parse("$url/general/name/${box.read('email')}"));
+      //               if (resGeneral.statusCode == 200) {
+      //                 showAlert(
+      //                   title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+      //                   message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
+      //                   onConfirm: () {
+      //                     box.write('type', 'general');
+      //                     box.write('generalName',
+      //                         jsonDecode(resGeneral.body)['username']);
+      //                     box.write('generalImage',
+      //                         jsonDecode(resGeneral.body)['image']);
+      //                     log('Name ${box.read('generalName')}');
+      //                     Get.offAll(() => GeneralmainPage());
+      //                   },
+      //                 );
+      //               } else {
+      //                 showAlert(
+      //                   title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+      //                   message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+      //                   onConfirm: () {
+      //                     Get.back();
+      //                     Get.to(() => RegisterusergooglePage());
+      //                   },
+      //                 );
+      //               }
+      //             },
+      //           ),
+      //           ListTile(
+      //             leading: Icon(Icons.logout, color: Colors.redAccent),
+      //             title: Text('ออกจากระบบ'),
+      //             onTap: () {
+      //               showAlert(
+      //                 title: 'ออกจากระบบ?',
+      //                 message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+      //                 onConfirm: () async {
+      //                   await FirebaseMessaging.instance.deleteToken();
+      //                   box.erase();
+      //                   Get.offAll(() => IndexPage());
+      //                 },
+      //               );
+      //             },
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      // ),
+
       body: _loadingData
           ? SizedBox(
               child: Center(child: CircularProgressIndicator()),

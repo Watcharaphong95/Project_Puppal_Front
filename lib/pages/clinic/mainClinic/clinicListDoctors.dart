@@ -8,6 +8,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:http/http.dart' as http;
@@ -17,6 +18,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.d
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -67,215 +69,216 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        appBar: AppBar(
-          leading: Builder(
-            builder: (context) => IconButton(
-              icon: Icon(Icons.menu, size: 30),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            ),
-          ),
-          title: const Text(
-            "คุณหมอประจำคลินิก",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: Color(0xFFDBA871),
-          iconTheme: IconThemeData(color: Colors.white),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: Icon(
-                Icons.add_circle,
-                color: Colors.white,
-                size: 45,
-              ),
-              onPressed: () {
-                Get.to(() => Clinicadddoctor());
-              },
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/indexBg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    offset: Offset(2, 2),
-                  ),
-                ],
-              ),
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Color(0xFFDBA871),
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ClipOval(
-                          child: Image.network(
-                            box.read('clinicImage'),
-                            width: screenWidth * 0.2,
-                            height: screenWidth * 0.2,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: screenWidth * 0.2,
-                                  height: screenWidth * 0.2,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          box.read('clinicName') ?? "ผู้ใช้งาน",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.home, color: Color(0xFF916b44)),
-                    title: Text('หน้าหลัก'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => ClinicmainPage());
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.system_security_update,
-                        color: Color(0xFF916b44)),
-                    title: Text('คำขอฉีดยา'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => VaccineRequestsPage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.notifications, color: Color(0xFF916b44)),
-                    title: Text('แจ้งเตือน'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Notificationpage());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('ประวัติการฉีดยา'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Vaccinehistorypage());
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.supervised_user_circle,
-                        color: Color(0xFF916b44)),
-                    title: Text('หมอประจำคลินิก'),
-                    onTap: () {
-                      Get.back();
-                      Get.to(() => Cliniclistdoctors());
-                    },
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(Icons.medical_services, color: Color(0xFF916b44)),
-                    title: Text('เวลาปิด-เปิด'),
-                    onTap: () => Get.to(() => Clinicopeninghours()),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-                    title: Text('ตั้งค่า'),
-                    onTap: () => Get.to(() => Clinicsetting()),
-                  ),
-                  ListTile(
-                    leading:
-                        Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-                    title: Text('สลับโหมด'),
-                    onTap: () async {
-                      var resGeneral = await http.get(
-                          Uri.parse("$url/general/name/${box.read('email')}"));
-                      if (resGeneral.statusCode == 200) {
-                        showAlert(
-                          title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
-                          message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
-                          onConfirm: () {
-                            box.write('type', 'general');
-                            box.write('generalName',
-                                jsonDecode(resGeneral.body)['username']);
-                            box.write('generalImage',
-                                jsonDecode(resGeneral.body)['image']);
-                            log('Name ${box.read('generalName')}');
-                            Get.offAll(() => GeneralmainPage());
-                          },
-                        );
-                      } else {
-                        showAlert(
-                          title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
-                          message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-                          onConfirm: () {
-                            Get.back();
-                            Get.to(() => RegisterusergooglePage());
-                          },
-                        );
-                      }
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.logout, color: Colors.redAccent),
-                    title: Text('ออกจากระบบ'),
-                    onTap: () {
-                      showAlert(
-                        title: 'ออกจากระบบ?',
-                        message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-                        onConfirm: () async {
-                          await FirebaseMessaging.instance.deleteToken();
-                          box.erase();
-                          Get.offAll(() => IndexPage());
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        // appBar: AppBar(
+        //   leading: Builder(
+        //     builder: (context) => IconButton(
+        //       icon: Icon(Icons.menu, size: 30),
+        //       onPressed: () {
+        //         Scaffold.of(context).openDrawer();
+        //       },
+        //     ),
+        //   ),
+        //   title: const Text(
+        //     "คุณหมอประจำคลินิก",
+        //     style: TextStyle(
+        //       fontWeight: FontWeight.w600,
+        //       fontSize: 24,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        //   backgroundColor: Color(0xFFDBA871),
+        //   iconTheme: IconThemeData(color: Colors.white),
+        //   centerTitle: true,
+        //   actions: [
+        //     IconButton(
+        //       icon: Icon(
+        //         Icons.add_circle,
+        //         color: Colors.white,
+        //         size: 45,
+        //       ),
+        //       onPressed: () {
+        //         Get.to(() => Clinicadddoctor());
+        //       },
+        //     ),
+        //   ],
+        // ),
+        // drawer: Drawer(
+        //   child: Container(
+        //     decoration: BoxDecoration(
+        //       image: DecorationImage(
+        //         image: AssetImage('assets/images/indexBg.png'),
+        //         fit: BoxFit.cover,
+        //       ),
+        //     ),
+        //     child: Container(
+        //       decoration: BoxDecoration(
+        //         color: Colors.white.withOpacity(0.85),
+        //         borderRadius: BorderRadius.only(
+        //           topRight: Radius.circular(30),
+        //           bottomRight: Radius.circular(30),
+        //         ),
+        //         boxShadow: [
+        //           BoxShadow(
+        //             color: Colors.black.withOpacity(0.15),
+        //             blurRadius: 10,
+        //             offset: Offset(2, 2),
+        //           ),
+        //         ],
+        //       ),
+        //       child: ListView(
+        //         padding: EdgeInsets.zero,
+        //         children: [
+        //           DrawerHeader(
+        //             decoration: BoxDecoration(
+        //               color: Color(0xFFDBA871),
+        //               borderRadius: BorderRadius.only(
+        //                 topRight: Radius.circular(30),
+        //               ),
+        //             ),
+        //             child: Column(
+        //               crossAxisAlignment: CrossAxisAlignment.center,
+        //               children: [
+        //                 ClipOval(
+        //                   child: Image.network(
+        //                     box.read('clinicImage'),
+        //                     width: screenWidth * 0.2,
+        //                     height: screenWidth * 0.2,
+        //                     fit: BoxFit.cover,
+        //                     loadingBuilder: (context, child, loadingProgress) {
+        //                       if (loadingProgress == null) return child;
+        //                       return Shimmer.fromColors(
+        //                         baseColor: Colors.grey[300]!,
+        //                         highlightColor: Colors.grey[100]!,
+        //                         child: Container(
+        //                           width: screenWidth * 0.2,
+        //                           height: screenWidth * 0.2,
+        //                           color: Colors.white,
+        //                         ),
+        //                       );
+        //                     },
+        //                   ),
+        //                 ),
+        //                 SizedBox(height: 10),
+        //                 Text(
+        //                   box.read('clinicName') ?? "ผู้ใช้งาน",
+        //                   style: TextStyle(
+        //                     color: Colors.white,
+        //                     fontSize: 20,
+        //                     fontWeight: FontWeight.bold,
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //           ),
+        //           ListTile(
+        //             leading: Icon(Icons.home, color: Color(0xFF916b44)),
+        //             title: Text('หน้าหลัก'),
+        //             onTap: () {
+        //               Get.back();
+        //               Get.to(() => ClinicmainPage());
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading: Icon(Icons.system_security_update,
+        //                 color: Color(0xFF916b44)),
+        //             title: Text('คำขอฉีดยา'),
+        //             onTap: () {
+        //               Get.back();
+        //               Get.to(() => VaccineRequestsPage());
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading:
+        //                 Icon(Icons.notifications, color: Color(0xFF916b44)),
+        //             title: Text('แจ้งเตือน'),
+        //             onTap: () {
+        //               Get.back();
+        //               Get.to(() => Notificationpage());
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading:
+        //                 Icon(Icons.medical_services, color: Color(0xFF916b44)),
+        //             title: Text('ประวัติการฉีดยา'),
+        //             onTap: () {
+        //               Get.back();
+        //               Get.to(() => Vaccinehistorypage());
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading: Icon(Icons.supervised_user_circle,
+        //                 color: Color(0xFF916b44)),
+        //             title: Text('หมอประจำคลินิก'),
+        //             onTap: () {
+        //               Get.back();
+        //               Get.to(() => Cliniclistdoctors());
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading:
+        //                 Icon(Icons.medical_services, color: Color(0xFF916b44)),
+        //             title: Text('เวลาปิด-เปิด'),
+        //             onTap: () => Get.to(() => Clinicopeninghours()),
+        //           ),
+        //           ListTile(
+        //             leading: Icon(Icons.settings, color: Color(0xFF916b44)),
+        //             title: Text('ตั้งค่า'),
+        //             onTap: () => Get.to(() => Clinicsetting()),
+        //           ),
+        //           ListTile(
+        //             leading:
+        //                 Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
+        //             title: Text('สลับโหมด'),
+        //             onTap: () async {
+        //               var resGeneral = await http.get(
+        //                   Uri.parse("$url/general/name/${box.read('email')}"));
+        //               if (resGeneral.statusCode == 200) {
+        //                 showAlert(
+        //                   title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
+        //                   message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
+        //                   onConfirm: () {
+        //                     box.write('type', 'general');
+        //                     box.write('generalName',
+        //                         jsonDecode(resGeneral.body)['username']);
+        //                     box.write('generalImage',
+        //                         jsonDecode(resGeneral.body)['image']);
+        //                     log('Name ${box.read('generalName')}');
+        //                     Get.offAll(() => GeneralmainPage());
+        //                   },
+        //                 );
+        //               } else {
+        //                 showAlert(
+        //                   title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
+        //                   message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
+        //                   onConfirm: () {
+        //                     Get.back();
+        //                     Get.to(() => RegisterusergooglePage());
+        //                   },
+        //                 );
+        //               }
+        //             },
+        //           ),
+        //           ListTile(
+        //             leading: Icon(Icons.logout, color: Colors.redAccent),
+        //             title: Text('ออกจากระบบ'),
+        //             onTap: () {
+        //               showAlert(
+        //                 title: 'ออกจากระบบ?',
+        //                 message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+        //                 onConfirm: () async {
+        //                   await FirebaseMessaging.instance.deleteToken();
+        //                   box.erase();
+        //                   Get.offAll(() => IndexPage());
+        //                 },
+        //               );
+        //             },
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        // ),
+
         body: _loadingData
             ? Center(
                 child: Column(
@@ -447,10 +450,12 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       elevation: 2,
                                                     ),
                                                     onPressed: () {
-                                                      Get.to(() =>
-                                                          Clinicdoctorprofile(
-                                                              name:
-                                                                  doctor.name));
+                                                      Get.to(
+                                                        () =>
+                                                            Clinicdoctorprofile(
+                                                                name: doctor
+                                                                    .name),
+                                                      );
                                                     },
                                                     child: const Text(
                                                       'ดูประวัติ',

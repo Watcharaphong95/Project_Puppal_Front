@@ -23,6 +23,7 @@ import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
@@ -31,6 +32,8 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -99,25 +102,26 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "PUPPAL",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 24,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: secondaryBrown,
-        iconTheme: IconThemeData(color: Colors.white),
+      // appBar: AppBar(
+      //   title: const Text(
+      //     "PUPPAL",
+      //     style: TextStyle(
+      //       fontWeight: FontWeight.w600,
+      //       fontSize: 24,
+      //       color: Colors.white,
+      //     ),
+      //   ),
+      //   backgroundColor: secondaryBrown,
+      //   iconTheme: IconThemeData(color: Colors.white),
 
-        elevation: 0,
-        centerTitle: true,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
-      ),
+      //   elevation: 0,
+      //   centerTitle: true,
+      //   // leading: IconButton(
+      //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+      //   //   onPressed: () => Navigator.pop(context),
+      //   // ),
+      // ),
+
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
@@ -213,7 +217,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                   title: Text('ประวัติการฉีดยา'),
                   onTap: () {
                     Get.back();
-                    Get.to(() => Vaccinehistorypage());
+                    Get.to(() => Clinicmainbottomnavigate(indexPage: 3));
                   },
                 ),
                 ListTile(
@@ -1068,7 +1072,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                   ),
                                                   child: InkWell(
                                                     onTap: () {
-                                                      Get.to(() =>
+                                                      Clinicappnavigator.toWidget(
                                                           Calendarbookingdetailpage(
                                                               docId:
                                                                   item.docId));

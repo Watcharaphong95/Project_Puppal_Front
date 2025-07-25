@@ -9,11 +9,13 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/model/seacrhspecialPost.dart';
 import 'package:puppal_application/model/specialPost.dart';
+import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +23,7 @@ import 'dart:io';
 
 class Clinicdoctorprofile extends StatefulWidget {
   final String? name;
+
   const Clinicdoctorprofile({super.key, this.name});
 
   @override
@@ -359,8 +362,10 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  Get.to(() => Clinicdoctoreditprofile(
-                                      name: doctors.name));
+                                  Get.to(
+                                    () => Clinicdoctoreditprofile(
+                                        name: doctors.name),
+                                  );
                                 },
                                 icon: Icon(
                                   Icons.edit,
