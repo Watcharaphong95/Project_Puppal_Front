@@ -373,7 +373,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'แก้ไขโปรไฟล์',
                               subtitle: 'จัดการข้อมูลส่วนตัว',
                               onTap: () {
-                                Clinicappnavigator.toWidget(Clinicprofile());
+                                Get.to(() => (Clinicprofile()));
                               },
                               screenWidth: screenWidth,
                             ),
