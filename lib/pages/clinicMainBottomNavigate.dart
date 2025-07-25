@@ -62,7 +62,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
   final notchBottomBarController =
       NotchBottomBarController(index: 1); // <<== เพิ่มตรงนี้ด้วย
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
+  final String clinicEmail = GetStorage().read('clinic_email') ?? '';
   final List<Widget> pages = [
     VaccineRequestsPage(),
     ClinicmainPage(),
@@ -113,12 +113,20 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
     currentIndex = widget.indexPage;
 
     // Use the controller's method to update the index properly
-    navController.notchBottomBarController.jumpTo(currentIndex);
   }
 
   void init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          navController.notchBottomBarController.jumpTo(currentIndex);
+        } catch (e) {
+          log("Failed to jumpTo(): $e");
+        }
+      }
     });
   }
 
@@ -205,7 +213,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                 ? [
                     IconButton(
                       onPressed: () {
-                        Clinicappnavigator.toWidget(Clinicadddoctor());
+                        Get.to(() => Clinicadddoctor());
                       },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xFFE9CBAF),

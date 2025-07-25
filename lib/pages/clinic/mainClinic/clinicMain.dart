@@ -320,30 +320,32 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                   child: Column(
                     children: [
                       // Calendar Section with Modern Card Design
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: buildCalendar(
-                          focusedDay: _focusedDay,
-                          selectedDay: _selectedDay,
-                          onDaySelected: (selected, focused) {
-                            setState(() {
-                              _focusedDay = focused;
-                              _selectedDay = selected;
-                              // events = List.from(reservebookingListAll);
-                              events = reservebookingListAll
-                                  .where((e) =>
-                                      e.status == 2 &&
-                                      normalizeDate(e.date!) ==
-                                          normalizeDate(selected))
-                                  .toList();
-                            });
-                          },
-                          onPageChanged: (focused) {
-                            setState(() {
-                              _focusedDay = focused;
-                            });
-                          },
-                          eventLoader: getEventsForDay,
+                      Container(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: buildCalendar(
+                            focusedDay: _focusedDay,
+                            selectedDay: _selectedDay,
+                            onDaySelected: (selected, focused) {
+                              setState(() {
+                                _focusedDay = focused;
+                                _selectedDay = selected;
+                                // events = List.from(reservebookingListAll);
+                                events = reservebookingListAll
+                                    .where((e) =>
+                                        e.status == 2 &&
+                                        normalizeDate(e.date!) ==
+                                            normalizeDate(selected))
+                                    .toList();
+                              });
+                            },
+                            onPageChanged: (focused) {
+                              setState(() {
+                                _focusedDay = focused;
+                              });
+                            },
+                            eventLoader: getEventsForDay,
+                          ),
                         ),
                       ),
 

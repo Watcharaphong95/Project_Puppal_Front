@@ -99,9 +99,9 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
       Get.to(() => IndexPage());
     } else {
       if (box.read('type') == 'general') {
-        Get.offAll(() => GeneralmainPage());
+        Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
       } else {
-        Get.offAll(() => ClinicmainPage());
+        Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
       }
     }
   }
