@@ -16,6 +16,7 @@ import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/appNavigator.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addVaccinationRecord/AddVaccinationRecordPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 
@@ -793,7 +794,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                         child: _buildPopupActionButton(
                                           label: "บันทึกประวัติ",
                                           onPressed: () {
-                                            AppNavigation.toWidget(
+                                            Clinicappnavigator.toWidget(
                                                 AddVaccinationRecordPage(
                                                     docId: widget.docId));
                                           },

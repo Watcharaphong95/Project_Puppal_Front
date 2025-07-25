@@ -2,6 +2,7 @@ import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_not
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:puppal_application/pages/appNavigator.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 
 class Mainclinicnavigatecontroller extends GetxController {
   // Current page index
@@ -114,7 +115,7 @@ class Mainclinicnavigatecontroller extends GetxController {
   // Clean up dynamic pages (call when needed to free memory)
   void cleanupDynamicPages() {
     // Remove pages that are not in the navigation stack
-    List<int> stackIndices = AppNavigation.getNavigationStack();
+    List<int> stackIndices = Clinicappnavigator.getNavigationStack();
     List<int> toRemove = [];
 
     dynamicPages.forEach((index, page) {
@@ -130,18 +131,18 @@ class Mainclinicnavigatecontroller extends GetxController {
 
   // Handle back navigation
   void handleBack() {
-    AppNavigation.back();
+    Clinicappnavigator.back();
   }
 
   // Check if current page can go back
   bool canGoBack() {
-    return AppNavigation.canGoBack() || currentIndex.value != 1;
+    return Clinicappnavigator.canGoBack() || currentIndex.value != 1;
   }
 
   @override
   void onClose() {
     notchBottomBarController.dispose();
-    AppNavigation.clearStack();
+    Clinicappnavigator.clearStack();
     super.onClose();
   }
 }

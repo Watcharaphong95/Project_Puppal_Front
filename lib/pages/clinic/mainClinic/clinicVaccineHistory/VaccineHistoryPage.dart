@@ -25,6 +25,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.da
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryDetailsPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -980,7 +981,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                 ),
                                                 child: InkWell(
                                                   onTap: () {
-                                                    AppNavigation.toWidget(
+                                                    Clinicappnavigator.toWidget(
                                                         Vaccinehistorydetailspage(
                                                             docId: item.docId));
                                                   },

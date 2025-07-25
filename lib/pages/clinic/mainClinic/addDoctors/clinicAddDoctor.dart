@@ -518,7 +518,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
       );
       return;
     } else {
-      AppNavigation.toWidget(Clinicaddavatar());
+      Get.to(() => Clinicaddavatar());
     }
   }
 

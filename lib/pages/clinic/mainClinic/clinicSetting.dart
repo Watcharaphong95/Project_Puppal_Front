@@ -18,6 +18,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/profile/resetPassword/recoveryPassword.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
@@ -372,7 +373,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'แก้ไขโปรไฟล์',
                               subtitle: 'จัดการข้อมูลส่วนตัว',
                               onTap: () {
-                                AppNavigation.toWidget(Clinicprofile());
+                                Clinicappnavigator.toWidget(Clinicprofile());
                               },
                               screenWidth: screenWidth,
                             ),

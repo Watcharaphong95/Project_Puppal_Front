@@ -32,6 +32,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
@@ -1071,7 +1072,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                   ),
                                                   child: InkWell(
                                                     onTap: () {
-                                                      AppNavigation.toWidget(
+                                                      Clinicappnavigator.toWidget(
                                                           Calendarbookingdetailpage(
                                                               docId:
                                                                   item.docId));

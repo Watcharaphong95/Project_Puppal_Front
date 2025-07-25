@@ -28,6 +28,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/acceptRequest.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/bookingDetailPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -849,8 +850,9 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           // arrow button
                           GestureDetector(
                             onTap: () {
-                              AppNavigation.toWidget(
-                                  BookingdetailPage(docid: docId));
+                              Clinicappnavigator.toWidget(
+                                BookingdetailPage(docid: docId),
+                              );
                             },
                             child: Container(
                               padding: const EdgeInsets.all(12),

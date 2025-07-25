@@ -18,6 +18,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.d
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
@@ -449,9 +450,11 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       elevation: 2,
                                                     ),
                                                     onPressed: () {
-                                                      AppNavigation.toWidget(
-                                                        Clinicdoctorprofile(
-                                                            name: doctor.name),
+                                                      Get.to(
+                                                        () =>
+                                                            Clinicdoctorprofile(
+                                                                name: doctor
+                                                                    .name),
                                                       );
                                                     },
                                                     child: const Text(
