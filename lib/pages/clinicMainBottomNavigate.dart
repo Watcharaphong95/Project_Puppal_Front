@@ -163,7 +163,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                 ? [
                     IconButton(
                       onPressed: () {
-                        AppNavigation.toWidget(Clinicadddoctor());
+                        Get.to(() => (Clinicadddoctor()));
                       },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xFFE9CBAF),
