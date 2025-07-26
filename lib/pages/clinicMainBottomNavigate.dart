@@ -388,7 +388,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                                 child: Container(
                                   padding: EdgeInsets.all(12),
                                   child: Icon(
-                                    FontAwesomeIcons.dog,
+                                    FontAwesomeIcons.syringe,
                                     size: 30,
                                     color: Colors.white,
                                   ),
@@ -426,7 +426,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                           index: navController.currentIndex.value,
                           height: 60.0,
                           items: <Widget>[
-                            Icon(FontAwesomeIcons.dog,
+                            Icon(FontAwesomeIcons.syringe,
                                 size: 30, color: Colors.white),
                             Icon(FontAwesomeIcons.calendar,
                                 size: 30, color: Colors.white),

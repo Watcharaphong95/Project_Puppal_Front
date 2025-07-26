@@ -78,6 +78,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
       url = config['apiEndPoint'];
     });
     startRealtimeGet();
+    await Future.delayed(Duration(milliseconds: 500));
+
     setState(() {
       _loadingData = false;
     });
@@ -439,9 +441,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     return FutureBuilder<Map<String, dynamic>?>(
       future: getReserveBook(docId),
       builder: (context, reserveSnap) {
-        if (reserveSnap.connectionState == ConnectionState.waiting) {
-          return _buildLoadingCard();
-        }
+        if (reserveSnap.connectionState == ConnectionState.waiting) {}
         if (!reserveSnap.hasData || reserveSnap.data == null) {
           return _buildErrorCard();
         }
@@ -607,7 +607,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Color(0xFF916B44),
+                                            Colors.white,
                                           ),
                                         ),
                                       ),
@@ -758,12 +758,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildLoadingCard() {
-    return const Center(
-      child: CircularProgressIndicator(),
     );
   }
 

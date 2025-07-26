@@ -1576,23 +1576,54 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
             if (validEvents.isEmpty)
               return const SizedBox.shrink(); // ❌ ไม่มี status 2 = ไม่แสดงจุด
 
-            final markerCount = validEvents.length > 3 ? 3 : validEvents.length;
+            // final markerCount = validEvents.length > 3 ? 3 : validEvents.length;
+
+            if (validEvents.isEmpty) return const SizedBox.shrink();
+
+            final maxDots = 4;
+            final count = validEvents.length;
+            final markerCount = count > maxDots ? maxDots : count;
+            final extraCount = count - maxDots;
 
             return Padding(
-              padding: const EdgeInsets.only(top: 28),
+              padding: const EdgeInsets.only(top: 28, left: 2, right: 2),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(markerCount, (index) {
-                  return Container(
-                    width: 6,
-                    height: 6,
-                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                    decoration: const BoxDecoration(
-                      color: Colors.red, // จะใช้สีอื่นก็ได้ เช่น deepOrange
-                      shape: BoxShape.circle,
+                children: [
+                  // สร้างจุดจำนวน markerCount
+                  ...List.generate(markerCount, (index) {
+                    return Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 2), // ลด margin ให้น้อยลงเพื่อชิดกัน
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    );
+                  }),
+                  // ถ้ามีมากกว่า 4 จุด แสดง +n ด้านหลัง
+                  if (extraCount > 0)
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '+$extraCount',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  );
-                }),
+                ],
               ),
             );
           },

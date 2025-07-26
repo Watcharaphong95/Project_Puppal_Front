@@ -801,7 +801,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                         child: _buildPopupActionButton(
                                           label: 'ปฏิเสธการจอง',
                                           onPressed: () async {
-                                            Navigator.pop(context);
+                                            // Navigator.pop(context);
                                             bool isConfirmed =
                                                 await RejectDialog(
                                                     context, widget.docid);
@@ -818,7 +818,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                         child: _buildPopupActionButton(
                                           label: 'ยืนยันการจอง',
                                           onPressed: () async {
-                                            Navigator.pop(context);
+                                            // Navigator.pop(context);
                                             bool isConfirmed =
                                                 await confirmDialog(
                                                     context, widget.docid);
@@ -1281,7 +1281,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
 
   Future<void> sendNotificationRefuse(
       String generalEmail, String userName) async {
-    final sql = Uri.parse("$url/reserve/notify/refuse/general-reponse");
+    final sql = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
 
     try {
       final res = await http.post(
@@ -1372,6 +1372,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
         if (doc.exists) {
           final data = doc.data();
           final generalEmail = data?['generalEmail'];
+          log(generalEmail);
           final clinicEmail = data?['clinicEmail'];
 
           if (generalEmail != null) {
@@ -1382,11 +1383,15 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
               if (status == 2) {
                 await sendNotificationAccept(generalEmail, userName);
                 await sendClinicAcceptNotification(
-                    clinicEmail: clinicEmail,
+                    clinicEmail: box.read('clinicEmail'),
                     userName: box.read('clinicName'),
                     date: data?['date'] ?? '',
                     generalEmail: generalEmail);
               } else if (status == 0) {
+                final doc = await FirebaseFirestore.instance
+                    .collection('reserve')
+                    .doc(docId)
+                    .delete();
                 await sendNotificationRefuse(generalEmail, userName);
                 await sendClinicRefuseNotification(
                     clinicEmail: clinicEmail,
