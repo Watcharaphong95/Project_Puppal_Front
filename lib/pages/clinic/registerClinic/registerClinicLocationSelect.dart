@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -209,14 +210,16 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
   // Function to confirm location //
 
   void onConfirmLocation() {
+    showLoadingDialog();
     if (selectedLatLng != null) {
       controller.lat.value = selectedLatLng!.latitude.toString();
       controller.lng.value = selectedLatLng!.longitude.toString();
 
       log('Selected LatLng: ${selectedLatLng!.latitude.toString()}, ${selectedLatLng!.longitude.toString()}');
-
+      Get.back(); // ปิด loading ก่อน
       Get.to(() => ClinicavatarPage());
     } else {
+      Get.back(); // ปิด loading ก่อน
       Get.snackbar(
         'เลือกตำแหน่ง',
         'กรุณาเลือกตำแหน่งก่อน',
@@ -287,33 +290,41 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
             actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
             actions: [
               // ปุ่มยกเลิก
+              // ปุ่มยกเลิก
+              // ปุ่มยกเลิก
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
+                  color: Colors.white, // พื้นหลังสีขาว
                   border: Border.all(
-                    color: const Color(0xFF916B44),
-                    width: 1.5,
+                    color: const Color(0xFF916B44), // สีกรอบน้ำตาล
+                    width: 2,
                   ),
                 ),
                 child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF916B44),
+                    foregroundColor: const Color(0xFF916B44), // สีข้อความน้ำตาล
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
+                    backgroundColor:
+                        Colors.white, // พื้นหลังสีขาว (ซ้ำกันเพื่อความชัดเจน)
                   ),
                   child: const Text(
-                    "ยกเลิก",
+                    'ยกเลิก',
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                 ),
               ),
+
               const SizedBox(width: 12),
               // ปุ่มยืนยัน
               Container(
@@ -330,8 +341,8 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
                 ),
                 child: TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
                     Navigator.of(context).pop(true);
+                    Navigator.pop;
                     onConfirmLocation();
                   },
                   style: TextButton.styleFrom(
@@ -586,6 +597,56 @@ class _CliniclocationselectPageState extends State<CliniclocationselectPage> {
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
       radius: 16,
+    );
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

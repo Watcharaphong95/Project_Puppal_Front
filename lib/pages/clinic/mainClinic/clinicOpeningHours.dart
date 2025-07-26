@@ -1314,14 +1314,14 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
 
 // Time Picker Bottom Sheet using time_picker_spinner package
 class TimePickerBottomSheet extends StatefulWidget {
-  final TimeOfDay? initialTime;
   final bool isOpenTime;
+  final TimeOfDay? initialTime;
   final Function(TimeOfDay) onTimeSelected;
 
   const TimePickerBottomSheet({
     Key? key,
-    required this.initialTime,
     required this.isOpenTime,
+    this.initialTime,
     required this.onTimeSelected,
   }) : super(key: key);
 
@@ -1330,33 +1330,79 @@ class TimePickerBottomSheet extends StatefulWidget {
 }
 
 class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
-  late DateTime selectedTime;
+  late int selectedHour;
+  late int selectedMinute;
 
   static const Color primaryColor = Color(0xFF916B44);
   static const Color secondaryColor = Color(0xFFDBA871);
   static const Color tertiaryColor = Color(0xFFE9CBAF);
 
+  // เวลาที่เหมาะสมสำหรับคลินิก
+  List<int> get availableHours {
+    if (widget.isOpenTime) {
+      // เวลาเปิด: 6:00 - 12:00
+      return List.generate(7, (index) => 6 + index); // 6,7,8,9,10,11,12
+    } else {
+      // เวลาปิด: 12:00 - 22:00
+      return List.generate(
+          11, (index) => 12 + index); // 12,13,14,15,16,17,18,19,20,21,22
+    }
+  }
+
+  // นาทีทีละ 30 นาที
+  List<int> get availableMinutes => [0, 30];
+
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    final time = widget.initialTime ?? TimeOfDay.now();
-    selectedTime =
-        DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final time = widget.initialTime ??
+        (widget.isOpenTime
+            ? TimeOfDay(hour: 8, minute: 0)
+            : TimeOfDay(hour: 17, minute: 0));
+
+    selectedHour = time.hour;
+    selectedMinute = time.minute;
+
+    // ปรับให้อยู่ในช่วงที่เหมาะสม
+    if (!availableHours.contains(selectedHour)) {
+      selectedHour = availableHours.first;
+    }
+    if (!availableMinutes.contains(selectedMinute)) {
+      selectedMinute = availableMinutes.first;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
+      height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -5),
+          ),
+        ],
       ),
       child: Column(
         children: [
+          // Handle bar
+          Container(
+            margin: EdgeInsets.only(top: 12),
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+
           // Header
           Container(
+            margin: const EdgeInsets.all(20),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1364,14 +1410,22 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  widget.isOpenTime ? "เลือกเวลาเปิด" : "เลือกเวลาปิด",
+                  widget.isOpenTime
+                      ? "เลือกเวลาเปิดคลินิก"
+                      : "เลือกเวลาปิดคลินิก",
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1381,6 +1435,7 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                 Icon(
                   widget.isOpenTime ? Icons.wb_sunny : Icons.nightlight_round,
                   color: Colors.white,
+                  size: 28,
                 ),
               ],
             ),
@@ -1388,54 +1443,232 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
 
           // Time Display
           Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: tertiaryColor.withOpacity(0.3),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: secondaryColor.withOpacity(0.3),
+                color: secondaryColor.withOpacity(0.5),
+                width: 2,
               ),
             ),
             child: Text(
-              "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
+              "${selectedHour.toString().padLeft(2, '0')}:${selectedMinute.toString().padLeft(2, '0')}",
               style: TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
+                letterSpacing: 2,
               ),
               textAlign: TextAlign.center,
             ),
           ),
 
-          // Time Picker Spinner
+          SizedBox(height: 20),
+
+          // Beautiful Time Picker with Cream Highlight
           Expanded(
-            child: TimePickerSpinner(
-              time: selectedTime,
-              is24HourMode: true,
-              normalTextStyle: TextStyle(
-                fontSize: 18,
-                color: primaryColor.withOpacity(0.6),
-              ),
-              highlightedTextStyle: TextStyle(
-                fontSize: 22,
-                color: primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-              spacing: 40,
-              itemHeight: 60,
-              isForce2Digits: true,
-              minutesInterval: 5,
-              onTimeChange: (time) {
-                setState(() {
-                  selectedTime = time;
-                });
-              },
+            child: Column(
+              children: [
+                // SizedBox(height: 10),
+                // Text(
+                //   'เลือกเวลา',
+                //   style: TextStyle(
+                //     fontSize: 18,
+                //     fontWeight: FontWeight.bold,
+                //     color: primaryColor,
+                //   ),
+                // ),
+                SizedBox(height: 10),
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFAF2EA), // สีครีมอ่อน
+                      border: Border.all(
+                        color: secondaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: Offset(0, 5),
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Cream highlight bar ครอบทั้งชั่วโมงและนาที
+                        Positioned.fill(
+                          child: Center(
+                            child: Container(
+                              height: 55,
+                              margin: EdgeInsets.symmetric(horizontal: 15),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFE9CBAF)
+                                    .withOpacity(0.6), // สีครีมเข้มขึ้น
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: primaryColor.withOpacity(0.2),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: primaryColor.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Time Pickers Row
+                        Row(
+                          children: [
+                            // Hour Picker
+                            Expanded(
+                              flex: 2,
+                              child: ListWheelScrollView.useDelegate(
+                                itemExtent: 50,
+                                diameterRatio: 2.5,
+                                perspective: 0.002,
+                                squeeze: 1.0,
+                                physics: FixedExtentScrollPhysics(),
+                                controller: FixedExtentScrollController(
+                                  initialItem:
+                                      availableHours.indexOf(selectedHour),
+                                ),
+                                onSelectedItemChanged: (index) {
+                                  setState(() {
+                                    selectedHour = availableHours[index];
+                                  });
+                                },
+                                childDelegate: ListWheelChildBuilderDelegate(
+                                  childCount: availableHours.length,
+                                  builder: (context, index) {
+                                    if (index < 0 ||
+                                        index >= availableHours.length)
+                                      return null;
+                                    final hour = availableHours[index];
+                                    final isSelected = hour == selectedHour;
+
+                                    return Opacity(
+                                      opacity: (index -
+                                                      availableHours.indexOf(
+                                                          selectedHour))
+                                                  .abs() <=
+                                              1
+                                          ? 1.0
+                                          : 0.3,
+                                      child: Center(
+                                        child: Text(
+                                          hour.toString().padLeft(2, '0'),
+                                          style: TextStyle(
+                                            fontSize: isSelected ? 28 : 22,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? primaryColor
+                                                : primaryColor.withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            // Colon separator (:)
+                            Container(
+                              width: 20,
+                              child: Center(
+                                child: Text(
+                                  ':',
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Minute Picker
+                            Expanded(
+                              flex: 2,
+                              child: ListWheelScrollView.useDelegate(
+                                itemExtent: 50,
+                                diameterRatio: 2.5,
+                                perspective: 0.002,
+                                squeeze: 1.0,
+                                physics: FixedExtentScrollPhysics(),
+                                controller: FixedExtentScrollController(
+                                  initialItem:
+                                      availableMinutes.indexOf(selectedMinute),
+                                ),
+                                onSelectedItemChanged: (index) {
+                                  setState(() {
+                                    selectedMinute = availableMinutes[index];
+                                  });
+                                },
+                                childDelegate: ListWheelChildBuilderDelegate(
+                                  childCount: availableMinutes.length,
+                                  builder: (context, index) {
+                                    if (index < 0 ||
+                                        index >= availableMinutes.length)
+                                      return null;
+                                    final minute = availableMinutes[index];
+                                    final isSelected = minute == selectedMinute;
+
+                                    return Opacity(
+                                      opacity: (index -
+                                                      availableMinutes.indexOf(
+                                                          selectedMinute))
+                                                  .abs() <=
+                                              1
+                                          ? 1.0
+                                          : 0.3,
+                                      child: Center(
+                                        child: Text(
+                                          minute.toString().padLeft(2, '0'),
+                                          style: TextStyle(
+                                            fontSize: isSelected ? 28 : 22,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? primaryColor
+                                                : primaryColor.withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
             ),
           ),
 
           // Buttons
-          Padding(
+          Container(
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
@@ -1443,7 +1676,8 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryColor),
+                      // backgroundColor: Colors.grey.shade,
+                      side: BorderSide(color: primaryColor, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1461,26 +1695,43 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      widget.onTimeSelected(
-                        TimeOfDay.fromDateTime(selectedTime),
-                      );
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      // gradient: LinearGradient(
+                      //   colors:primaryColor,
+                      // ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      "ตกลง",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onTimeSelected(
+                          TimeOfDay(hour: selectedHour, minute: selectedMinute),
+                        );
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        "ตกลง",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
