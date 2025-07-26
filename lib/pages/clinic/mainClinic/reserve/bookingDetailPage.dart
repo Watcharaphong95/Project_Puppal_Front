@@ -1213,7 +1213,6 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
 
             if (userName != null) {
               if (status == 2) {
-                await sendNotificationAccept(generalEmail, userName);
                 await sendClinicAcceptNotification(
                     clinicEmail: clinicEmail,
                     userName: box.read('clinicName'),
@@ -1224,7 +1223,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                     .collection('reserve')
                     .doc(docId)
                     .delete();
-                await sendNotificationRefuse(generalEmail, userName);
+
                 await sendClinicRefuseNotification(
                     clinicEmail: clinicEmail,
                     userName: box.read('clinicName'),
@@ -1314,58 +1313,6 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
       }
     } catch (e) {
       print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
-    }
-  }
-
-  Future<void> sendNotificationAccept(
-      String generalEmail, String userName) async {
-    final sql = Uri.parse("$url/reserve/notify/accept/general-reponse");
-
-    try {
-      final res = await http.post(
-        sql,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'generalEmail': generalEmail,
-          'userName': userName,
-        }),
-      );
-
-      if (res.statusCode == 200) {
-        log("✅ Notification sent successfully");
-      } else {
-        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
-      }
-    } catch (e) {
-      log("❌ Error sending notification: $e");
-    }
-  }
-
-  Future<void> sendNotificationRefuse(
-      String generalEmail, String userName) async {
-    final sql = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
-
-    try {
-      final res = await http.post(
-        sql,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'generalEmail': generalEmail,
-          'userName': userName,
-        }),
-      );
-
-      if (res.statusCode == 200) {
-        log("✅ Notification sent successfully");
-      } else {
-        log("❌ Failed to send notification: ${res.statusCode} - ${res.body}");
-      }
-    } catch (e) {
-      log("❌ Error sending notification: $e");
     }
   }
 
