@@ -118,4 +118,8 @@ class Mainclinicnavigatecontroller extends GetxController {
     Clinicappnavigator.clearStack();
     super.onClose();
   }
+
+  String getTitleForCurrentIndex() {
+    return pageTitles[currentIndex.value] ?? 'PUPPAL';
+  }
 }

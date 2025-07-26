@@ -385,8 +385,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'เปลี่ยนรหัสผ่าน',
                               subtitle: 'อัปเดตรหัสผ่านของคุณ',
                               onTap: () {
-                                Clinicappnavigator.toWidget(
-                                    RecoverypasswordPage());
+                                Get.to(() => RecoverypasswordPage());
                               },
                               screenWidth: screenWidth,
                             ),

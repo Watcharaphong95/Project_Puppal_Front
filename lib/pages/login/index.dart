@@ -225,113 +225,244 @@ class _IndexPageState extends State<IndexPage> {
     Get.to(() => RegistertypePage());
   }
 
+  // Future<void> googleLoginButton() async {
+  //   _google.signOut();
+  //   box.erase();
+  //   try {
+  //     final GoogleSignInAccount? account = await _google.signIn();
+  //     if (account != null) {
+  //       showLoadingDialog();
+  //       var res =
+  //           await http.get(Uri.parse("$url/user/google/${account.email}"));
+  //       Get.back();
+  //       if (res.statusCode == 200) {
+  //         final user = userPostFromJson(res.body);
+  //         box.write('email', user.email);
+  //         if (user.general == 1 && user.clinic == 1) {
+  //           Get.to(() => LogintypeselectPage());
+  //         } else if (user.general == 1) {
+  //           showLoadingDialog();
+  //           var resGeneral = await http
+  //               .get(Uri.parse("$url/general/name/${box.read('email')}"));
+  //           box.write('type', 'general');
+  //           box.write('generalName', jsonDecode(resGeneral.body)['username']);
+  //           box.write('generalImage', jsonDecode(resGeneral.body)['image']);
+  //           box.write(
+  //               'generalUsername', jsonDecode(resGeneral.body)['username']);
+  //           String? fcmToken = await FirebaseMessaging.instance.getToken();
+  //           FcmTokenPost token =
+  //               FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+  //           var tokenUpdate = await http.put(
+  //             Uri.parse("$url/user/fcmToken"),
+  //             headers: {"Content-Type": "application/json; charset=utf-8"},
+  //             body: fcmTokenPostToJson(token),
+  //           );
+  //           if (tokenUpdate.statusCode == 201) {
+  //             log('Name ${box.read('generalName')}');
+  //             Get.back();
+  //             Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
+  //           } else {
+  //             Get.snackbar(
+  //               'ข้อผิดพลาด',
+  //               'กรุณาลองใหม่อีกครั้ง',
+  //               snackPosition: SnackPosition.TOP,
+  //               backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+  //               colorText: Colors.white,
+  //               borderRadius: 12,
+  //               margin: const EdgeInsets.all(16),
+  //               duration: const Duration(seconds: 2),
+  //               snackStyle: SnackStyle.FLOATING,
+  //               isDismissible: true,
+  //             );
+  //             return;
+  //           }
+  //         } else if (user.clinic == 1) {
+  //           showLoadingDialog();
+  //           var resClinic = await http
+  //               .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+  //           box.write('type', 'clinic');
+  //           box.write('clinicName', jsonDecode(resClinic.body)['name']);
+  //           box.write('clinicImage', jsonDecode(resClinic.body)['image']);
+  //           String? fcmToken = await FirebaseMessaging.instance.getToken();
+  //           FcmTokenPost token =
+  //               FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+
+  //           var tokenUpdate = await http.put(
+  //             Uri.parse("$url/user/fcmToken"),
+  //             headers: {"Content-Type": "application/json; charset=utf-8"},
+  //             body: fcmTokenPostToJson(token),
+  //           );
+  //           if (tokenUpdate.statusCode == 201) {
+  //             log('Name ${box.read('clinicName')}');
+  //             Get.back();
+  //             Get.offAll(() => Clinicmainbottomnavigate(
+  //                   indexPage: 1,
+  //                 ));
+  //           } else {
+  //             Get.snackbar(
+  //               'ข้อผิดพลาด',
+  //               'กรุณาลองใหม่อีกครั้ง',
+  //               snackPosition: SnackPosition.TOP,
+  //               backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+  //               colorText: Colors.white,
+  //               borderRadius: 12,
+  //               margin: const EdgeInsets.all(16),
+  //               duration: const Duration(seconds: 2),
+  //               snackStyle: SnackStyle.FLOATING,
+  //               isDismissible: true,
+  //             );
+  //             return;
+  //           }
+  //         }
+  //       } else {
+  //         showLoadingDialog();
+  //         var res = await http.get(Uri.parse("$url/user/${account.email}"));
+  //         Get.back();
+  //         if (res.statusCode == 200) {
+  //           showAlertNoClose(
+  //               title: 'อีเมลนี้ถูกใช้แล้ว!',
+  //               message: 'กรุณาล็อคอินให้ถูกวิธี');
+  //         } else {
+  //           box.write('emailGoogleRegister', account.email);
+  //           Get.to(() => RegistertypePage());
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     log("Google Sign-In error: $error");
+  //   }
+  // }
   Future<void> googleLoginButton() async {
     _google.signOut();
     box.erase();
+
     try {
       final GoogleSignInAccount? account = await _google.signIn();
+
       if (account != null) {
+        log("✅ Signed in with Google: ${account.email}");
         showLoadingDialog();
+
         var res =
             await http.get(Uri.parse("$url/user/google/${account.email}"));
-        Get.back();
+        log("🌐 GET /user/google → ${res.statusCode}");
+
+        if (Get.isDialogOpen ?? false) Get.back(); // ปิด dialog ก่อนดำเนินการ
+
         if (res.statusCode == 200) {
           final user = userPostFromJson(res.body);
           box.write('email', user.email);
+
           if (user.general == 1 && user.clinic == 1) {
+            log("➡️ User has both general & clinic account");
             Get.to(() => LogintypeselectPage());
           } else if (user.general == 1) {
+            log("➡️ User is general only");
             showLoadingDialog();
+
             var resGeneral = await http
                 .get(Uri.parse("$url/general/name/${box.read('email')}"));
+
             box.write('type', 'general');
             box.write('generalName', jsonDecode(resGeneral.body)['username']);
             box.write('generalImage', jsonDecode(resGeneral.body)['image']);
             box.write(
                 'generalUsername', jsonDecode(resGeneral.body)['username']);
+
             String? fcmToken = await FirebaseMessaging.instance.getToken();
-            FcmTokenPost token =
-                FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+            FcmTokenPost token = FcmTokenPost(
+              userEmail: box.read('email'),
+              fcmToken: fcmToken!,
+            );
 
             var tokenUpdate = await http.put(
               Uri.parse("$url/user/fcmToken"),
               headers: {"Content-Type": "application/json; charset=utf-8"},
               body: fcmTokenPostToJson(token),
             );
+
             if (tokenUpdate.statusCode == 201) {
-              log('Name ${box.read('generalName')}');
-              Get.back();
+              log("✅ FCM Token updated successfully");
+              if (Get.isDialogOpen ?? false) Get.back();
               Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
             } else {
-              Get.snackbar(
-                'ข้อผิดพลาด',
-                'กรุณาลองใหม่อีกครั้ง',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: const Color.fromARGB(255, 211, 89, 89),
-                colorText: Colors.white,
-                borderRadius: 12,
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-                snackStyle: SnackStyle.FLOATING,
-                isDismissible: true,
-              );
-              return;
+              showErrorSnackBar();
             }
           } else if (user.clinic == 1) {
+            log("➡️ User is clinic only");
             showLoadingDialog();
+
             var resClinic = await http
                 .get(Uri.parse("$url/clinic/name/${box.read('email')}"));
+
             box.write('type', 'clinic');
             box.write('clinicName', jsonDecode(resClinic.body)['name']);
             box.write('clinicImage', jsonDecode(resClinic.body)['image']);
+
             String? fcmToken = await FirebaseMessaging.instance.getToken();
-            FcmTokenPost token =
-                FcmTokenPost(userEmail: box.read('email'), fcmToken: fcmToken!);
+            FcmTokenPost token = FcmTokenPost(
+              userEmail: box.read('email'),
+              fcmToken: fcmToken!,
+            );
 
             var tokenUpdate = await http.put(
               Uri.parse("$url/user/fcmToken"),
               headers: {"Content-Type": "application/json; charset=utf-8"},
               body: fcmTokenPostToJson(token),
             );
+
             if (tokenUpdate.statusCode == 201) {
-              log('Name ${box.read('clinicName')}');
-              Get.back();
-              Get.offAll(() => Clinicmainbottomnavigate(
-                    indexPage: 1,
-                  ));
+              log("✅ FCM Token updated successfully");
+              if (Get.isDialogOpen ?? false) Get.back();
+              Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
             } else {
-              Get.snackbar(
-                'ข้อผิดพลาด',
-                'กรุณาลองใหม่อีกครั้ง',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: const Color.fromARGB(255, 211, 89, 89),
-                colorText: Colors.white,
-                borderRadius: 12,
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-                snackStyle: SnackStyle.FLOATING,
-                isDismissible: true,
-              );
-              return;
+              showErrorSnackBar();
             }
           }
         } else {
+          log("ℹ️ User not found in /user/google/, checking /user/ ...");
           showLoadingDialog();
-          var res = await http.get(Uri.parse("$url/user/${account.email}"));
-          Get.back();
-          if (res.statusCode == 200) {
+
+          var resUser = await http.get(Uri.parse("$url/user/${account.email}"));
+
+          if (Get.isDialogOpen ?? false) Get.back();
+
+          if (resUser.statusCode == 200) {
+            log("⚠️ Email already exists in another method");
             showAlertNoClose(
-                title: 'อีเมลนี้ถูกใช้แล้ว!',
-                message: 'กรุณาล็อคอินให้ถูกวิธี');
+              title: 'อีเมลนี้ถูกใช้แล้ว!',
+              message: 'กรุณาล็อคอินให้ถูกวิธี',
+            );
           } else {
+            log("🆕 New user detected → to RegistertypePage()");
             box.write('emailGoogleRegister', account.email);
             Get.to(() => RegistertypePage());
           }
         }
+      } else {
+        log("❌ No Google account selected");
       }
     } catch (error) {
-      log("Google Sign-In error: $error");
+      if (Get.isDialogOpen ?? false) Get.back();
+      log("❌ Google Sign-In error: $error");
+      showErrorSnackBar();
     }
+  }
+
+  void showErrorSnackBar() {
+    Get.snackbar(
+      'ข้อผิดพลาด',
+      'กรุณาลองใหม่อีกครั้ง',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: const EdgeInsets.all(16),
+      duration: const Duration(seconds: 2),
+      snackStyle: SnackStyle.FLOATING,
+      isDismissible: true,
+    );
   }
 
   void loginButton() {

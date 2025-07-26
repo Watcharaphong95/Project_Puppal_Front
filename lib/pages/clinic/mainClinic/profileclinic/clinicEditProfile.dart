@@ -77,25 +77,24 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        // appBar: AppBar(
-        //   title: const Text(
-        //     "แก้ไขข้อมูลคลินิก",
-        //     style: TextStyle(
-        //       fontWeight: FontWeight.w600,
-        //       fontSize: 24,
-        //       color: Colors.white,
-        //     ),
-        //   ),
-        //   backgroundColor: Color(0xFFDBA871),
-        //   iconTheme: IconThemeData(color: Colors.white),
-
-        //   elevation: 0,
-        //   centerTitle: true,
-        //   // leading: IconButton(
-        //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   //   onPressed: () => Navigator.pop(context),
-        //   // ),
-        // ),
+        appBar: AppBar(
+          title: const Text(
+            "แก้ไขข้อมูลคลินิก",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
+          elevation: 0,
+          centerTitle: true,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+        ),
         body: _loadingData
             ? Center(
                 child: Column(
@@ -369,6 +368,7 @@ class _CliniceditprofileState extends State<EitprofilePage> {
 
                             // Map Section
                             Container(
+                              height: screenHeight * 0.7,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(24),
@@ -408,7 +408,7 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                                   ),
                                   SingleChildScrollView(
                                     child: Container(
-                                      height: screenHeight * 0.75,
+                                      height: screenHeight * 0.6,
                                       // decoration: BoxDecoration(
                                       //   image: DecorationImage(
                                       //       image: AssetImage(

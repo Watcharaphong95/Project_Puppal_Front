@@ -94,205 +94,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-        // appBar: AppBar(
-        //   title: const Text(
-        //     "คำขอฉีดวัคซีน",
-        //     style: TextStyle(
-        //       fontWeight: FontWeight.w600,
-        //       fontSize: 24,
-        //       color: Colors.white,
-        //     ),
-        //   ),
-        //   backgroundColor: secondaryBrown,
-        //   iconTheme: IconThemeData(color: Colors.white),
-        //   elevation: 0,
-        //   centerTitle: true,
-        //   // leading: IconButton(
-        //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   //   onPressed: () => Navigator.pop(context),
-        //   // ),
-        // ),
-        // drawer: Drawer(
-        //   child: Container(
-        //     decoration: BoxDecoration(
-        //       image: DecorationImage(
-        //         image: AssetImage('assets/images/indexBg.png'),
-        //         fit: BoxFit.cover,
-        //       ),
-        //     ),
-        //     child: Container(
-        //       decoration: BoxDecoration(
-        //         color: Colors.white.withOpacity(0.85),
-        //         borderRadius: BorderRadius.only(
-        //           topRight: Radius.circular(30),
-        //           bottomRight: Radius.circular(30),
-        //         ),
-        //         boxShadow: [
-        //           BoxShadow(
-        //             color: Colors.black.withOpacity(0.15),
-        //             blurRadius: 10,
-        //             offset: Offset(2, 2),
-        //           ),
-        //         ],
-        //       ),
-        //       child: ListView(
-        //         padding: EdgeInsets.zero,
-        //         children: [
-        //           DrawerHeader(
-        //             decoration: BoxDecoration(
-        //               color: secondaryBrown,
-        //               borderRadius: BorderRadius.only(
-        //                 topRight: Radius.circular(30),
-        //               ),
-        //             ),
-        //             child: Column(
-        //               crossAxisAlignment: CrossAxisAlignment.center,
-        //               children: [
-        //                 ClipOval(
-        //                   child: Image.network(
-        //                     box.read('clinicImage'),
-        //                     width: screenWidth * 0.2,
-        //                     height: screenWidth * 0.2,
-        //                     fit: BoxFit.cover,
-        //                     loadingBuilder: (context, child, loadingProgress) {
-        //                       if (loadingProgress == null) return child;
-        //                       return Shimmer.fromColors(
-        //                         baseColor: Colors.grey[300]!,
-        //                         highlightColor: Colors.grey[100]!,
-        //                         child: Container(
-        //                           width: screenWidth * 0.2,
-        //                           height: screenWidth * 0.2,
-        //                           color: Colors.white,
-        //                         ),
-        //                       );
-        //                     },
-        //                   ),
-        //                 ),
-        //                 SizedBox(height: 10),
-        //                 Text(
-        //                   box.read('clinicName') ?? "ผู้ใช้งาน",
-        //                   style: TextStyle(
-        //                     color: Colors.white,
-        //                     fontSize: 20,
-        //                     fontWeight: FontWeight.bold,
-        //                   ),
-        //                 ),
-        //               ],
-        //             ),
-        //           ),
-        //           ListTile(
-        //             leading: Icon(Icons.home, color: Color(0xFF916b44)),
-        //             title: Text('หน้าหลัก'),
-        //             onTap: () {
-        //               Get.back();
-        //               Get.to(() => ClinicmainPage());
-        //             },
-        //           ),
-        //           ListTile(
-        //             leading: Icon(Icons.system_security_update,
-        //                 color: Color(0xFF916b44)),
-        //             title: Text('คำขอฉีดยา'),
-        //             onTap: () {
-        //               Get.back();
-        //               Get.to(() => VaccineRequestsPage());
-        //             },
-        //           ),
-        //           ListTile(
-        //             leading:
-        //                 Icon(Icons.notifications, color: Color(0xFF916b44)),
-        //             title: Text('แจ้งเตือน'),
-        //             onTap: () {
-        //               Get.back();
-        //               Get.to(() => Notificationpage());
-        //             },
-        //           ),
-        //           ListTile(
-        //             leading:
-        //                 Icon(Icons.medical_services, color: Color(0xFF916b44)),
-        //             title: Text('ประวัติการฉีดยา'),
-        //             onTap: () {
-        //               Get.back();
-        //               Get.to(() => Vaccinehistorypage());
-        //             },
-        //           ),
-        //           ListTile(
-        //             leading: Icon(Icons.supervised_user_circle,
-        //                 color: Color(0xFF916b44)),
-        //             title: Text('หมอประจำคลินิก'),
-        //             onTap: () {
-        //               Get.back();
-        //               Get.to(() => Cliniclistdoctors());
-        //             },
-        //           ),
-        //           ListTile(
-        //               leading: Icon(Icons.medical_services,
-        //                   color: Color(0xFF916b44)),
-        //               title: Text('เวลาปิด-เปิด'),
-        //               onTap: () {
-        //                 Get.back();
-        //                 Get.to(() => Clinicopeninghours());
-        //               }),
-        //           ListTile(
-        //               leading: Icon(Icons.settings, color: Color(0xFF916b44)),
-        //               title: Text('ตั้งค่า'),
-        //               onTap: () {
-        //                 Get.back();
-        //                 Get.to(() => Clinicsetting());
-        //               }),
-        //           ListTile(
-        //             leading:
-        //                 Icon(MdiIcons.accountSwitch, color: Color(0xFF916b44)),
-        //             title: Text('สลับโหมด'),
-        //             onTap: () async {
-        //               var resGeneral = await http.get(
-        //                   Uri.parse("$url/general/name/${box.read('email')}"));
-        //               if (resGeneral.statusCode == 200) {
-        //                 showAlert(
-        //                   title: 'สลับไปยังบัญชีผู้ใช้ทั่วไป?',
-        //                   message: 'กด ตกลง เพื่อไปยังบัญชีผู้ใช้ทั่วไป',
-        //                   onConfirm: () {
-        //                     box.write('type', 'general');
-        //                     box.write('generalName',
-        //                         jsonDecode(resGeneral.body)['username']);
-        //                     box.write('generalImage',
-        //                         jsonDecode(resGeneral.body)['image']);
-        //                     log('Name ${box.read('generalName')}');
-        //                     Get.offAll(() => GeneralmainPage());
-        //                   },
-        //                 );
-        //               } else {
-        //                 showAlert(
-        //                   title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
-        //                   message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
-        //                   onConfirm: () {
-        //                     Get.back();
-        //                     Get.to(() => RegisterusergooglePage());
-        //                   },
-        //                 );
-        //               }
-        //             },
-        //           ),
-        //           ListTile(
-        //             leading: Icon(Icons.logout, color: Colors.redAccent),
-        //             title: Text('ออกจากระบบ'),
-        //             onTap: () {
-        //               showAlert(
-        //                 title: 'ออกจากระบบ?',
-        //                 message: 'คุณต้องการออกจากระบบใช่หรือไม่',
-        //                 onConfirm: () async {
-        //                   await FirebaseMessaging.instance.deleteToken();
-        //                   box.erase();
-        //                   Get.offAll(() => IndexPage());
-        //                 },
-        //               );
-        //             },
-        //           ),
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        // ),
-
         body: _loadingData
             ? Center(
                 child: Column(
@@ -557,18 +358,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     );
   }
 
-  // void readData() async {
-  //   var query = db.collection("reserve").where("name");
-  //   var result = await query.get();
-
-  //   List<String> newMessages =
-  //       result.docs.map((doc) => doc['message'] as String).toList();
-
-  //   setState(() {
-  //     messages = newMessages;
-  //   });
-  // }
-
   void startRealtimeGet() {
     showLoadingDialog();
 
@@ -757,7 +546,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       color: pressed ? null : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFE9CBAF).withOpacity(0.3),
+                        color: const Color(0xFF5E3D23).withOpacity(0.3),
                         width: 1,
                       ),
                       boxShadow: [
@@ -774,13 +563,104 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                         children: [
                           // indicator bar
                           Container(
-                            width: 4,
+                            margin: const EdgeInsets.only(right: 12),
+                            width: 74,
+                            height: 80,
                             decoration: BoxDecoration(
-                              color: indicatorColor,
-                              borderRadius: BorderRadius.circular(2),
+                              borderRadius:
+                                  BorderRadius.circular(20), // กรอบนอก
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF916B44),
+                                  Color(0xFFDBA871),
+                                ],
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(3), // ขอบด้านในหน่อยๆ
+                            child: ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(17), // รูปโค้งมน
+                              child: FutureBuilder<DogDetailsPost?>(
+                                future: getdog(reserve['dogDogId'] is int
+                                    ? reserve['dogDogId'] as int
+                                    : int.tryParse(
+                                            reserve['dogDogId'].toString()) ??
+                                        0),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFFE9CBAF).withOpacity(0.3),
+                                            Color(0xFFE9CBAF).withOpacity(0.1),
+                                          ],
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Color(0xFF916B44),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  if (!snapshot.hasData ||
+                                      snapshot.data?.image == null) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFFE9CBAF).withOpacity(0.3),
+                                            Color(0xFFE9CBAF).withOpacity(0.1),
+                                          ],
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.pets,
+                                        size: 32,
+                                        color: Color(0xFF916B44),
+                                      ),
+                                    );
+                                  }
+                                  return Image.network(
+                                    snapshot.data!.image!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFFE9CBAF).withOpacity(0.3),
+                                            Color(0xFFE9CBAF).withOpacity(0.1),
+                                          ],
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 32,
+                                        color: Color(0xFF916B44),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 5),
                           // content
                           Expanded(
                             child: Column(
@@ -849,8 +729,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           // arrow button
                           GestureDetector(
                             onTap: () {
-                              Clinicappnavigator.toWidget(
-                                BookingdetailPage(docid: docId),
+                              Get.to(
+                                () => BookingdetailPage(docid: docId),
                               );
                             },
                             child: Container(
@@ -894,14 +774,16 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   }
 
 // Pop-up Dialog Method - ปรับปรุงให้รับ Map แทน Reservebooking object
-  void _showAppointmentPopup(
+  Future<void> _showAppointmentPopup(
       BuildContext context,
       Map<String, dynamic> reserveData,
       DogDetailsPost? dogDetails,
-      String docId) {
-    final ownerName = generalList.isNotEmpty ? generalList[0].name : 'ไม่ระบุ';
-    final ownerPhone =
-        generalList.isNotEmpty ? generalList[0].phone : 'ไม่ระบุ';
+      String docId) async {
+    final generalEmail = reserveData['generalEmail'];
+    GeneralPost? generalData = await getGeneral(generalEmail);
+
+    final ownerName = generalData?.name ?? 'ไม่ระบุ';
+    final ownerPhone = generalData?.phone ?? 'ไม่ระบุ';
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -959,27 +841,34 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            "คำขอจองฉีดวัคซีนจากคุณ",
-                            style: TextStyle(
-                              color: primaryBrown,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              "คำขอจองฉีดวัคซีนจากคุณ",
+                              style: TextStyle(
+                                color: primaryBrown,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Text(
-                            ownerName, // ใช้ชื่อจาก getGeneral
-                            style: TextStyle(
-                              color: primaryBrown,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
+                          SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              ownerName,
+                              style: TextStyle(
+                                color: primaryBrown,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
+
                       SizedBox(
                         child: Padding(padding: EdgeInsets.only(bottom: 15)),
                       ),
@@ -1112,10 +1001,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           'วันที่จอง', _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
                           'เวลาที่จอง', _formatDate(reserveData['date'])),
-                      _buildPopupDetailRow('รหัสสุนัข',
-                          reserveData['dogDogId']?.toString() ?? 'ไม่ระบุ'),
-                      _buildPopupDetailRow('ประเภทการจอง',
-                          reserveData['type']?.toString() ?? 'ไม่ระบุ'),
 
                       const SizedBox(height: 32),
 
@@ -1397,6 +1282,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     try {
       var res = await http.get(Uri.parse("$url/general/$generalEmail"));
       if (res.statusCode == 200) {
+        log(res.body);
         final Map<String, dynamic> jsonMap = json.decode(res.body);
         return GeneralPost.fromJson(jsonMap);
       } else {

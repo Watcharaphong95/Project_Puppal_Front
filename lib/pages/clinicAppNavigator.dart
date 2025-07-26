@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:puppal_application/controller/mainClinicNavigateController.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
 
 class Clinicappnavigator {
@@ -97,24 +98,24 @@ class Clinicappnavigator {
   }
 
   // Navigate back (like Get.back)
-  static bool back() {
-    if (_navController == null) initialize();
+  // static bool back() {
+  //   if (_navController == null) initialize();
 
-    if (_navigationStack.length > 1) {
-      int currentIndex = _navigationStack.removeLast();
+  //   if (_navigationStack.length > 1) {
+  //     int currentIndex = _navigationStack.removeLast();
 
-      // Remove dynamic page if it exists
-      if (_navController!.dynamicPages.containsKey(currentIndex)) {
-        _navController!.removeDynamicPage(currentIndex);
-      }
+  //     // Remove dynamic page if it exists
+  //     if (_navController!.dynamicPages.containsKey(currentIndex)) {
+  //       _navController!.removeDynamicPage(currentIndex);
+  //     }
 
-      // Navigate to previous page
-      int previousIndex = _navigationStack.last;
-      _navController!.navigateToPage(previousIndex);
-      return true;
-    }
-    return false;
-  }
+  //     // Navigate to previous page
+  //     int previousIndex = _navigationStack.last;
+  //     _navController!.navigateToPage(previousIndex);
+  //     return true;
+  //   }
+  //   return false;
+  // }
 
   // Navigate back until specific page (like Get.until)
   static void until(int targetPageIndex) {
@@ -233,5 +234,31 @@ class Clinicappnavigator {
     if (_navController != null) {
       print('Dynamic Pages: ${_navController!.dynamicPages.keys.toList()}');
     }
+  }
+
+  static final List<int> _stack = [];
+
+  static void push(int index) {
+    _stack.add(index); // บันทึกหน้าก่อนหน้า
+    Get.find<Mainclinicnavigatecontroller>().updateIndex(index);
+  }
+
+  static bool back() {
+    if (_navController == null) initialize();
+
+    if (_navigationStack.length > 1) {
+      int currentIndex = _navigationStack.removeLast();
+
+      // Remove dynamic page if it exists
+      if (_navController!.dynamicPages.containsKey(currentIndex)) {
+        _navController!.removeDynamicPage(currentIndex);
+      }
+
+      // Navigate to previous page
+      int previousIndex = _navigationStack.last;
+      _navController!.navigateToPage(previousIndex);
+      return true;
+    }
+    return false;
   }
 }

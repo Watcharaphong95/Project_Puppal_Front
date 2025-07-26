@@ -85,6 +85,50 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
     });
   }
 
+  Widget? buildAppBar() {
+    final index = navController.currentIndex.value;
+
+    bool hasPage = navController.dynamicPages.containsKey(index) ||
+        (index >= 0 && index < navController.pageTitles.length) ||
+        (index >= 0 && index <= 5); // ตาม switch case
+
+    if (!hasPage) {
+      return null; // ไม่แสดง AppBar ถ้า index ไม่มีหน้า
+    }
+
+    return AppBar(
+      backgroundColor: Color(0xFFDBA871),
+      centerTitle: true,
+      iconTheme: IconThemeData(color: Colors.white),
+      title: Text(
+        index < navController.pageTitles.length
+            ? navController.pageTitles[index] ?? ''
+            : '',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      actions: index == 3
+          ? [
+              IconButton(
+                onPressed: () {
+                  Get.to(() => Clinicadddoctor());
+                },
+                icon: CircleAvatar(
+                  backgroundColor: Color(0xFFE9CBAF),
+                  child: Icon(
+                    FontAwesomeIcons.plus,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ]
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
@@ -110,7 +154,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                 ? [
                     IconButton(
                       onPressed: () {
-                        Clinicappnavigator.toWidget(Clinicadddoctor());
+                        Get.to(() => Clinicadddoctor());
                       },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xFFE9CBAF),
