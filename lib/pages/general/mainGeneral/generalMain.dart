@@ -306,7 +306,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               )
             : SingleChildScrollView(
                 child: Container(
-                  height: screenHeight * 0.9,
+                  padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
+                  height: screenHeight * 0.85,
                   // decoration: BoxDecoration(
                   //   image: DecorationImage(
                   //       image: AssetImage('assets/images/indexBg.png'),
@@ -537,24 +538,24 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                           );
                                         }).toList(),
                                       )
-                                    : Row(
-                                        children: [
-                                          Container(
-                                            width: screenWidth * 0.015,
-                                            height: screenHeight * 0.03,
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
+                                    : Container(
+                                        // color: Colors.amber,
+                                        width: screenWidth,
+                                        height: screenHeight * 0.1,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Center(
+                                              child: Text(
+                                                'ไม่มีนัดวันนี้',
+                                                style: TextStyle(
+                                                    fontSize: 32,
+                                                    color: Colors.grey),
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            '  ไม่มีนัดวันนี้',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                color: Color(0xFF916B44)),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                 Card(
                                   elevation: 2,
