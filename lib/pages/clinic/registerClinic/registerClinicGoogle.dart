@@ -63,7 +63,11 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
-    emailCtl.text = box.read('emailGoogleRegister');
+    if (box.read('emailGoogleRegister') != null) {
+      emailCtl.text = box.read('emailGoogleRegister');
+    } else {
+      emailCtl.text = box.read('email');
+    }
   }
 
   @override

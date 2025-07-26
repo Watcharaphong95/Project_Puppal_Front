@@ -323,8 +323,6 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
                 child: TextButton(
                   onPressed: () {
                     onConfirmLocation();
-                    Navigator.pop(context);
-                    Navigator.of(context).pop(true);
 
                     // _rejectReservation();
                   },

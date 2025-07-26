@@ -1,4 +1,3 @@
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
@@ -16,13 +15,9 @@ class Mainclinicnavigatecontroller extends GetxController {
   // Parameters for pages
   var pageParameters = <String, dynamic>{}.obs;
 
-  // Bottom navigation controller
-  late NotchBottomBarController notchBottomBarController;
-
   @override
   void onInit() {
     super.onInit();
-    notchBottomBarController = NotchBottomBarController(index: 1);
 
     // Initialize default titles
     pageTitles.addAll({
@@ -41,12 +36,10 @@ class Mainclinicnavigatecontroller extends GetxController {
 
     // Store parameters if provided
     if (params != null) {
-      pageParameters.clear(); // Clear previous params
+      pageParameters.clear();
       pageParameters.addAll(params);
     }
 
-    // Update bottom navigation controller
-    updateBottomNavController(index);
     update();
   }
 
@@ -90,27 +83,6 @@ class Mainclinicnavigatecontroller extends GetxController {
   // Update current index (for external updates)
   void updateIndex(int index) {
     currentIndex.value = index;
-    updateBottomNavController(index);
-  }
-
-  // Handle bottom navigation controller updates
-  void updateBottomNavController(int index) {
-    if (index <= 2) {
-      // For valid bottom nav indices, set normally
-      notchBottomBarController.index = index;
-      // notchBottomBarController.jumpTo(index);
-    } else {
-      // For drawer pages, create a new controller with no selection
-      // This forces all items to show as inactive
-      // notchBottomBarController.dispose();
-      // notchBottomBarController = NotchBottomBarController(index: -1);
-      notchBottomBarController.index = -1;
-    }
-  }
-
-  // Check if bottom navigation should show active state
-  bool isBottomNavActive() {
-    return currentIndex.value <= 2;
   }
 
   // Clean up dynamic pages (call when needed to free memory)
@@ -142,7 +114,7 @@ class Mainclinicnavigatecontroller extends GetxController {
 
   @override
   void onClose() {
-    notchBottomBarController.dispose();
+    // Simple cleanup without animation controller disposal issues
     Clinicappnavigator.clearStack();
     super.onClose();
   }

@@ -306,7 +306,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               )
             : SingleChildScrollView(
                 child: Container(
-                  height: screenHeight * 0.83,
+                  height: screenHeight * 0.9,
                   // decoration: BoxDecoration(
                   //   image: DecorationImage(
                   //       image: AssetImage('assets/images/indexBg.png'),
@@ -315,6 +315,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                   //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
                   // ),
                   color: Color(0xFFFAF8F5),
+                  // color: Colors.amber,
                   child: Column(
                     children: [
                       SizedBox(
@@ -373,39 +374,63 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 markerBuilder: (context, date, events) {
                                   if (events.isEmpty) return SizedBox.shrink();
 
+                                  const int maxDots = 3; // Maximum dots to show
+                                  final int eventCount = events.length;
+                                  final List<dynamic> displayEvents =
+                                      events.take(maxDots).toList();
+
                                   return Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: events.map((event) {
-                                      Color dotColor;
+                                    children: [
+                                      // Display dots for first few events
+                                      ...displayEvents.map((event) {
+                                        Color dotColor;
+                                        switch ((event as Dog).status) {
+                                          case 0:
+                                            dotColor = Colors.red;
+                                            break;
+                                          case 1:
+                                            dotColor = Colors.yellow.shade600;
+                                            break;
+                                          case 2:
+                                            dotColor = Colors.lightBlueAccent;
+                                            break;
+                                          case 3:
+                                            dotColor =
+                                                Colors.lightGreen.shade400;
+                                            break;
+                                          default:
+                                            dotColor = Colors.grey;
+                                        }
 
-                                      switch ((event as Dog).status) {
-                                        case 0:
-                                          dotColor = Colors.red;
-                                          break;
-                                        case 1:
-                                          dotColor = Colors.yellow.shade600;
-                                          break;
-                                        case 2:
-                                          dotColor = Colors.lightBlueAccent;
-                                          break;
-                                        case 3:
-                                          dotColor = Colors.lightGreen.shade400;
-                                          break;
-                                        default:
-                                          dotColor = Colors.grey;
-                                      }
+                                        return Container(
+                                          width: 6,
+                                          height: 6,
+                                          margin: EdgeInsets.symmetric(
+                                              horizontal: 0.5),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: dotColor,
+                                          ),
+                                        );
+                                      }).toList(),
 
-                                      return Container(
-                                        width: 6,
-                                        height: 6,
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 0.5),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: dotColor,
+                                      // Show "+X" if there are more events
+                                      if (eventCount > maxDots)
+                                        Container(
+                                          margin: EdgeInsets.only(
+                                            left: 2,
+                                          ),
+                                          child: Text(
+                                            '+${eventCount - maxDots}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              // fontWeight: FontWeight.bold,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
                                         ),
-                                      );
-                                    }).toList(),
+                                    ],
                                   );
                                 },
 
@@ -462,21 +487,19 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 getEventsForDay(_selectedDay).isNotEmpty
                                     ? Column(
                                         children: events.map((e) {
-                                          return Card(
-                                            elevation: 2,
-                                            child: InkWell(
-                                              onTap: () {
-                                                if (DateTime.now()
-                                                    .isAfter(_selectedDay)) {
-                                                  return;
-                                                }
+                                          return InkWell(
+                                            onTap: () {
+                                              if (DateTime.now()
+                                                  .isAfter(_selectedDay)) {
+                                                return;
+                                              }
 
-                                                if (e.status != 0) {
-                                                  showReserveInfoAlert(
-                                                      context, e);
-                                                } else {
-                                                  GeneralAppNavigation.toWidget(
-                                                      ClinicsearchPage(
+                                              if (e.status != 0) {
+                                                showReserveInfoAlert(
+                                                    context, e);
+                                              } else {
+                                                GeneralAppNavigation.toWidget(
+                                                  ClinicsearchPage(
                                                     dogId: e.dogId,
                                                     vaccineName:
                                                         e.vaccines.join(', '),
@@ -485,12 +508,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                     reserveId: e.reserveId,
                                                     dogData: Map.fromEntries(
                                                       eventMap.entries
-                                                          // 1. Keep only dates before now
                                                           .where((entry) => entry
                                                               .key
                                                               .isBefore(DateTime
                                                                   .now()))
-                                                          // 2. Map to new entries with filtered dog lists (only status == 0)
                                                           .map((entry) =>
                                                               MapEntry(
                                                                 entry.key,
@@ -502,24 +523,17 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                                             e.dogId)
                                                                     .toList(),
                                                               ))
-                                                          // 3. Keep only entries where filtered list is not empty
                                                           .where((entry) =>
                                                               entry.value
                                                                   .isNotEmpty),
                                                     ),
-                                                  ));
-                                                }
-                                              },
-                                              child: ListTile(
-                                                title: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    dogInfoCard(e),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                                16), // Match dogInfoCard's border radius
+                                            child: dogInfoCard(e),
                                           );
                                         }).toList(),
                                       )
@@ -612,164 +626,290 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
     );
   }
 
-  Widget dogInfoCard(e) {
-    bool isDisabled = DateTime.now().isAfter(_selectedDay);
+  Widget dogInfoCard(dynamic e) {
+    final bool isDisabled = e == null || DateTime.now().isAfter(_selectedDay);
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    // Color palette
+    const Color primaryBrown = Color(0xFF916B44);
+    const Color lightBeige = Color(0xFFFAF8F5);
+    const Color creamLightBrown = Color(0xFFE9CBAF);
+    const Color goldenBrown = Color(0xFFDBA871);
+
+    // Placeholder widget when e is null
+    if (e == null) {
+      return Opacity(
+        opacity: 0.5,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: creamLightBrown, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Row(
+              children: [
+                Container(
+                  width: screenWidth * 0.2,
+                  height: screenHeight * 0.1,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: screenWidth * 0.55,
+                      height: 20,
+                      color: Colors.grey.shade300,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: screenWidth * 0.4,
+                      height: 16,
+                      color: Colors.grey.shade300,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Opacity(
       opacity: isDisabled ? 0.5 : 1.0,
       child: IgnorePointer(
         ignoring: isDisabled,
-        child: Row(
-          children: [
-            if (e.status == 0)
-              Container(
-                width: screenWidth * 0.02,
-                height: screenHeight * 0.1,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              )
-            else if (e.status == 1)
-              Container(
-                width: screenWidth * 0.02,
-                height: screenHeight * 0.1,
-                decoration: BoxDecoration(
-                  color: Colors.yellow.shade600,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              )
-            else if (e.status == 2)
-              Container(
-                width: screenWidth * 0.02,
-                height: screenHeight * 0.1,
-                decoration: BoxDecoration(
-                  color: Colors.lightBlueAccent,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              )
-            else if (e.status == 3)
-              Container(
-                width: screenWidth * 0.02,
-                height: screenHeight * 0.1,
-                decoration: BoxDecoration(
-                  color: Colors.lightGreen.shade400,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              )
-            else
-              SizedBox.shrink(),
-            SizedBox(width: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                e.image,
-                width: screenWidth * 0.2,
-                height: screenHeight * 0.1,
-                fit: BoxFit.cover,
-                color: isDisabled
-                    ? Colors.grey
-                    : null, // optional: greyscale image
-                colorBlendMode: isDisabled ? BlendMode.saturation : null,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
-                  return Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
-                    child: Container(
-                      width: screenWidth * 0.2,
-                      height: screenHeight * 0.1,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: creamLightBrown, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-            ),
-            SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: screenWidth * 0.55,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        e.status != 0
-                            ? 'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}'
-                            : '',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDisabled ? Colors.grey : Colors.grey,
-                        ),
-                      ),
-                    ],
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Status Indicator
+              if (e.status != null)
+                Container(
+                  width: 8,
+                  height: screenHeight * 0.075,
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(e.status),
+                    borderRadius: BorderRadius.circular(50),
                   ),
+                )
+              else
+                const SizedBox.shrink(),
+              const SizedBox(width: 12),
+              // Image or Pet Icon Fallback
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: primaryBrown, width: 2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Column(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: e.image != null && e.image.isNotEmpty
+                      ? Image.network(
+                          e.image,
+                          width: screenWidth * 0.15,
+                          height: screenHeight * 0.075,
+                          fit: BoxFit.cover,
+                          color: isDisabled ? Colors.grey : null,
+                          colorBlendMode:
+                              isDisabled ? BlendMode.saturation : null,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey.shade300,
+                              highlightColor: Colors.grey.shade100,
+                              child: Container(
+                                width: screenWidth * 0.2,
+                                height: screenHeight * 0.1,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: screenWidth * 0.2,
+                              height: screenHeight * 0.1,
+                              color: lightBeige,
+                              child: const Icon(
+                                Icons.pets,
+                                color: primaryBrown,
+                                size: 40,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          width: screenWidth * 0.2,
+                          height: screenHeight * 0.1,
+                          color: lightBeige,
+                          child: const Icon(
+                            Icons.pets,
+                            color: primaryBrown,
+                            size: 40,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Content Column
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Time
+                    if (e.status != 0 && e.time != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDisabled
+                                  ? Colors.grey
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Name and Age
                     Text(
-                      e.name,
+                      e.name ?? 'Unknown Pet',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isDisabled ? Colors.grey : Colors.black,
+                        color: isDisabled ? Colors.grey : primaryBrown,
                       ),
                     ),
                     Text(
-                      'อายุ ${getDogAge(e.birthday)}',
+                      e.birthday != null
+                          ? 'อายุ ${getDogAge(e.birthday)}'
+                          : 'อายุไม่ระบุ',
                       style: TextStyle(
-                        color: isDisabled ? Colors.grey : Colors.grey,
                         fontSize: 15,
+                        color: isDisabled ? Colors.grey : Colors.grey.shade600,
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 5),
-                if (e.vaccines != null &&
-                    e.vaccines.isNotEmpty &&
-                    e.vaccines
-                        .any((vaccine) => vaccine.toString().trim().isNotEmpty))
-                  SizedBox(
-                    width: screenWidth * 0.5,
-                    child: Text(
-                      'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: isDisabled ? Colors.grey : Colors.black,
-                      ),
-                    ),
-                  ),
-                SizedBox(
-                  width: screenWidth * 0.55,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
+                    const SizedBox(height: 8),
+                    // Vaccines
+                    if (e.vaccines != null &&
+                        e.vaccines.isNotEmpty &&
+                        e.vaccines.any(
+                            (vaccine) => vaccine.toString().trim().isNotEmpty))
                       SizedBox(
-                        width: screenWidth * 0.225,
+                        width: screenWidth * 0.3,
                         child: Text(
-                          e.status != 0 ? 'คลินิก: ${e.clinicName}' : '',
+                          'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           style: TextStyle(
-                            color:
-                                isDisabled ? Colors.grey : Colors.grey.shade700,
+                            fontSize: 14,
+                            color: isDisabled ? Colors.grey : Colors.black87,
                           ),
                         ),
                       ),
-                    ],
+                    // Clinic
+                    if (e.status != 0 && e.clinicName != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'คลินิก: ${e.clinicName}',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDisabled
+                                    ? Colors.grey
+                                    : Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12), // Optional spacing before the arrow
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFE9CBAF).withOpacity(0.15),
+                        Color(0xFFE9CBAF).withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Color(0xFFE9CBAF).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: isDisabled ? Colors.grey : primaryBrown,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+// Helper function to determine status color
+  Color _getStatusColor(int status) {
+    switch (status) {
+      case 0:
+        return Colors.red;
+      case 1:
+        return Colors.yellow.shade600;
+      case 2:
+        return Colors.lightBlueAccent;
+      case 3:
+        return Colors.lightGreen.shade400;
+      default:
+        return Colors.grey;
+    }
   }
 
   void startRealtimeGet() {

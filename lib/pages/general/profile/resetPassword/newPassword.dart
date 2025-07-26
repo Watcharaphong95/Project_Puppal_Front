@@ -8,8 +8,10 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/userPasswordChange.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalSetting.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
 class NewpasswordPage extends StatefulWidget {
@@ -46,7 +48,16 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text(
+          'เปลี่ยนรหัสผ่าน',
+          style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: SingleChildScrollView(
         child: Container(
           height: screenHeight,
@@ -143,7 +154,15 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
                   ),
                   SizedBox(height: screenHeight * 0.025),
                   ElevatedButton(
-                      onPressed: confirmButton,
+                      onPressed: () {
+                        showAlert(
+                          title: 'เปลี่ยนรหัสผ่าน?',
+                          message: 'คุณแน่ใจใช่หรือไม่?',
+                          onConfirm: () {
+                            confirmButton();
+                          },
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF916B44),
                           shape: RoundedRectangleBorder(
@@ -163,6 +182,32 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
   }
 
   Future<void> confirmButton() async {
+    final password = passwordCtl.text;
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecial = RegExp(r'!@#\$%^&*(),.":{}|_').hasMatch(password);
+
+    if (password.length < 8 ||
+        !hasUpper ||
+        !hasLower ||
+        !hasDigit ||
+        !hasSpecial) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
     if (passwordCtl.text != confirmPasswordCtl.text) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -205,12 +250,12 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
                 while (Get.isDialogOpen ?? false) {
                   Get.back();
                 }
-                GeneralAppNavigation.offAll(1);
+                Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
               } else if (box.read('type') == 'clinic') {
                 while (Get.isDialogOpen ?? false) {
                   Get.back();
                 }
-                Clinicappnavigator.offAll(1);
+                Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
               }
             }
           });
@@ -353,6 +398,150 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
         ),
       ),
       barrierDismissible: false,
+    );
+  }
+
+  void showAlert({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFA1887F),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 }

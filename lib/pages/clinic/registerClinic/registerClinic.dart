@@ -647,6 +647,33 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       return;
     }
 
+    final password = passwordCtl.text;
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecial = RegExp(r'!@#\$%^&*(),.":{}|_').hasMatch(password);
+
+    if (password.length < 8 ||
+        !hasUpper ||
+        !hasLower ||
+        !hasDigit ||
+        !hasSpecial) {
+      Get.back();
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
 // Password match check
     if (passwordCtl.text != confirmPasswordCtl.text) {
       Get.snackbar(

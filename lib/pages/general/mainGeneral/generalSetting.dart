@@ -257,13 +257,6 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
             )
           : Container(
               height: screenHeight,
-              // decoration: BoxDecoration(
-              //   image: DecorationImage(
-              //       image: AssetImage('assets/images/indexBg.png'),
-              //       fit: BoxFit.cover,
-              //       colorFilter: ColorFilter.mode(
-              //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-              // ),
               color: Color(0xFFFAF8F5),
               child: SingleChildScrollView(
                 child: Padding(
@@ -275,77 +268,136 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ClipOval(
-                          child: Image.network(
-                            generalData.image,
-                            width: screenWidth * 0.35,
-                            height: screenWidth * 0.35,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: screenWidth * 0.35,
-                                  height: screenWidth * 0.35,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
+                        // Profile Image with enhanced styling
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF916B44).withOpacity(0.15),
+                                blurRadius: 15,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.network(
+                              generalData.image,
+                              width: screenWidth * 0.35,
+                              height: screenWidth * 0.35,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: screenWidth * 0.35,
+                                    height: screenWidth * 0.35,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        SizedBox(
-                          width: screenWidth * 0.6,
+
+                        SizedBox(height: 16),
+
+                        // Name with enhanced styling
+                        Container(
+                          width: screenWidth * 0.7,
                           child: Center(
                             child: Text(
                               generalData.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 24),
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF916B44),
+                              ),
                             ),
                           ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+
+                        SizedBox(height: 32),
+
+                        // Settings buttons with enhanced styling
                         Column(
                           children: [
+                            // Edit Profile Button
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Container(
                                 height: screenHeight * 0.075,
                                 width: screenWidth * 0.8,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     Get.to(() => EditprofilePage());
                                   },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Color(0xFF916B44),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: Color(0xFFE9CBAF),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 20),
+                                  ),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(
-                                            Icons.edit_note,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
+                                          Container(
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFDBA871)
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              Icons.edit_note,
+                                              size: screenWidth * 0.07,
+                                              color: Color(0xFF916B44),
+                                            ),
                                           ),
-                                          const SizedBox(width: 8),
+                                          const SizedBox(width: 16),
                                           const Text(
                                             'แก้ไขโปรไฟล์',
                                             style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF916B44),
+                                            ),
                                           ),
                                         ],
                                       ),
                                       const Icon(
                                         FontAwesomeIcons.chevronRight,
-                                        size: 20,
+                                        size: 16,
                                         color: Colors.grey,
                                       ),
                                     ],
@@ -353,38 +405,75 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ),
                               ),
                             ),
+
+                            // Change Password Button
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Container(
                                 height: screenHeight * 0.075,
                                 width: screenWidth * 0.8,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     Get.to(() => RecoverypasswordPage());
                                   },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Color(0xFF916B44),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: Color(0xFFE9CBAF),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 20),
+                                  ),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(
-                                            Icons.lock,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFF916b44),
+                                          Container(
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFDBA871)
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              Icons.lock,
+                                              size: screenWidth * 0.07,
+                                              color: Color(0xFF916B44),
+                                            ),
                                           ),
-                                          const SizedBox(width: 8),
+                                          const SizedBox(width: 16),
                                           const Text(
                                             'เปลี่ยนรหัสผ่าน',
                                             style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black),
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF916B44),
+                                            ),
                                           ),
                                         ],
                                       ),
                                       const Icon(
                                         FontAwesomeIcons.chevronRight,
-                                        size: 20,
+                                        size: 16,
                                         color: Colors.grey,
                                       ),
                                     ],
@@ -392,50 +481,23 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ),
                               ),
                             ),
-                            // Padding(
-                            //   padding: const EdgeInsets.symmetric(vertical: 5),
-                            //   child: SizedBox(
-                            //     height: screenHeight * 0.075,
-                            //     width: screenWidth * 0.8,
-                            //     child: ElevatedButton(
-                            //       onPressed: () {
-                            //         Get.to(() => EditadressPage());
-                            //       },
-                            //       child: Row(
-                            //         mainAxisAlignment:
-                            //             MainAxisAlignment.spaceBetween,
-                            //         children: [
-                            //           Row(
-                            //             children: [
-                            //               Icon(
-                            //                 Icons.pin_drop,
-                            //                 size: screenWidth * 0.10,
-                            //                 color: Color(0xFF916b44),
-                            //               ),
-                            //               const SizedBox(width: 8),
-                            //               const Text(
-                            //                 'เปลี่ยนที่อยู่',
-                            //                 style: TextStyle(
-                            //                     fontSize: 20,
-                            //                     color: Colors.black),
-                            //               ),
-                            //             ],
-                            //           ),
-                            //           const Icon(
-                            //             FontAwesomeIcons.chevronRight,
-                            //             size: 20,
-                            //             color: Colors.grey,
-                            //           ),
-                            //         ],
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
+
+                            // Delete Profile Button
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: SizedBox(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Container(
                                 height: screenHeight * 0.075,
                                 width: screenWidth * 0.8,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     showAlert(
@@ -446,36 +508,61 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                           deleteProfile();
                                         });
                                   },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.red,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: Colors.red.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 20),
+                                  ),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(
-                                            FontAwesomeIcons.trash,
-                                            size: screenWidth * 0.10,
-                                            color: Color(0xFFEF4444),
+                                          Container(
+                                            padding: EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.red.withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              FontAwesomeIcons.trash,
+                                              size: screenWidth * 0.06,
+                                              color: Color(0xFFEF4444),
+                                            ),
                                           ),
-                                          const SizedBox(width: 8),
+                                          const SizedBox(width: 16),
                                           const Text(
                                             'ลบโปรไฟล์',
                                             style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.red),
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.red,
+                                            ),
                                           ),
                                         ],
                                       ),
                                       const Icon(
                                         FontAwesomeIcons.chevronRight,
-                                        size: 20,
+                                        size: 16,
                                         color: Colors.grey,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         )
                       ],
