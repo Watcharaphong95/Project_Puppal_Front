@@ -313,7 +313,7 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                           width: screenWidth * 0.7,
                           child: Center(
                             child: Text(
-                              generalData.name,
+                              generalData.username,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

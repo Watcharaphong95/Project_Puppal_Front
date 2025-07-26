@@ -114,11 +114,11 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
                   // เบอร์โทรศัพท์
                   _buildModernTextField(
-                    label: 'เบอร์โทรศัพท์',
-                    controller: phoneCtl,
-                    icon: Icons.phone_outlined,
-                    screenHeight: screenHeight,
-                  ),
+                      label: 'เบอร์โทรศัพท์',
+                      controller: phoneCtl,
+                      icon: Icons.phone_outlined,
+                      screenHeight: screenHeight,
+                      isPhone: true),
 
                   // รหัสผ่าน
                   _buildPasswordTextField(
@@ -345,6 +345,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    bool isPhone = false, // พารามิเตอร์ใหม่
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,6 +380,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
           ),
           child: TextField(
             controller: controller,
+            keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -597,6 +599,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
         closeCtl.text.trim().isEmpty ||
         selectedWeekdays.isEmpty ||
         numPerTimeCtl.text.trim().isEmpty) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -615,6 +618,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     // Phone number format check (simple 10-digit validation).
     RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
@@ -633,6 +637,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     // Email format check
     RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกอีเมลที่ถูกต้อง',
@@ -677,6 +682,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
 // Password match check
     if (passwordCtl.text != confirmPasswordCtl.text) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านไม่ตรงกัน',
@@ -705,6 +711,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
 
     if (res.statusCode == 200) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
@@ -719,6 +726,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       );
       return;
     } else {
+      Get.back();
       Get.to(() => CliniclocationselectPage());
     }
     log(res.body);

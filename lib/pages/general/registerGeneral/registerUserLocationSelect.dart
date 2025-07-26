@@ -57,6 +57,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
             style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: Color(0xFF916B44)),
       body: SingleChildScrollView(
         child: Container(
