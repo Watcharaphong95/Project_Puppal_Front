@@ -81,10 +81,9 @@ class _NotificationpageState extends State<Notificationpage> {
   Future<void> initialize() async {
     final config = await Configuration.getConfig();
     url = config['apiEndPoint'];
-    setState(() {
-      _loadingData = false;
-    });
+
     startRealtimeGet();
+    await Future.delayed(Duration(milliseconds: 500));
     // getNotification();
     box.write('type', 'clinic');
     _isMounted = true;
@@ -93,6 +92,9 @@ class _NotificationpageState extends State<Notificationpage> {
         .map((e) => int.tryParse(e.toString()) ?? -1)
         .where((id) => id != -1)
         .toSet();
+    setState(() {
+      _loadingData = false;
+    });
   }
 
   @override
@@ -243,7 +245,6 @@ class _NotificationpageState extends State<Notificationpage> {
       //               title: Text('เวลาปิด-เปิด'),
       //               onTap: () {
       //                 Get.back();
-
       //                 Get.to(() => Clinicopeninghours());
       //               }),
       //           ListTile(
@@ -251,7 +252,6 @@ class _NotificationpageState extends State<Notificationpage> {
       //               title: Text('ตั้งค่า'),
       //               onTap: () {
       //                 Get.back();
-
       //                 Get.to(() => Clinicsetting());
       //               }),
       //           ListTile(
@@ -307,7 +307,6 @@ class _NotificationpageState extends State<Notificationpage> {
       //     ),
       //   ),
       // ),
-
       body: _loadingData
           ? Center(
               child: Column(
@@ -836,7 +835,6 @@ class _NotificationpageState extends State<Notificationpage> {
         .collection('clinicNotifications')
         .where('receiverEmail', isEqualTo: userEmail)
         .orderBy('createAt', descending: true)
-        .limit(5)
         .snapshots()
         .listen((snapshot) {
       log('Realtime update - total notifications: ${snapshot.docs.length}');
@@ -851,6 +849,7 @@ class _NotificationpageState extends State<Notificationpage> {
         log('Notification message: ${n.message}');
         log('Notification created at: ${n.createAt}');
       }
+      setState(() {});
 
       // ถ้าคุณต้องการให้ UI รีเฟรช ให้เรียก setState() ใน StatefulWidget หรือแจ้ง listener ที่เหมาะสมที่นี่
     }, onError: (error) {

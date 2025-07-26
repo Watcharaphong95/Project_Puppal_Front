@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -401,12 +402,10 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                         Wrap(
                           spacing: 8,
                           runSpacing: 4,
-                          children: selectedSpecialty.map((specialty) {
+                          children: selectedSpecialty.toSet().map((specialty) {
                             return Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Color(0xFF916B44).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
@@ -525,6 +524,34 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
     bool confirmed = await confirmDialog(context);
     if (!confirmed) return;
 
+    // ✅ ดึงรายชื่อความเชี่ยวชาญทั้งหมด
+    final checkRes = await http.get(Uri.parse("$url/special"));
+    if (checkRes.statusCode == 200) {
+      final List<dynamic> existingList = jsonDecode(checkRes.body);
+      bool isDuplicate = existingList.any((item) =>
+          item['name'].toString().toLowerCase() ==
+          selectedSpecialty.toLowerCase());
+
+      if (isDuplicate) {
+        Get.snackbar(
+            snackPosition: SnackPosition.TOP,
+            "ไม่สามารถบันทึกข้อมูลได้",
+            "ชื่อความเชี่ยวชาญนี้มีอยู่แล้ว",
+            backgroundColor: Colors.orange,
+            colorText: Colors.white);
+        return; // ❌ หยุดบันทึก
+      }
+    } else {
+      log("ไม่สามารถตรวจสอบความซ้ำได้: ${checkRes.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("ไม่สามารถตรวจสอบความซ้ำได้"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     // ✅ แสดงโหลดหมุน
     showDialog(
       context: context,
@@ -551,12 +578,15 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
       if (res.statusCode == 200 || res.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("บันทึกสำเร็จ"),
+            content: Text(
+              "บันทึกสำเร็จ",
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Color(0xFF916B44),
           ),
         );
 
-        _init(); // หรือ setState(() {...}) เพื่อรีโหลดข้อมูล
+        _init(); // รีโหลดข้อมูล
       } else {
         log("📥 Status Code: ${res.statusCode}");
         log("📥 Response Body: ${res.body}");
@@ -576,6 +606,61 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  Future<void> deleteSpecialByObject(String name) async {
+    try {
+      // 1. เช็คก่อนว่ามี special นี้ใน docspecial ไหม (GET /docspecial)
+      final docSpecialResponse = await http.get(Uri.parse('$url/docspecial'));
+
+      if (docSpecialResponse.statusCode == 200) {
+        final List docSpecialData = json.decode(docSpecialResponse.body);
+
+        // ตรวจสอบว่ามีชื่อ specialty นี้อยู่ใน docspecial ไหม
+        final existsInDocSpecial =
+            docSpecialData.any((item) => item['name'] == name);
+
+        if (!existsInDocSpecial) {
+          Get.snackbar(
+              snackPosition: SnackPosition.TOP,
+              "ไม่สามารถลบข้อมูลได้",
+              "เพราะความเชี่ยวชาญนี้มีหมอใช้อยู่",
+              backgroundColor: Colors.red,
+              colorText: Colors.white);
+          log("❌ ไม่สามารถลบ $name เพราะไม่มีใน docspecial");
+
+          return;
+        }
+
+        // 2. ถ้ามีใน docspecial ค่อยไปหา id ใน special (GET /special/search/:name)
+        final response = await http.get(Uri.parse('$url/special/search/$name'));
+
+        if (response.statusCode == 200) {
+          final List data = json.decode(response.body);
+
+          if (data.isNotEmpty) {
+            final id = data[0]['special_id'];
+
+            // 3. เรียก DELETE เพื่อลบ special ตาม id
+            final deleteRes = await http.delete(Uri.parse('$url/special/$id'));
+
+            if (deleteRes.statusCode == 200) {
+              log("✅ ลบ $name แล้ว (id: $id)");
+            } else {
+              log("❌ ลบ $name ไม่ได้ (id: $id)");
+            }
+          } else {
+            log("❌ ไม่พบชื่อ $name ในฐานข้อมูล special");
+          }
+        } else {
+          log("❌ ไม่สามารถโหลดข้อมูล special จาก API ได้: ${response.statusCode}");
+        }
+      } else {
+        log("❌ ไม่สามารถโหลดข้อมูล docspecial จาก API ได้: ${docSpecialResponse.statusCode}");
+      }
+    } catch (e) {
+      log("❌ เกิดข้อผิดพลาดในการลบ: $e");
     }
   }
 
@@ -715,7 +800,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
     TextEditingController otherSpecialtyController = TextEditingController();
     List<String> allSpecialties = [...special.map((s) => s.name), "อื่นๆ"];
     List<String> filtered = List<String>.from(allSpecialties);
-
+    List<String> tempSelected = List<String>.from(selectedSpecialty);
     bool isOtherSelected = false;
 
     showModalBottomSheet(
@@ -727,409 +812,329 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
           builder: (context, setModalState) {
             return Container(
               decoration: BoxDecoration(
-                // color: Color(0xFFE9CBAF),
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: 16),
-                      // Handle Bar
-                      Container(
-                        width: 50,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF916B44).withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 16),
+                    Container(
+                      width: 50,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF916B44).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      SizedBox(height: 20),
-
-                      // Header
-                      Text(
-                        isOtherSelected
-                            ? 'เพิ่มความเชี่ยวชาญใหม่'
-                            : 'เลือกความเชี่ยวชาญ',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF916B44),
-                        ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      isOtherSelected
+                          ? 'เพิ่มความเชี่ยวชาญใหม่'
+                          : 'เลือกความเชี่ยวชาญ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF916B44),
                       ),
-                      SizedBox(height: 20),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          children: [
-                            // Search Field
-                            if (!isOtherSelected)
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF916B44).withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: TextField(
-                                  controller: searchController,
-                                  decoration: InputDecoration(
-                                    hintText: 'ค้นหาความเชี่ยวชาญ',
-                                    hintStyle: TextStyle(
-                                      color: Color(0xFF916B44).withOpacity(0.5),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF916B44),
-                                        width: 2,
+                    ),
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          if (!isOtherSelected) ...[
+                            // Selected Tags
+                            if (tempSelected.isNotEmpty)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: tempSelected.toSet().map((item) {
+                                  return Chip(
+                                    label: Text(item),
+                                    backgroundColor: Color(0xFFFAF8F5),
+                                    deleteIcon: Icon(Icons.close, size: 18),
+                                    onDeleted: () {
+                                      setModalState(() {
+                                        tempSelected.remove(item);
+                                      });
+                                    },
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        color:
+                                            Color(0xFF916B44), // กรอบสีน้ำตาล
+                                        width: 1.5,
                                       ),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    prefixIcon: Icon(
-                                      Icons.search,
-                                      color: Color(0xFF916B44),
-                                    ),
-                                    suffixIcon: searchController.text.isNotEmpty
-                                        ? IconButton(
-                                            icon: Icon(
-                                              Icons.clear,
-                                              color: Color(0xFF916B44),
-                                            ),
-                                            onPressed: () {
-                                              searchController.clear();
-                                              setModalState(() {
-                                                filtered = List<String>.from(
-                                                    allSpecialties);
-                                              });
-                                            },
-                                          )
-                                        : null,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  onChanged: (value) {
-                                    setModalState(() {
-                                      filtered = allSpecialties
-                                          .where((s) => s
-                                              .toLowerCase()
-                                              .contains(value.toLowerCase()))
-                                          .toList();
+                                  );
+                                }).toList(),
+                              ),
+
+                            if (tempSelected.isNotEmpty)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () async {
+                                    for (final item in tempSelected) {
+                                      await deleteSpecialByObject(item);
+                                    }
+
+                                    setState(() {
+                                      selectedSpecialty.removeWhere((item) =>
+                                          tempSelected.contains(item));
                                     });
+
+                                    tempSelected.clear();
+                                    Navigator.pop(context); // ปิด modal
                                   },
+                                  icon: Icon(Icons.delete_forever,
+                                      color: Colors.red),
+                                  label: Text('ลบทั้งหมด',
+                                      style: TextStyle(color: Colors.red)),
                                 ),
                               ),
-                            SizedBox(height: 20),
+                            SizedBox(height: 10),
 
-                            // List Container
-                            if (!isOtherSelected)
-                              Container(
-                                constraints: BoxConstraints(maxHeight: 350),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF916B44).withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: filtered.isEmpty
-                                      ? Container(
-                                          height: 100,
-                                          child: Center(
-                                            child: Text(
-                                              'ไม่พบความเชี่ยวชาญ',
-                                              style: TextStyle(
-                                                color: Color(0xFF916B44)
-                                                    .withOpacity(0.6),
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : ListView.builder(
-                                          shrinkWrap: true,
-                                          padding: EdgeInsets.zero,
-                                          itemCount: filtered.length,
-                                          itemBuilder: (context, index) {
-                                            final item = filtered[index];
-                                            bool isSelected = selectedSpecialty
-                                                .contains(item);
-
-                                            return Container(
-                                              margin: EdgeInsets.only(
-                                                top: index == 0 ? 8 : 0,
-                                                bottom:
-                                                    index == filtered.length - 1
-                                                        ? 8
-                                                        : 0,
-                                              ),
-                                              child: item == "อื่นๆ"
-                                                  ? Container(
-                                                      margin:
-                                                          EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: Color(0xFFDBA871)
-                                                            .withOpacity(0.3),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                      ),
-                                                      child: ListTile(
-                                                        title: Text(
-                                                          "อื่นๆ",
-                                                          style: TextStyle(
-                                                            color: Color(
-                                                                0xFF916B44),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                        trailing: Icon(
-                                                          Icons
-                                                              .arrow_forward_ios,
-                                                          color:
-                                                              Color(0xFF916B44),
-                                                          size: 16,
-                                                        ),
-                                                        onTap: () {
-                                                          setModalState(() {
-                                                            isOtherSelected =
-                                                                true;
-                                                          });
-                                                        },
-                                                      ),
-                                                    )
-                                                  : Container(
-                                                      margin:
-                                                          EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: isSelected
-                                                            ? Color(0xFFDBA871)
-                                                                .withOpacity(
-                                                                    0.2)
-                                                            : Colors
-                                                                .transparent,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                        border: isSelected
-                                                            ? Border.all(
-                                                                color: Color(
-                                                                        0xFF916B44)
-                                                                    .withOpacity(
-                                                                        0.3),
-                                                                width: 1,
-                                                              )
-                                                            : null,
-                                                      ),
-                                                      child: CheckboxListTile(
-                                                        title: Text(
-                                                          item,
-                                                          style: TextStyle(
-                                                            color: Color(
-                                                                0xFF916B44),
-                                                            fontWeight:
-                                                                isSelected
-                                                                    ? FontWeight
-                                                                        .w500
-                                                                    : FontWeight
-                                                                        .w400,
-                                                          ),
-                                                        ),
-                                                        value: isSelected,
-                                                        activeColor:
-                                                            Color(0xFF916B44),
-                                                        checkColor:
-                                                            Colors.white,
-                                                        onChanged:
-                                                            (bool? selected) {
-                                                          setModalState(() {
-                                                            if (selected ==
-                                                                true) {
-                                                              selectedSpecialty
-                                                                  .add(item);
-                                                            } else {
-                                                              selectedSpecialty
-                                                                  .remove(item);
-                                                            }
-                                                          });
-                                                        },
-                                                      ),
-                                                    ),
-                                            );
-                                          },
-                                        ),
-                                ),
-                              ),
-
-                            // Other Specialty Input
-                            if (isOtherSelected) ...[
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF916B44).withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: TextField(
-                                  controller: otherSpecialtyController,
-                                  decoration: InputDecoration(
-                                    hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
-                                    hintStyle: TextStyle(
-                                      color: Color(0xFF916B44).withOpacity(0.5),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: Color(0xFF916B44),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-
-                              // Action Buttons
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      height: 48,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          setModalState(() {
-                                            isOtherSelected = false;
-                                            otherSpecialtyController.clear();
-                                          });
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Color(0xFF916B44),
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            side: BorderSide(
-                                              color: Color(0xFF916B44),
-                                              width: 1,
-                                            ),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "ยกเลิก",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Container(
-                                      height: 48,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          if (isOtherSelected &&
-                                              otherSpecialtyController.text
-                                                  .trim()
-                                                  .isNotEmpty) {
-                                            selectedSpecialty.add(
-                                                otherSpecialtyController.text
-                                                    .trim());
-                                            await specialAdd(
-                                                otherSpecialtyController.text
-                                                    .trim());
-                                          }
-
-                                          setState(() {
-                                            selectedSpecialty =
-                                                List.from(selectedSpecialty);
-                                          });
-
-                                          Navigator.pop(context);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Color(0xFF916B44),
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "บันทึก",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                            // Search Field
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFF916B44).withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
                                   ),
                                 ],
                               ),
-                            ],
+                              child: TextField(
+                                controller: searchController,
+                                decoration: InputDecoration(
+                                  hintText: 'ค้นหาความเชี่ยวชาญ',
+                                  prefixIcon: Icon(Icons.search,
+                                      color: Color(0xFF916B44)),
+                                  suffixIcon: searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: Icon(Icons.clear,
+                                              color: Color(0xFF916B44)),
+                                          onPressed: () {
+                                            searchController.clear();
+                                            setModalState(() {
+                                              filtered =
+                                                  List.from(allSpecialties);
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 16),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  setModalState(() {
+                                    filtered = allSpecialties
+                                        .where((s) => s
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase()))
+                                        .toList();
+                                  });
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                            // List of specialties
+                            Container(
+                              constraints: BoxConstraints(maxHeight: 350),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFF916B44).withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: filtered.isEmpty
+                                    ? Container(
+                                        height: 100,
+                                        child: Center(
+                                          child: Text(
+                                            'ไม่พบความเชี่ยวชาญ',
+                                            style: TextStyle(
+                                              color: Color(0xFF916B44)
+                                                  .withOpacity(0.6),
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: filtered.length,
+                                        itemBuilder: (context, index) {
+                                          final item = filtered[index];
+                                          final isSelected =
+                                              tempSelected.contains(item);
+                                          return item == "อื่นๆ"
+                                              ? ListTile(
+                                                  title: Text("อื่นๆ",
+                                                      style: TextStyle(
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                          fontWeight:
+                                                              FontWeight.w500)),
+                                                  trailing: Icon(
+                                                      Icons.arrow_forward_ios,
+                                                      size: 16,
+                                                      color: Color(0xFF916B44)),
+                                                  onTap: () {
+                                                    setModalState(() {
+                                                      isOtherSelected = true;
+                                                    });
+                                                  },
+                                                )
+                                              : CheckboxListTile(
+                                                  title: Text(item),
+                                                  value: isSelected,
+                                                  onChanged: (val) {
+                                                    setModalState(() {
+                                                      if (val == true) {
+                                                        tempSelected.add(item);
+                                                      } else {
+                                                        tempSelected
+                                                            .remove(item);
+                                                      }
+                                                    });
+                                                  },
+                                                  activeColor:
+                                                      Color(0xFF916B44),
+                                                );
+                                        },
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                            // Confirm Button
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedSpecialty =
+                                            List.from(tempSelected);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF916B44),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text("ตกลง",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500)),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
-                        ),
+
+                          // กรอกอื่นๆ
+                          if (isOtherSelected) ...[
+                            TextField(
+                              controller: otherSpecialtyController,
+                              decoration: InputDecoration(
+                                hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: Color(0xFF916B44),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      setModalState(() {
+                                        isOtherSelected = false;
+                                        otherSpecialtyController.clear();
+                                      });
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Color(0xFF916B44),
+                                      side:
+                                          BorderSide(color: Color(0xFF916B44)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text("ยกเลิก"),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final other =
+                                          otherSpecialtyController.text.trim();
+                                      if (other.isNotEmpty) {
+                                        setState(() {
+                                          selectedSpecialty.add(other);
+                                        });
+                                        await specialAdd(other);
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF916B44),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text("บันทึก"),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
-                      SizedBox(height: 20),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 20),
+                  ],
                 ),
               ),
             );

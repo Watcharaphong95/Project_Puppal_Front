@@ -891,7 +891,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                       child: Text(
                         '+$extraCount',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
