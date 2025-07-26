@@ -51,6 +51,7 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
     });
     await getNotification();
     _isLoading = false;
+    if (!mounted) return;
     setState(() {});
   }
 

@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:puppal_application/controller/mainClinicNavigateController.dart';
 import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
@@ -41,6 +42,7 @@ Future<void> main() async {
   Get.put(RegisterDogInjectionCtl());
   Get.put(injectionRecordList());
   Get.put(MainNavigationController());
+  Get.put(Mainclinicnavigatecontroller());
   Get.put(GeneralMainBottomNavigateController());
   GeneralAppNavigation.initialize();
   Clinicappnavigator.initialize();

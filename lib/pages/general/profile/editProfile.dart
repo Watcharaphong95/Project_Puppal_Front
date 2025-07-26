@@ -40,6 +40,7 @@ class _EditprofilePageState extends State<EditprofilePage> {
   String url = '';
   bool _loadingData = true;
   bool _dataChange = false;
+  bool _hasMovedByUser = false;
 
   File? _imageFile;
 
@@ -101,421 +102,536 @@ class _EditprofilePageState extends State<EditprofilePage> {
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _loadingData
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Color(0xFFDBA871),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE9CBAF).withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF916B44),
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'กำลังโหลด...',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 16,
+                  SizedBox(height: 20),
+                  Text(
+                    'กำลังโหลดข้อมูล...',
+                    style: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             )
-          : SingleChildScrollView(
-              child: Container(
-                // decoration: BoxDecoration(
-                //   image: DecorationImage(
-                //       image: AssetImage('assets/images/indexBg.png'),
-                //       fit: BoxFit.cover,
-                //       colorFilter: ColorFilter.mode(
-                //           Colors.white.withOpacity(0.2), BlendMode.dstATop)),
-                // ),
-                color: Color(0xFFFAF8F5),
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFAF8F5),
+                    Color(0xFFF5F0E8),
+                  ],
+                ),
+              ),
+              child: SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.05,
-                      vertical: screenHeight * 0.05),
-                  child: SizedBox(
-                    width: screenWidth * 0.9,
-                    child: Column(
-                      spacing: 16,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: selectImage,
-                          child: _imageFile == null
-                              ? ClipOval(
-                                  child: Image.network(
-                                    generalData.image,
-                                    width: screenWidth * 0.35,
-                                    height: screenWidth * 0.35,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Shimmer.fromColors(
-                                        baseColor: Colors.grey[300]!,
-                                        highlightColor: Colors.grey[100]!,
-                                        child: Container(
+                    horizontal: screenWidth * 0.05,
+                    vertical: screenHeight * 0.03,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Profile Image Section
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF916B44).withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: selectImage,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Color(0xFFE9CBAF),
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF916B44).withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: _imageFile == null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          generalData.image,
                                           width: screenWidth * 0.35,
                                           height: screenWidth * 0.35,
-                                          color: Colors.white,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                              : ClipOval(
-                                  child: Image.file(
-                                    _imageFile!,
-                                    width: screenWidth * 0.35,
-                                    height: screenWidth * 0.35,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                        ),
-                        Text(
-                          'กดที่รูปโปรไฟล์เพื่อเปลี่ยนรูป',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'ชื่อผู้ใช้',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (usernameCtl.text !=
-                                        generalData.userEmail) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: usernameCtl,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'ชื่อ',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (nameCtl.text != generalData.name) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: nameCtl,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'นามสกุล',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (surnameCtl.text !=
-                                        generalData.surname) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: surnameCtl,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'อีเมล',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (emailCtl.text !=
-                                        generalData.userEmail) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: emailCtl,
-                                  readOnly: true,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'เบอร์โทรศัพท์',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (phoneCtl.text != generalData.phone) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: phoneCtl,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'ที่อยู่',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            Material(
-                              elevation: 5,
-                              borderRadius: BorderRadius.circular(10),
-                              child: SizedBox(
-                                height: screenHeight * 0.055,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    if (addressCtl.text !=
-                                        generalData.address) {
-                                      _dataChange = true;
-                                    } else {
-                                      _dataChange = false;
-                                    }
-                                  },
-                                  controller: addressCtl,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Material(
-                                  color: Colors.white,
-                                  elevation: 5,
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Container(
-                                    height: screenHeight * 0.55,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: selectedLatLng == null
-                                        ? Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                CircularProgressIndicator(
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                          Color>(
-                                                    Color(0xFFDBA871),
-                                                  ),
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child,
+                                              loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Shimmer.fromColors(
+                                              baseColor: Color(0xFFE9CBAF)
+                                                  .withOpacity(0.3),
+                                              highlightColor: Colors.white,
+                                              child: Container(
+                                                width: screenWidth * 0.35,
+                                                height: screenWidth * 0.35,
+                                                decoration: BoxDecoration(
+                                                  color: Color(0xFFE9CBAF)
+                                                      .withOpacity(0.5),
+                                                  shape: BoxShape.circle,
                                                 ),
-                                                SizedBox(height: 16),
-                                                Text(
-                                                  'กำลังโหลด...',
-                                                  style: TextStyle(
-                                                    color: Colors.grey.shade600,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            child: Stack(children: [
-                                              GoogleMap(
-                                                onMapCreated: (controller) {
-                                                  mapController = controller;
-                                                },
-                                                myLocationEnabled: true,
-                                                myLocationButtonEnabled: true,
-                                                initialCameraPosition:
-                                                    CameraPosition(
-                                                  target: selectedLatLng!,
-                                                  zoom: 15,
-                                                ),
-                                                onCameraMove: (position) {
-                                                  selectedLatLng =
-                                                      position.target;
-                                                  _dataChange = true;
-                                                },
-                                                onCameraIdle: () {
-                                                  setState(() {});
-                                                },
-                                                markers: markers,
-                                                gestureRecognizers: <Factory<
-                                                    OneSequenceGestureRecognizer>>{
-                                                  Factory<
-                                                      OneSequenceGestureRecognizer>(
-                                                    () =>
-                                                        EagerGestureRecognizer(),
-                                                  ),
-                                                },
                                               ),
-                                              Center(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.fromLTRB(
-                                                          0, 0, 0, 35),
-                                                  child: Icon(
-                                                    Icons.location_pin,
-                                                    size: 40,
-                                                    color: Colors.red,
-                                                  ),
-                                                ),
-                                              )
-                                            ]),
-                                          ),
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : ClipOval(
+                                        child: Image.file(
+                                          _imageFile!,
+                                          width: screenWidth * 0.35,
+                                          height: screenWidth * 0.35,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: Color(0xFF916B44),
+                                  size: 16,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'แตะเพื่อเปลี่ยนรูปโปรไฟล์',
+                                  style: TextStyle(
+                                    color: Color(0xFF916B44),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                              0, screenHeight * 0.01, 0, screenHeight * 0.05),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Form Fields
+                      _buildInputField(
+                        label: 'ชื่อผู้ใช้',
+                        controller: usernameCtl,
+                        icon: Icons.person_rounded,
+                        onChanged: (value) {
+                          if (usernameCtl.text != generalData.userEmail) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildInputField(
+                        label: 'ชื่อ',
+                        controller: nameCtl,
+                        icon: Icons.badge_rounded,
+                        onChanged: (value) {
+                          if (nameCtl.text != generalData.name) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildInputField(
+                        label: 'นามสกุล',
+                        controller: surnameCtl,
+                        icon: Icons.badge_rounded,
+                        onChanged: (value) {
+                          if (surnameCtl.text != generalData.surname) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildInputField(
+                        label: 'อีเมล',
+                        controller: emailCtl,
+                        icon: Icons.email_rounded,
+                        readOnly: true,
+                        onChanged: (value) {
+                          if (emailCtl.text != generalData.userEmail) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildInputField(
+                        label: 'เบอร์โทรศัพท์',
+                        controller: phoneCtl,
+                        icon: Icons.phone_rounded,
+                        keyboardType: TextInputType.phone,
+                        onChanged: (value) {
+                          if (phoneCtl.text != generalData.phone) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildInputField(
+                        label: 'ที่อยู่',
+                        controller: addressCtl,
+                        icon: Icons.home_rounded,
+                        onChanged: (value) {
+                          if (addressCtl.text != generalData.address) {
+                            _dataChange = true;
+                          } else {
+                            _dataChange = false;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Map Section
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF916B44).withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: screenWidth * 0.4,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFE9CBAF).withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.location_on_rounded,
+                                      color: Color(0xFF916B44),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'ตำแหน่งที่อยู่',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF916B44),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 16),
+                              Container(
+                                height: screenHeight * 0.4,
+                                child: selectedLatLng == null
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Color(0xFFE9CBAF)
+                                                    .withOpacity(0.3),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(
+                                                  Color(0xFF916B44),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(height: 16),
+                                            Text(
+                                              'กำลังโหลดแผนที่...',
+                                              style: TextStyle(
+                                                color: Color(0xFF916B44),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        backgroundColor: Color(0xFF916b44)),
-                                    onPressed: _dataChange
-                                        ? () {
-                                            confirmButton();
-                                          }
-                                        : null,
-                                    child: Text(
-                                      'ยืนยัน',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    )),
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Stack(
+                                          children: [
+                                            GoogleMap(
+                                              onMapCreated: (controller) {
+                                                mapController = controller;
+                                              },
+                                              myLocationEnabled: true,
+                                              myLocationButtonEnabled: true,
+                                              initialCameraPosition:
+                                                  CameraPosition(
+                                                target: selectedLatLng!,
+                                                zoom: 15,
+                                              ),
+                                              onCameraMove: (position) {
+                                                selectedLatLng =
+                                                    position.target;
+                                                if (_hasMovedByUser) {
+                                                  _dataChange = true;
+                                                }
+                                              },
+                                              onCameraIdle: () {
+                                                if (!_hasMovedByUser) {
+                                                  _hasMovedByUser = true;
+                                                }
+                                                setState(() {});
+                                              },
+                                              markers: markers,
+                                              gestureRecognizers: <Factory<
+                                                  OneSequenceGestureRecognizer>>{
+                                                Factory<
+                                                    OneSequenceGestureRecognizer>(
+                                                  () =>
+                                                      EagerGestureRecognizer(),
+                                                ),
+                                              },
+                                            ),
+                                            Center(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                        0, 0, 0, 35),
+                                                child: Icon(
+                                                  Icons.location_pin,
+                                                  size: 32,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                               ),
                             ],
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      ),
+
+                      SizedBox(height: 32),
+
+                      // Confirm Button
+                      Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: _dataChange
+                              ? Color(0xFF916B44)
+                              : Color(0xFFE9CBAF).withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: _dataChange
+                              ? [
+                                  BoxShadow(
+                                    color: Color(0xFF916B44).withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: _dataChange ? () => confirmButton() : null,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.save_rounded,
+                                color: _dataChange
+                                    ? Colors.white
+                                    : Color(0xFF916B44),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'บันทึกข้อมูล',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: _dataChange
+                                      ? Colors.white
+                                      : Color(0xFF916B44),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
             ),
+    );
+  }
+
+  // Helper method for input fields
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    bool readOnly = false,
+    TextInputType? keyboardType,
+    Function(String)? onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF916B44).withOpacity(0.08),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Color(0xFF916B44),
+                    size: 16,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF916B44),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: readOnly ? Color(0xFFFAF8F5) : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Color(0xFFE9CBAF),
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                readOnly: readOnly,
+                keyboardType: keyboardType,
+                onChanged: onChanged,
+                style: TextStyle(
+                  color: Color(0xFF916B44),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(
+                    color: Color(0xFF916B44).withOpacity(0.5),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

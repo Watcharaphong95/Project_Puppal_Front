@@ -55,10 +55,12 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
                 fontSize: 24,
                 fontWeight: FontWeight.w600)),
         backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Container(
-          decoration: BoxDecoration(color: Color(0xFFFAF8F5)),
+          // decoration: BoxDecoration(color: Color(0xFFFAF8F5)),
+          color: Color(0xFFFAF8F5),
           child: SafeArea(
             child: Padding(
               padding:
@@ -215,41 +217,26 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
                     height: 56,
                     margin: EdgeInsets.only(bottom: 20),
                     child: ElevatedButton(
-                      onPressed: userRegisterNextButton,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF916B44),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
+                        backgroundColor:
+                            Color(0xFFDBA871), // Golden Brown for buttons
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        shadowColor: Color(0xFF916B44).withOpacity(0.3),
-                      ).copyWith(
-                        elevation: MaterialStateProperty.resolveWith<double>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.pressed))
-                              return 0;
-                            return 8;
-                          },
-                        ),
+                        elevation: 6,
+                        shadowColor: Colors.black26,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'ถัดไป',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 18,
+                      onPressed: userRegisterNextButton,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          'ถัดไป',
+                          style: TextStyle(
+                            fontSize: 20,
                             color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -473,6 +460,7 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
 
   Future<void> userRegisterNextButton() async {
     showLoadingDialog();
+
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -523,6 +511,33 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
+    final password = passwordCtl.text;
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecial = RegExp(r'!@#\$%^&*(),.":{}|_').hasMatch(password);
+
+    if (password.length < 8 ||
+        !hasUpper ||
+        !hasLower ||
+        !hasDigit ||
+        !hasSpecial) {
+      Get.back();
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
         snackPosition: SnackPosition.TOP,
         backgroundColor: const Color.fromARGB(255, 211, 89, 89),
         colorText: Colors.white,

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart'; // NEW IMPORT
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,7 +10,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/mainClinicNavigateController.dart';
-import 'package:puppal_application/controller/mainGeneralNavigateController.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
@@ -21,8 +20,8 @@ import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineReques
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
-import 'package:puppal_application/pages/general/registerGeneral/dog/registerDog.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
@@ -51,96 +50,46 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
   late double screenHeight;
   final box = GetStorage();
 
-  final navController = Get.find<MainNavigationController>();
+  final navController = Get.find<Mainclinicnavigatecontroller>();
 
   String url = '';
 
-  // Remove this line - we'll use the controller's instance
-  // late NotchBottomBarController notchBottomBarController;
   int currentIndex = 1;
 
-  final notchBottomBarController =
-      NotchBottomBarController(index: 1); // <<== เพิ่มตรงนี้ด้วย
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-  final List<Widget> pages = [
-    VaccineRequestsPage(),
-    ClinicmainPage(),
-    Notificationpage(),
-    Cliniclistdoctors(),
-    Vaccinehistorypage(),
-    Clinicsetting(),
-  ];
-
-  final List<String> appBarTitles = [
-    'คำขอ',
-    'PUPPAL',
-    'การแจ้งเตือน',
-    'หมอ',
-    'ประวัติการฉีดยา',
-    'ตั้งค่า',
-  ];
-
-  final List<BottomBarItem> bottomBarItems = [
-    BottomBarItem(
-      inActiveItem:
-          Center(child: Icon(FontAwesomeIcons.syringe, color: Colors.white)),
-      activeItem: Icon(FontAwesomeIcons.syringe, color: Color(0xFFDBA871)),
-      itemLabel: 'คำขอ',
-    ),
-    BottomBarItem(
-      inActiveItem:
-          Center(child: Icon(FontAwesomeIcons.calendar, color: Colors.white)),
-      activeItem: Icon(FontAwesomeIcons.calendar, color: Color(0xFFDBA871)),
-      itemLabel: 'PUPPAL',
-    ),
-    BottomBarItem(
-      inActiveItem: Center(
-        child: Icon(FontAwesomeIcons.bell, color: Colors.white),
-      ),
-      activeItem: Center(
-        child: Icon(FontAwesomeIcons.bell, color: Color(0xFFDBA871)),
-      ),
-      itemLabel: 'แจ้งเตือน',
-    ),
-  ];
 
   @override
   void initState() {
     log(widget.indexPage.toString());
-    init();
     super.initState();
     currentIndex = widget.indexPage;
-
-    // Use the controller's method to update the index properly
-    navController.notchBottomBarController.jumpTo(currentIndex);
+    init();
   }
 
   void init() async {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    navController.currentIndex.value = currentIndex;
   }
 
   @override
   void dispose() {
-    // Don't dispose here since we're using the controller's instance
-    // notchBottomBarController.dispose();
     super.dispose();
   }
 
   void onTap(int index) {
     setState(() {
       currentIndex = index;
-      // Use the controller's method to update properly
       navController.updateIndex(index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
+
     final name = box.read('clinicName') ?? 'ผู้ใช้งาน';
     final image = box.read('clinicImage') ?? 'default_image_url_or_placeholder';
 
@@ -150,9 +99,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
             centerTitle: true,
             iconTheme: IconThemeData(color: Colors.white),
             title: Text(
-              navController.currentIndex.value < appBarTitles.length
-                  ? appBarTitles[navController.currentIndex.value]
-                  : '',
+              navController.getPageTitle(navController.currentIndex.value),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -246,8 +193,11 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                       ),
                     ),
                     ListTile(
-                      leading: Icon(FontAwesomeIcons.syringe,
-                          color: Color(0xFF916b44)),
+                      leading: SizedBox(
+                        width: 40,
+                        child: Icon(FontAwesomeIcons.syringe,
+                            color: Color(0xFF916b44)),
+                      ),
                       title: Text('หมอประจำคลินิก'),
                       onTap: () {
                         setState(() {
@@ -257,7 +207,10 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                       },
                     ),
                     ListTile(
-                      leading: Icon(Icons.menu_book, color: Color(0xFF916b44)),
+                      leading: SizedBox(
+                          width: 40,
+                          child:
+                              Icon(Icons.menu_book, color: Color(0xFF916b44))),
                       title: Text('ประวัติการฉีดวัคซีน'),
                       onTap: () {
                         setState(() {
@@ -267,8 +220,10 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                       },
                     ),
                     ListTile(
-                      leading:
-                          Icon(FontAwesomeIcons.gear, color: Color(0xFF916b44)),
+                      leading: SizedBox(
+                          width: 40,
+                          child: Icon(FontAwesomeIcons.gear,
+                              color: Color(0xFF916b44))),
                       title: Text('ตั้งค่า'),
                       onTap: () {
                         setState(() {
@@ -278,8 +233,11 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                       },
                     ),
                     ListTile(
-                      leading: Icon(MdiIcons.accountSwitch,
-                          color: Color(0xFF916b44)),
+                      leading: SizedBox(
+                        width: 40,
+                        child: Icon(MdiIcons.accountSwitch,
+                            color: Color(0xFF916b44)),
+                      ),
                       title: Text('สลับโหมด'),
                       onTap: () async {
                         var resGeneral = await http.get(Uri.parse(
@@ -294,7 +252,8 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                                   jsonDecode(resGeneral.body)['username']);
                               box.write('generalImage',
                                   jsonDecode(resGeneral.body)['image']);
-                              Get.offAll(() => GeneralmainPage());
+                              Get.offAll(() =>
+                                  GeneralMainBottomNavigate(indexPage: 1));
                             },
                           );
                         } else {
@@ -311,8 +270,11 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                       },
                     ),
                     ListTile(
-                      leading: Icon(FontAwesomeIcons.doorOpen,
-                          color: Colors.redAccent),
+                      leading: SizedBox(
+                        width: 40,
+                        child: Icon(FontAwesomeIcons.doorOpen,
+                            color: Colors.redAccent),
+                      ),
                       title: Text('ออกจากระบบ'),
                       onTap: () {
                         showAlert(
@@ -332,30 +294,6 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
             ),
           ),
           extendBody: true,
-          bottomNavigationBar: Container(
-            height: screenHeight * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-            ),
-            child: AnimatedNotchBottomBar(
-              showTopRadius: true,
-              showBottomRadius: false,
-              elevation: 0,
-              removeMargins: true,
-              notchBottomBarController: navController.notchBottomBarController,
-              bottomBarItems: bottomBarItems,
-              onTap: (index) {
-                if (index <= 2) {
-                  onTap(index);
-                }
-              },
-              kIconSize: 20,
-              kBottomRadius: 0,
-              itemLabelStyle: TextStyle(color: Colors.white),
-              color: Color(0xFFDBA871),
-              durationInMilliSeconds: 500,
-            ),
-          ),
           body: PopScope(
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
@@ -363,21 +301,108 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                 final handled = Clinicappnavigator.handleSystemBack();
                 if (!handled) {
                   showAlert(
-                    title: 'คุณต้องการออกจากแอปใช่หรือไม่',
-                    message: '',
-                    onConfirm: () {
-                      Get.back();
-                    },
-                  );
+                      title: 'คุณต้องการออกจากแอปใช่หรือไม่',
+                      message: '',
+                      onConfirm: () {
+                        Get.back();
+                      });
                 }
               }
             },
-            child: Container(
-              margin: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.075),
-              child: SafeArea(
-                bottom: false,
-                child: getCurrentPage(),
-              ),
+            child: Stack(
+              children: [
+                // Main page content - full screen
+                Container(
+                  color: Color(0xFFFAF8F5),
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.0725),
+                  height: screenHeight,
+                  child: SafeArea(bottom: false, child: getCurrentPage()),
+                ),
+                // Floating bottom navigation bar
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: navController.currentIndex.value > 2
+                      ? // Custom navigation bar when index > 2 (all buttons unselected)
+                      Container(
+                          height: 60.0,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFDBA871)
+                                .withOpacity(0.9), // Semi-transparent
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              // Dog button - unselected
+                              GestureDetector(
+                                onTap: () => onTap(0),
+                                child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(
+                                    FontAwesomeIcons.dog,
+                                    size: 30,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              // Calendar button - unselected
+                              GestureDetector(
+                                onTap: () => onTap(1),
+                                child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(
+                                    FontAwesomeIcons.calendar,
+                                    size: 30,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              // Bell button - unselected
+                              GestureDetector(
+                                onTap: () => onTap(2),
+                                child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(
+                                    FontAwesomeIcons.bell,
+                                    size: 30,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : // Normal CurvedNavigationBar when index <= 2
+                      CurvedNavigationBar(
+                          index: navController.currentIndex.value,
+                          height: 60.0,
+                          items: <Widget>[
+                            Icon(FontAwesomeIcons.dog,
+                                size: 30, color: Colors.white),
+                            Icon(FontAwesomeIcons.calendar,
+                                size: 30, color: Colors.white),
+                            Icon(FontAwesomeIcons.bell,
+                                size: 30, color: Colors.white),
+                          ],
+                          color: Color(0xFFDBA871)
+                              .withOpacity(0.9), // Semi-transparent
+                          buttonBackgroundColor:
+                              Color(0xFFE9CBAF).withOpacity(0.9),
+                          backgroundColor: Colors.transparent,
+                          animationCurve: Curves.easeInOut,
+                          animationDuration: Duration(milliseconds: 500),
+                          onTap: (index) {
+                            onTap(index);
+                          },
+                          letIndexChange: (index) => true,
+                        ),
+                ),
+              ],
             ),
           ),
         ));
@@ -390,9 +415,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
     if (navController.dynamicPages.containsKey(index)) {
       return navController.dynamicPages[index]!;
     }
-    if (index >= 0 && index < pages.length) {
-      return pages[index];
-    }
+
     // Regular pages
     switch (index) {
       case 0:
