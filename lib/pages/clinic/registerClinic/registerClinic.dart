@@ -597,6 +597,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
         closeCtl.text.trim().isEmpty ||
         selectedWeekdays.isEmpty ||
         numPerTimeCtl.text.trim().isEmpty) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -615,6 +616,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     // Phone number format check (simple 10-digit validation).
     RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
@@ -633,6 +635,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     // Email format check
     RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกอีเมลที่ถูกต้อง',
@@ -652,7 +655,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
     final hasLower = RegExp(r'[a-z]').hasMatch(password);
     final hasDigit = RegExp(r'[0-9]').hasMatch(password);
-    final hasSpecial = RegExp(r'!@#\$%^&*(),.":{}|_').hasMatch(password);
+    final hasSpecial =
+        RegExp(r'[!@#\$%^&*(),.":{}|_]').hasMatch(password); // ✅ แก้แล้ว
 
     if (password.length < 8 ||
         !hasUpper ||
@@ -660,6 +664,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
         !hasDigit ||
         !hasSpecial) {
       Get.back();
+
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
@@ -677,6 +682,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
 // Password match check
     if (passwordCtl.text != confirmPasswordCtl.text) {
+      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านไม่ตรงกัน',
@@ -703,7 +709,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     controller.address.value = addressCtl.text;
 
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
-
+    Get.back();
     if (res.statusCode == 200) {
       Get.snackbar(
         'ข้อผิดพลาด',
