@@ -4,36 +4,22 @@ import 'dart:developer';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
 import 'package:puppal_application/config/config.dart';
-import 'package:puppal_application/model/clinicUpdateTypePost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/generalPost.dart';
-import 'package:puppal_application/model/reserveClinicPost.dart';
-import 'package:puppal_application/model/reserveGeneralPost.dart';
-import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
-import 'package:puppal_application/model/reservebooking.dart';
+
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/acceptRequest.dart';
+
 import 'package:puppal_application/pages/clinic/mainClinic/reserve/bookingDetailPage.dart';
-import 'package:puppal_application/pages/clinicAppNavigator.dart';
-import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
-import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
-import 'package:puppal_application/pages/login/index.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
-import 'dart:convert';
 
 class VaccineRequestsPage extends StatefulWidget {
   const VaccineRequestsPage({super.key});
@@ -1522,7 +1508,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 child: TextButton(
                   onPressed: () {
                     // Navigator.of(context).pop(true);
-                    Navigator.pop(context);
                     Navigator.of(context).pop(true);
                     acceptrequest(docId, 2);
                     // _rejectReservation();
@@ -1650,7 +1635,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 child: TextButton(
                   onPressed: () {
                     // Navigator.of(context).pop(true);
-                    Navigator.pop(context);
+
                     Navigator.of(context).pop(true);
                     acceptrequest(docId, 0);
                     // _rejectReservation();

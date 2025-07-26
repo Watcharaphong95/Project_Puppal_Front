@@ -8,19 +8,16 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/clinicGetInjectionRecord.dart';
-import 'package:puppal_application/model/clinicUpdateTypePost.dart';
+
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
-import 'package:puppal_application/model/doctorPost.dart';
-import 'package:puppal_application/model/dogPost.dart';
+
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
 import 'package:http/http.dart' as http;
-import 'package:puppal_application/model/reserveUpdateStatusPost.dart';
-import 'package:puppal_application/model/reservebooking.dart';
+
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/acceptRequest.dart';
-import 'package:shimmer/shimmer.dart';
+
 import 'package:puppal_application/model/clinicGetInjectionRecord.dart'
     as getInjection;
 
@@ -1187,6 +1184,73 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
     }
   }
 
+  Future<void> acceptrequest(String docId, int status) async {
+    showLoadingDialog();
+
+    if (status == 0 || status == 2) {
+      try {
+        // 1. อัปเดต status
+        await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .update({'status': status});
+
+        // 2. ดึงข้อมูลของ reserve
+        final doc = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data();
+          final generalEmail = data?['generalEmail'];
+          log(generalEmail);
+          final clinicEmail = data?['clinicEmail'];
+
+          if (generalEmail != null) {
+            final generalUser = await getGeneral(generalEmail);
+            final userName = generalUser?.name;
+
+            if (userName != null) {
+              if (status == 2) {
+                await sendNotificationAccept(generalEmail, userName);
+                await sendClinicAcceptNotification(
+                    clinicEmail: clinicEmail,
+                    userName: box.read('clinicName'),
+                    date: data?['date'] ?? '',
+                    generalEmail: generalEmail);
+              } else if (status == 0) {
+                final doc = await FirebaseFirestore.instance
+                    .collection('reserve')
+                    .doc(docId)
+                    .delete();
+                await sendNotificationRefuse(generalEmail, userName);
+                await sendClinicRefuseNotification(
+                    clinicEmail: clinicEmail,
+                    userName: box.read('clinicName'),
+                    date: data?['date'] ?? '',
+                    generalEmail: generalEmail);
+              }
+            } else {
+              log("⚠️ Missing userName from getGeneral()");
+            }
+          } else {
+            log("⚠️ Missing generalEmail in document");
+          }
+        }
+
+        log('✅ Updated status to $status for docId=$docId');
+      } catch (e) {
+        log('❌ Failed to update status: $e');
+      }
+    } else {
+      log('⚠️ Status not allowed to update: $status');
+    }
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+  }
+
   // List<DogPost> AboutDialog(String str) =>
   //     List<DogPost>.from(json.decode(str).map((x) => DogPost.fromJson(x)));
   Future<void> sendClinicAcceptNotification({
@@ -1349,73 +1413,6 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
       return DateTime(year, month, day);
     } catch (e) {
       return null;
-    }
-  }
-
-  Future<void> acceptrequest(String docId, int status) async {
-    showLoadingDialog();
-
-    if (status == 0 || status == 2) {
-      try {
-        // 1. อัปเดต status
-        await FirebaseFirestore.instance
-            .collection('reserve')
-            .doc(docId)
-            .update({'status': status});
-
-        // 2. ดึงข้อมูลของ reserve
-        final doc = await FirebaseFirestore.instance
-            .collection('reserve')
-            .doc(docId)
-            .get();
-
-        if (doc.exists) {
-          final data = doc.data();
-          final generalEmail = data?['generalEmail'];
-          log(generalEmail);
-          final clinicEmail = data?['clinicEmail'];
-
-          if (generalEmail != null) {
-            final generalUser = await getGeneral(generalEmail);
-            final userName = generalUser?.name;
-
-            if (userName != null) {
-              if (status == 2) {
-                await sendNotificationAccept(generalEmail, userName);
-                await sendClinicAcceptNotification(
-                    clinicEmail: box.read('clinicEmail'),
-                    userName: box.read('clinicName'),
-                    date: data?['date'] ?? '',
-                    generalEmail: generalEmail);
-              } else if (status == 0) {
-                final doc = await FirebaseFirestore.instance
-                    .collection('reserve')
-                    .doc(docId)
-                    .delete();
-                await sendNotificationRefuse(generalEmail, userName);
-                await sendClinicRefuseNotification(
-                    clinicEmail: clinicEmail,
-                    userName: box.read('clinicName'),
-                    date: data?['date'] ?? '',
-                    generalEmail: generalEmail);
-              }
-            } else {
-              log("⚠️ Missing userName from getGeneral()");
-            }
-          } else {
-            log("⚠️ Missing generalEmail in document");
-          }
-        }
-
-        log('✅ Updated status to $status for docId=$docId');
-      } catch (e) {
-        log('❌ Failed to update status: $e');
-      }
-    } else {
-      log('⚠️ Status not allowed to update: $status');
-    }
-    if (Get.isDialogOpen ?? false) {
-      Get.back();
     }
   }
 
