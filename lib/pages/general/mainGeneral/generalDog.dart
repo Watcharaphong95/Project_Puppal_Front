@@ -273,7 +273,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
       body: Container(
         decoration: BoxDecoration(color: Color(0xFFFAF8F5)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+          padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
           child: Column(
             children: [
               // Search Field

@@ -16,7 +16,6 @@ import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddD
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDocter.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;

@@ -8,7 +8,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/notificationModelRes.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicGoogle.dart';
@@ -39,10 +41,22 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
 
   List<NotifyModel> notifyList = [];
 
+  late AppData appData;
+
+  var db = FirebaseFirestore.instance;
+
   @override
   void initState() {
+    appData = context.read<AppData>();
+
     init();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    stopRealTime(); // 👈 Stop the listener when page is destroyed
+    super.dispose();
   }
 
   Future<void> init() async {
@@ -50,6 +64,7 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
       url = config['apiEndPoint'];
     });
     await getNotification();
+    startRealtimeGet();
     _isLoading = false;
     if (!mounted) return;
     setState(() {});
@@ -404,6 +419,52 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
                       },
                     )),
     );
+  }
+
+  void startRealtimeGet() {
+    // stopRealTime();
+    // if (!mounted) return;
+
+    final colRef = db
+        .collection("generalNotifications")
+        .where("receiverEmail", isEqualTo: box.read("email"));
+
+    log('🔔 Listener is Started');
+
+    appData.listener = colRef.snapshots().listen(
+      (querySnapshot) {
+        for (var change in querySnapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            // var docId = change.doc.id;
+            // var data = change.doc.data();
+            fireStoreRemoveListen();
+            if (mounted) {
+              setState(() {});
+            }
+          }
+        }
+      },
+      onError: (error) => log("❌ Listen failed: $error"),
+    );
+  }
+
+  Future<void> fireStoreRemoveListen() async {
+    await getNotification();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void stopRealTime() {
+    if (appData.listener != null) {
+      appData.listener?.cancel().then((_) {
+        log('🔕 Listener is stopped');
+      }).catchError((e) {
+        log('⚠️ Failed to stop listener: $e');
+      });
+    } else {
+      log('ℹ️ No listener was running');
+    }
   }
 
   Widget _buildEmptyState() {
