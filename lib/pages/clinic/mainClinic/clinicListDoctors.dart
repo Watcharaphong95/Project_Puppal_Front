@@ -16,7 +16,6 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.da
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';

@@ -953,6 +953,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
 
   Future<void> fireStoreRemoveListen() async {
     await getAppointmentEmail();
+    events = getEventsForDay(_selectedDay);
     if (mounted) {
       setState(() {});
     }

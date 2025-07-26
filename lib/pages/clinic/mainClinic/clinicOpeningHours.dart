@@ -18,7 +18,6 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicSetting.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';

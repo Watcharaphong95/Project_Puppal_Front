@@ -587,6 +587,7 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
   }
 
   Future<void> userRegisterNextButton() async {
+    showLoadingDialog();
     if (nameCtl.text.trim().isEmpty ||
         emailCtl.text.trim().isEmpty ||
         passwordCtl.text.trim().isEmpty ||
@@ -984,6 +985,56 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
           ),
         );
       },
+    );
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

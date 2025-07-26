@@ -13,7 +13,6 @@ import 'package:puppal_application/model/specialPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddAvatar.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
-import 'package:puppal_application/pages/clinic/mainClinic/reserve/vaccineRequestsPage.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDoctorAvatar.dart';
 import 'package:puppal_application/pages/login/index.dart';
 
