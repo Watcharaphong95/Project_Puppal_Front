@@ -186,7 +186,7 @@ class _NewpasswordPageState extends State<NewpasswordPage> {
     final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
     final hasLower = RegExp(r'[a-z]').hasMatch(password);
     final hasDigit = RegExp(r'[0-9]').hasMatch(password);
-    final hasSpecial = RegExp(r'!@#\$%^&*(),.":{}|_').hasMatch(password);
+    final hasSpecial = RegExp(r'[!@#\$%^&*(),.":{}|_]').hasMatch(password);
 
     if (password.length < 8 ||
         !hasUpper ||
