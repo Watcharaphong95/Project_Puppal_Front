@@ -254,6 +254,7 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
     required String title,
     required String message,
     VoidCallback? onConfirm,
+    VoidCallback? onCancel,
   }) {
     showDialog(
       context: context,
@@ -296,9 +297,44 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
             ),
           ],
         ),
-        actionsAlignment: MainAxisAlignment.center,
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
         actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
         actions: [
+          // ปุ่มยกเลิก
+          // ปุ่มยกเลิก
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: Colors.white, // เพิ่มพื้นหลังสีขาว
+              border: Border.all(
+                  color: const Color(0xFF916B44), width: 2), // กรอบสีน้ำตาล
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (onCancel != null) onCancel();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF916B44), // ข้อความสีน้ำตาล
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                backgroundColor: Colors.white, // พื้นหลังปุ่มสีขาว
+              ),
+              child: const Text(
+                'ยกเลิก',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  // ไม่ต้องกำหนดสีซ้ำที่นี่ เพราะกำหนด foregroundColor ไว้แล้ว
+                ),
+              ),
+            ),
+          ),
+
+          // ปุ่มตกลง
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
@@ -386,29 +422,6 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
         actionsAlignment: MainAxisAlignment.center,
         actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
         actions: [
-          // ยกเลิก
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Color(0xFF916B44), width: 1.5),
-            ),
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF916B44),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-              child: const Text(
-                'ยกเลิก',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           // ยืนยัน
           Container(
             decoration: BoxDecoration(
@@ -436,7 +449,7 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
                 ),
               ),
               child: const Text(
-                'ยืนยัน',
+                'ตกลง',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),

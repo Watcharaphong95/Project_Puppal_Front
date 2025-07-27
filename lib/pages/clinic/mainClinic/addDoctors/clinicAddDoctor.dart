@@ -609,58 +609,123 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
   }
 
   Future<void> deleteSpecialByObject(String name) async {
+    showLoadingDialog(); // แสดง dialog
     try {
-      // 1. เช็คก่อนว่ามี special นี้ใน docspecial ไหม (GET /docspecial)
-      final docSpecialResponse = await http.get(Uri.parse('$url/docspecial'));
+      // 1. ค้นหา special_id จากชื่อก่อน
+      final response = await http.get(Uri.parse('$url/special/search/$name'));
 
-      if (docSpecialResponse.statusCode == 200) {
-        final List docSpecialData = json.decode(docSpecialResponse.body);
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body);
 
-        // ตรวจสอบว่ามีชื่อ specialty นี้อยู่ใน docspecial ไหม
-        final existsInDocSpecial =
-            docSpecialData.any((item) => item['name'] == name);
-
-        if (!existsInDocSpecial) {
-          Get.snackbar(
-              snackPosition: SnackPosition.TOP,
-              "ไม่สามารถลบข้อมูลได้",
-              "เพราะความเชี่ยวชาญนี้มีหมอใช้อยู่",
-              backgroundColor: Colors.red,
-              colorText: Colors.white);
-          log("❌ ไม่สามารถลบ $name เพราะไม่มีใน docspecial");
-
+        if (data.isEmpty) {
+          log("❌ ไม่พบชื่อ $name ในฐานข้อมูล special");
           return;
         }
 
-        // 2. ถ้ามีใน docspecial ค่อยไปหา id ใน special (GET /special/search/:name)
-        final response = await http.get(Uri.parse('$url/special/search/$name'));
+        final specialId = data[0]['special_id'];
 
-        if (response.statusCode == 200) {
-          final List data = json.decode(response.body);
+        // 2. เช็คว่า special_id ถูกใช้งานหรือไม่
+        final docSpecialResponse = await http.get(Uri.parse('$url/docspecial'));
 
-          if (data.isNotEmpty) {
-            final id = data[0]['special_id'];
+        if (docSpecialResponse.statusCode == 200) {
+          final List docSpecialData = json.decode(docSpecialResponse.body);
 
-            // 3. เรียก DELETE เพื่อลบ special ตาม id
-            final deleteRes = await http.delete(Uri.parse('$url/special/$id'));
+          final isUsed = docSpecialData.any(
+            (item) => item['special_id'] == specialId,
+          );
 
-            if (deleteRes.statusCode == 200) {
-              log("✅ ลบ $name แล้ว (id: $id)");
-            } else {
-              log("❌ ลบ $name ไม่ได้ (id: $id)");
-            }
+          if (isUsed) {
+            Get.snackbar(
+              "ไม่สามารถลบข้อมูลได้",
+              "เพราะความเชี่ยวชาญนี้มีหมอใช้อยู่",
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+            log("❌ ไม่สามารถลบ $name เพราะมีหมอใช้อยู่ (special_id: $specialId)");
+            return;
+          }
+
+          // 3. ลบได้
+          final deleteRes =
+              await http.delete(Uri.parse('$url/special/$specialId'));
+
+          if (deleteRes.statusCode == 200) {
+            log("✅ ลบ $name แล้ว (id: $specialId)");
+            Get.snackbar(
+              "ลบข้อมูลสำเร็จ",
+              "ลบความเชี่ยวชาญ '$name' เรียบร้อยแล้ว",
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 2),
+            );
+            _init();
           } else {
-            log("❌ ไม่พบชื่อ $name ในฐานข้อมูล special");
+            log("❌ ลบ $name ไม่ได้ (id: $specialId)");
           }
         } else {
-          log("❌ ไม่สามารถโหลดข้อมูล special จาก API ได้: ${response.statusCode}");
+          log("❌ โหลด docspecial ไม่ได้: ${docSpecialResponse.statusCode}");
         }
       } else {
-        log("❌ ไม่สามารถโหลดข้อมูล docspecial จาก API ได้: ${docSpecialResponse.statusCode}");
+        log("❌ โหลด special ไม่ได้: ${response.statusCode}");
       }
     } catch (e) {
       log("❌ เกิดข้อผิดพลาดในการลบ: $e");
+    } finally {
+      // ปิด loading dialog เสมอ
+      Navigator.of(Get.context!).pop();
     }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void _init() {
@@ -879,6 +944,12 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                                 alignment: Alignment.centerRight,
                                 child: TextButton.icon(
                                   onPressed: () async {
+                                    final confirm =
+                                        await confirmDeleteSpecialDialog(
+                                            context);
+                                    if (!confirm)
+                                      return; // ถ้าไม่ยืนยัน ให้หยุดการทำงาน
+
                                     for (final item in tempSelected) {
                                       await deleteSpecialByObject(item);
                                     }
@@ -1066,13 +1137,24 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                                 hintText: 'กรอกความเชี่ยวชาญอื่นๆ',
                                 filled: true,
                                 fillColor: Colors.white,
-                                border: OutlineInputBorder(
+                                enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none,
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF916B44), // สีน้ำตาล
+                                    width: 2,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Color(0xFF916B44), // สีน้ำตาลเหมือนกัน
+                                    width: 2,
+                                  ),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
                                     color: Color(0xFF916B44),
                                     width: 2,
                                   ),
@@ -1141,6 +1223,125 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
         );
       },
     );
+  }
+
+  Future<bool> confirmDeleteSpecialDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.delete_forever,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการลบข้อมูล",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการลบข้อมูลความเชี่ยวชาญหรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void showAlert({
