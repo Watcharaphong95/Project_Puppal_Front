@@ -87,8 +87,10 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
   void onTap(int index) {
     setState(() {
       currentIndex = index;
+      // GeneralAppNavigation.clearStack();
       navController.updateIndex(index);
     });
+    log('Index: ${currentIndex.toString()}');
   }
 
   @override
@@ -108,7 +110,8 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                   fontSize: 24,
                   fontWeight: FontWeight.w600),
             ),
-            actions: navController.currentIndex.value == 0
+            actions: navController.currentIndex.value == 0 ||
+                    navController.currentIndex.value == 6
                 ? [
                     IconButton(
                       onPressed: () {

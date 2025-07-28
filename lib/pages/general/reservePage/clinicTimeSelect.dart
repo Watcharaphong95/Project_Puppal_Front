@@ -236,7 +236,8 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                                       openMap(double.parse(clinic.clinic.lat),
                                           double.parse(clinic.clinic.lng));
                                     },
-                                    icon: Icon(Icons.map, size: 20),
+                                    icon: Icon(Icons.map,
+                                        size: 20, color: Color(0xFF916B44)),
                                     label: Text('ดูที่อยู่บนแผนที่'),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Color(0xFFDBA871),
@@ -585,11 +586,14 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                                           },
                                         );
                                       },
-                                      icon:
-                                          Icon(FontAwesomeIcons.plus, size: 16),
+                                      icon: Icon(
+                                        FontAwesomeIcons.plus,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
                                       label: Text('ส่งคำขอพิเศษ'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.orange,
+                                        backgroundColor: Color(0xFFDBA871),
                                         foregroundColor: Colors.white,
                                         padding:
                                             EdgeInsets.symmetric(vertical: 12),
@@ -908,8 +912,8 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         "clinicEmail": widget.email,
         "generalEmail": box.read('email'),
         "userName": box.read('generalName'),
-        "date": DateFormat('d MMMM y เวลา HH:mm', 'th')
-            .format(DateTime.parse(widget.date.toString()).toLocal())
+        "date":
+            '${DateFormat('d MMMM', 'th').format(DateTime.parse(widget.date.toString()).toLocal())} ${DateTime.parse(widget.date.toString()).toLocal().year + 543}'
       };
 
       var resNotifyClinic = await http.post(
@@ -917,18 +921,6 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(notifyData),
       );
-      // Get.back();
-      // if (resNotifyClinic.statusCode == 200) {
-      //   showAlertNoClose(
-      //       title: 'ส่งคำขอเรียบร้อยแล้ว',
-      //       message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
-      //       onConfirm: () {
-      //         Get.off(() => GeneralmainPage());
-      //       });
-      // } else {
-      //   showAlertNoClose(
-      //       title: 'ไม่สามารถส่งคำขอได้', message: 'กรุณาลองใหม่อีกครั้ง');
-      // }
     } catch (e) {
       Get.back();
       log(e.toString());
@@ -966,7 +958,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
               .update({'status': 1, 'type': 1});
         }
       } else {
-        if (widget.aid == 0) {
+        if (widget.aid[0] == 0) {
           data = {
             'generalEmail': box.read('email'),
             'clinicEmail': widget.email,
@@ -982,7 +974,7 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
             'generalEmail': box.read('email'),
             'clinicEmail': widget.email,
             'dogDogId': widget.dogId.toString(),
-            'appointmentAid': widget.aid.toString(),
+            'appointmentAid': widget.aid.join(','),
             'status': 1,
             'date': combined.toString(),
             'type': 1,
@@ -991,12 +983,22 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
         }
         await db.collection('reserve').add(data);
 
+        showAlertNoClose(
+            title: 'ส่งคำขอเรียบร้อยแล้ว',
+            message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
+            onConfirm: () {
+              while (Get.isDialogOpen ?? false) {
+                Get.back();
+              }
+              GeneralAppNavigation.offAll(1);
+            });
+
         var notifyData = {
           "clinicEmail": widget.email,
           "generalEmail": box.read('email'),
           "userName": box.read('generalName'),
-          "date": DateFormat('d MMMM y', 'th')
-              .format(DateTime.parse(widget.date.toString()).toLocal())
+          "date":
+              '${DateFormat('d MMMM', 'th').format(DateTime.parse(widget.date.toString()).toLocal())} ${DateTime.parse(widget.date.toString()).toLocal().year + 543}'
         };
 
         var resNotifyClinic = await http.post(
@@ -1004,23 +1006,10 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
           headers: {"Content-Type": "application/json; charset=utf-8"},
           body: jsonEncode(notifyData),
         );
-
-        if (resNotifyClinic.statusCode == 200) {
-          showAlertNoClose(
-              title: 'ส่งคำขอเรียบร้อยแล้ว',
-              message: 'กรุณารอทางคลินิกตอบรับคำขอของคุณ',
-              onConfirm: () {
-                while (Get.isDialogOpen ?? false) {
-                  Get.back();
-                }
-                GeneralAppNavigation.offAll(1);
-              });
-        } else {
-          showAlertNoClose(
-              title: 'ไม่สามารถส่งคำขอได้', message: 'กรุณาลองใหม่อีกครั้ง');
-        }
       }
     } catch (e) {
+      Get.back();
+      log(e.toString());
       showAlertNoClose(
           title: 'ไม่สามารถส่งคำขอได้',
           message:

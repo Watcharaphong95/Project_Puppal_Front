@@ -563,6 +563,59 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
                                 ),
                               ),
                             ),
+
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                  0, screenHeight * 0.035, 0, 0),
+                              child: Container(
+                                width: screenWidth * 0.7,
+                                height: screenHeight * 0.06,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    showAlert(
+                                      title: 'ออกจากระบบ?',
+                                      message: 'คุณต้องการออกจากระบบใช่หรือไม่',
+                                      onConfirm: () async {
+                                        await FirebaseMessaging.instance
+                                            .deleteToken();
+                                        box.erase();
+                                        Get.offAll(() => IndexPage());
+                                      },
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Color(0xFF916B44),
+                                    elevation: 0,
+                                    side: BorderSide(
+                                      color: Color(0xFF916B44),
+                                      width: 2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.logout,
+                                        size: 22,
+                                        color: Color(0xFF916B44),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        'ออกจากระบบ',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         )
                       ],

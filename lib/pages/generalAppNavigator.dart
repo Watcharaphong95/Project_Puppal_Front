@@ -8,9 +8,11 @@ class GeneralAppNavigation {
 
   // Initialize the navigation system
   static void initialize() {
-    _navController = Get.find<MainNavigationController>();
+    if (_navController == null) {
+      _navController = Get.find<MainNavigationController>();
+    }
     _navigationStack.clear();
-    _navigationStack.add(1); // Default to main page
+    _navigationStack.add(1);
   }
 
   // Navigate to a new page (like Get.to)

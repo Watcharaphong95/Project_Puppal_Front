@@ -165,84 +165,130 @@ class _EditprofilePageState extends State<EditprofilePage> {
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            GestureDetector(
-                              onTap: selectImage,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Color(0xFFE9CBAF),
-                                    width: 3,
+                        child: Container(
+                          width: screenWidth,
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: selectImage,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Color(0xFFE9CBAF),
+                                      width: 3,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            Color(0xFF916B44).withOpacity(0.2),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF916B44).withOpacity(0.2),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
+                                  child: _imageFile == null
+                                      ? Stack(
+                                          children: [
+                                            ClipOval(
+                                              child: Image.network(
+                                                generalData.image,
+                                                width: screenWidth * 0.35,
+                                                height: screenWidth * 0.35,
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (context, child,
+                                                    loadingProgress) {
+                                                  if (loadingProgress == null)
+                                                    return child;
+                                                  return Shimmer.fromColors(
+                                                    baseColor: Color(0xFFE9CBAF)
+                                                        .withOpacity(0.3),
+                                                    highlightColor:
+                                                        Colors.white,
+                                                    child: Container(
+                                                      width: screenWidth * 0.35,
+                                                      height:
+                                                          screenWidth * 0.35,
+                                                      decoration: BoxDecoration(
+                                                        color: Color(0xFFE9CBAF)
+                                                            .withOpacity(0.5),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: Container(
+                                                padding: EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Color(0xFF916B44),
+                                                ),
+                                                child: Icon(
+                                                  Icons.camera_alt,
+                                                  size: 20,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : ClipOval(
+                                          child: Image.file(
+                                            _imageFile!,
+                                            width: screenWidth * 0.35,
+                                            height: screenWidth * 0.35,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              Container(
+                                width: screenWidth * 0.5,
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal:
+                                        12), // เพิ่ม padding เพื่อให้มีช่องว่างภายใน
+                                decoration: BoxDecoration(
+                                  color: Color(
+                                      0xFFFFF4E6), // สีพื้นหลัง (อ่อนๆ เข้ากับ theme น้ำตาลทอง)
+                                  border: Border.all(
+                                    color: Color(0xFF916B44), // สีของขอบ
+                                    width: 0,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(8), // มุมโค้ง
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.mail,
+                                      color: Color(0xFF916B44),
+                                      size: 16,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      emailCtl.text,
+                                      style: TextStyle(
+                                        color: Color(0xFF916B44),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow
+                                          .ellipsis, // ตัดข้อความด้วย ...
+                                      maxLines: 1, // จำกัดบรรทัดที่แสดง
                                     ),
                                   ],
                                 ),
-                                child: _imageFile == null
-                                    ? ClipOval(
-                                        child: Image.network(
-                                          generalData.image,
-                                          width: screenWidth * 0.35,
-                                          height: screenWidth * 0.35,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child,
-                                              loadingProgress) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Shimmer.fromColors(
-                                              baseColor: Color(0xFFE9CBAF)
-                                                  .withOpacity(0.3),
-                                              highlightColor: Colors.white,
-                                              child: Container(
-                                                width: screenWidth * 0.35,
-                                                height: screenWidth * 0.35,
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFFE9CBAF)
-                                                      .withOpacity(0.5),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    : ClipOval(
-                                        child: Image.file(
-                                          _imageFile!,
-                                          width: screenWidth * 0.35,
-                                          height: screenWidth * 0.35,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
                               ),
-                            ),
-                            SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt_rounded,
-                                  color: Color(0xFF916B44),
-                                  size: 16,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'แตะเพื่อเปลี่ยนรูปโปรไฟล์',
-                                  style: TextStyle(
-                                    color: Color(0xFF916B44),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
@@ -285,22 +331,6 @@ class _EditprofilePageState extends State<EditprofilePage> {
                         icon: Icons.badge_rounded,
                         onChanged: (value) {
                           if (surnameCtl.text != generalData.surname) {
-                            _dataChange = true;
-                          } else {
-                            _dataChange = false;
-                          }
-                        },
-                      ),
-
-                      SizedBox(height: 16),
-
-                      _buildInputField(
-                        label: 'อีเมล',
-                        controller: emailCtl,
-                        icon: Icons.email_rounded,
-                        readOnly: true,
-                        onChanged: (value) {
-                          if (emailCtl.text != generalData.userEmail) {
                             _dataChange = true;
                           } else {
                             _dataChange = false;

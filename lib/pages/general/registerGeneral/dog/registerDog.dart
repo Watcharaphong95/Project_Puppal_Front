@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogAvatar.dart';
 import 'package:puppal_application/pages/general/registerGeneral/dog/registerDogInjectionRecord.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class RegisterdogPage extends StatefulWidget {
   const RegisterdogPage({super.key});
@@ -31,6 +32,7 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
   TextEditingController colorCtl = TextEditingController();
   TextEditingController defectCtl = TextEditingController();
   TextEditingController birthdayCtl = TextEditingController();
+  TextEditingController birthdayShowCtl = TextEditingController();
   TextEditingController diseaseCtl = TextEditingController();
   TextEditingController sterilizationCtl = TextEditingController();
   TextEditingController hairCtl = TextEditingController();
@@ -395,7 +397,7 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
                         // Birthday Field
                         _buildSelectField(
                           label: 'วันเกิด',
-                          controller: birthdayCtl,
+                          controller: birthdayShowCtl,
                           icon: Icons.cake_outlined,
                           hintText: 'เลือกวันเกิด',
                           onTap: () => _showDatePicker(context),
@@ -793,38 +795,185 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
 
   void _showDatePicker(BuildContext context) {
     FocusScope.of(context).requestFocus(FocusNode());
-    picker.DatePicker.showDatePicker(
-      context,
-      showTitleActions: true,
-      minTime: DateTime(2000, 1, 1),
-      maxTime: DateTime.now(),
-      locale: picker.LocaleType.th,
-      theme: picker.DatePickerTheme(
-          backgroundColor: Colors.white,
-          headerColor: Color(0xFF916b44),
-          itemStyle: TextStyle(
-            color: Color(0xFF916b44),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-          doneStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-          cancelStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          )),
-      onConfirm: (date) {
-        setState(() {
-          String formattedDate =
-              "${date.day}-${DateFormat.MMMM('th').format(date)}-${date.year}";
-          birthdayCtl.text = formattedDate;
-        });
+
+    DateTime selectedDate = DateTime.now();
+    DateTime focusedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Color(0xFFFAF8F5), // Light Beige background
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDBA871), // Golden Brown header
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'เลือกวันเกิด',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              content: Container(
+                width: double.maxFinite,
+                height: screenHeight * 0.5,
+                child: TableCalendar<DateTime>(
+                  firstDay: DateTime(2000, 1, 1),
+                  lastDay: DateTime.now(),
+                  focusedDay: focusedDate,
+                  selectedDayPredicate: (day) {
+                    return isSameDay(selectedDate, day);
+                  },
+                  calendarFormat: CalendarFormat.month,
+                  startingDayOfWeek: StartingDayOfWeek.sunday,
+                  locale: 'th',
+
+                  // Calendar styling
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    weekendTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    defaultTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Color(0xFFDBA871),
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Color(0xFF916B44).withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    markerDecoration: BoxDecoration(
+                      color: Color(0xFFDBA871),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+
+                  // Header styling with Buddhist Era
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    leftChevronIcon: Icon(
+                      Icons.chevron_left,
+                      color: Color(0xFF916B44),
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFF916B44),
+                    ),
+                    titleTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    titleTextFormatter: (date, locale) {
+                      // Convert to Buddhist Era for display
+                      int buddhistYear = date.year + 543;
+                      String monthName = DateFormat.MMMM('th').format(date);
+                      return '$monthName พ.ศ. $buddhistYear';
+                    },
+                  ),
+
+                  // Day of week styling
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    weekendStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      selectedDate = selectedDay;
+                      focusedDate = focusedDay;
+                    });
+                  },
+
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      focusedDate = focusedDay;
+                    });
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'ยกเลิก',
+                    style: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Format date for display with Buddhist Era but keep actual date in CE
+                    String formattedDate =
+                        "${selectedDate.day}-${DateFormat.MMMM('th').format(selectedDate)}-${selectedDate.year + 543}";
+
+                    String formattedDate_data =
+                        "${selectedDate.day}-${DateFormat.MMMM('th').format(selectedDate)}-${selectedDate.year}";
+
+                    this.setState(() {
+                      birthdayCtl.text = formattedDate_data;
+                      birthdayShowCtl.text = formattedDate;
+                    });
+
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFDBA871),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'ตกลง',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
+  }
+
+// Helper function to compare dates
+  bool isSameDay(DateTime? a, DateTime? b) {
+    if (a == null || b == null) {
+      return false;
+    }
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   Future<void> dogRegisterNextButton() async {
@@ -866,124 +1015,215 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
   void _showSelectBreed() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) {
         final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
-        return Padding(
-          padding: EdgeInsets.only(bottom: bottomPadding),
-          child: Container(
-            height: screenHeight * 0.5,
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
+        return Container(
+          decoration: BoxDecoration(
+            color: Color(0xFFFAF8F5), // Light Beige background
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomPadding),
+            child: Container(
+              height: screenHeight * 0.5,
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle indicator
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFE9CBAF), // Cream/Light Brown
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    'เลือกพันธุ์',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF916b44),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหาพันธุ์สุนัข',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.search),
-                    suffixIcon: searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear),
-                            onPressed: () {
-                              searchController.clear();
-                              FocusScope.of(context).unfocus();
-                              setState(() {
-                                filteredBreeds =
-                                    List<String>.from(breedOptions);
-                              });
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      log(value);
-                      if (value.isEmpty) {
-                        filteredBreeds = List<String>.from(breedOptions);
-                      } else {
-                        filteredBreeds = breedOptions
-                            .where((breed) => breed
-                                .toLowerCase()
-                                .contains(value.toLowerCase()))
-                            .toList();
-                      }
-                    });
-                  },
-                ),
-                SizedBox(height: 16),
-                Expanded(
-                  child: filteredBreeds.isEmpty
-                      ? Center(
-                          child: Text(
-                            'ไม่พบพันธุ์สุนัข',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
-                            ),
+                  SizedBox(height: 16),
+
+                  // Title with pet icon
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.pets,
+                          color: Color(0xFF916B44), // Primary Brown
+                          size: 24,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'เลือกพันธุ์',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF916B44), // Primary Brown
                           ),
-                        )
-                      : ListView.builder(
-                          itemCount: filteredBreeds.length,
-                          itemBuilder: (context, index) {
-                            return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                title: Center(
-                                  child: Text(
-                                    filteredBreeds[index],
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF916b44),
-                                    ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  // Search field with themed styling
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Color(0xFFE9CBAF), // Cream/Light Brown border
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'ค้นหาพันธุ์สุนัข',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Color(0xFF916B44), // Primary Brown
+                          size: 22,
+                        ),
+                        suffixIcon: searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Color(0xFF916B44), // Primary Brown
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  searchController.clear();
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {
+                                    filteredBreeds =
+                                        List<String>.from(breedOptions);
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF916B44), // Primary Brown
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          log(value);
+                          if (value.isEmpty) {
+                            filteredBreeds = List<String>.from(breedOptions);
+                          } else {
+                            filteredBreeds = breedOptions
+                                .where((breed) => breed
+                                    .toLowerCase()
+                                    .contains(value.toLowerCase()))
+                                .toList();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  // Breed list
+                  Expanded(
+                    child: filteredBreeds.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.pets,
+                                  color: Colors.grey[400],
+                                  size: 48,
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'ไม่พบพันธุ์สุนัข',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey[500],
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                onTap: () {
-                                  setState(() {
-                                    breedCtl.text = filteredBreeds[index];
-                                  });
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                )
-              ],
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: filteredBreeds.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color:
+                                        Color(0xFFE9CBAF), // Cream/Light Brown
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.03),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 8,
+                                  ),
+                                  leading: Icon(
+                                    Icons.pets,
+                                    color: Color(0xFFDBA871), // Golden Brown
+                                    size: 20,
+                                  ),
+                                  title: Text(
+                                    filteredBreeds[index],
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF916B44), // Primary Brown
+                                    ),
+                                  ),
+                                  trailing: Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: Color(0xFFDBA871), // Golden Brown
+                                    size: 16,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      breedCtl.text = filteredBreeds[index];
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  )
+                ],
+              ),
             ),
           ),
         );
@@ -994,72 +1234,135 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
   void _showSelectGender() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final List<String> genderOptions = ['ชาย', 'หญิง']; // Inlined list
+        final List<Map<String, dynamic>> genderOptions = [
+          {
+            'label': 'ชาย',
+            'icon': Icons.male,
+          },
+          {
+            'label': 'หญิง',
+            'icon': Icons.female,
+          },
+        ];
 
         return Container(
-          height: 300,
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
+          decoration: BoxDecoration(
+            color: Color(0xFFFAF8F5), // Light Beige background
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Container(
+            height: 300,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle indicator
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE9CBAF), // Cream/Light Brown
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'เลือกเพศ',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF916b44),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: Column(
-                  children: genderOptions.map((gender) {
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                SizedBox(height: 16),
+
+                // Title with pet icon
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.pets,
+                        color: Color(0xFF916B44), // Primary Brown
+                        size: 24,
                       ),
-                      child: ListTile(
-                        title: Center(
-                          child: Text(
-                            gender,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF916b44),
+                      SizedBox(width: 8),
+                      Text(
+                        'เลือกเพศ',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF916B44), // Primary Brown
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
+
+                // Gender options
+                Expanded(
+                  child: Column(
+                    children: genderOptions.map((genderOption) {
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFE9CBAF), // Cream/Light Brown
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          leading: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFDBA871).withOpacity(
+                                  0.1), // Golden Brown with opacity
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              genderOption['icon'],
+                              color: Color(0xFFDBA871), // Golden Brown
+                              size: 24,
                             ),
                           ),
+                          title: Text(
+                            genderOption['label'],
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF916B44), // Primary Brown
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Color(0xFFDBA871), // Golden Brown
+                            size: 16,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              genderCtl.text = genderOption['label'];
+                            });
+                            Navigator.pop(context);
+                          },
                         ),
-                        onTap: () {
-                          setState(() {
-                            genderCtl.text = gender;
-                          });
-                          Navigator.pop(context);
-                        },
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -1069,72 +1372,136 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
   void _showSelectSterilization() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final List<String> sterilizationOptions = ['ทำแล้ว', 'ยังไม่ทำ'];
+        final List<Map<String, dynamic>> sterilizationOptions = [
+          {
+            'label': 'ทำแล้ว',
+            'icon': Icons.check_circle,
+            'color': Colors.green,
+          },
+          {
+            'label': 'ยังไม่ทำ',
+            'icon': Icons.cancel,
+            'color': Colors.orange,
+          },
+        ];
 
         return Container(
-          height: 300,
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
+          decoration: BoxDecoration(
+            color: Color(0xFFFAF8F5), // Light Beige background
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Container(
+            height: 300,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle indicator
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE9CBAF), // Cream/Light Brown
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'สุนัขทำหมันมาแล้ว?',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF916b44),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: Column(
-                  children: sterilizationOptions.map((sterilization) {
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                SizedBox(height: 16),
+
+                // Title with medical icon
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.medical_services,
+                        color: Color(0xFF916B44), // Primary Brown
+                        size: 24,
                       ),
-                      child: ListTile(
-                        title: Center(
-                          child: Text(
-                            sterilization,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF916b44),
+                      SizedBox(width: 8),
+                      Text(
+                        'สุนัขทำหมันมาแล้ว?',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF916B44), // Primary Brown
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
+
+                // Sterilization options
+                Expanded(
+                  child: Column(
+                    children: sterilizationOptions.map((option) {
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFE9CBAF), // Cream/Light Brown
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          leading: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: option['color'].withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              option['icon'],
+                              color: option['color'],
+                              size: 24,
                             ),
                           ),
+                          title: Text(
+                            option['label'],
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF916B44), // Primary Brown
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Color(0xFFDBA871), // Golden Brown
+                            size: 16,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              sterilizationCtl.text = option['label'];
+                            });
+                            Navigator.pop(context);
+                          },
                         ),
-                        onTap: () {
-                          setState(() {
-                            sterilizationCtl.text = sterilization;
-                          });
-                          Navigator.pop(context);
-                        },
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

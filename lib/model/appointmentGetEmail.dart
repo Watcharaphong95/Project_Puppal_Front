@@ -43,6 +43,7 @@ class Dog {
   String birthday;
   List<String> vaccines;
   String time;
+  int type;
   String clinicName;
   String clinicImage;
   String clinicPhone;
@@ -59,6 +60,7 @@ class Dog {
     required this.birthday,
     required this.vaccines,
     required this.time,
+    required this.type,
     required this.clinicName,
     required this.clinicImage,
     required this.clinicPhone,
@@ -76,6 +78,7 @@ class Dog {
         birthday: json["birthday"],
         vaccines: List<String>.from(json["vaccines"].map((x) => x)),
         time: json["time"],
+        type: json["type"],
         clinicName: json["clinicName"],
         clinicImage: json["clinicImage"],
         clinicPhone: json["clinicPhone"],
@@ -93,6 +96,7 @@ class Dog {
         "birthday": birthday,
         "vaccines": List<dynamic>.from(vaccines.map((x) => x)),
         "time": time,
+        "type": type,
         "clinicName": clinicName,
         "clinicImage": clinicImage,
         "clinicPhone": clinicPhone,

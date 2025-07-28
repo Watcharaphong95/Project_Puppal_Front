@@ -586,7 +586,7 @@ class _DogselectPageState extends State<DogselectPage> {
                               SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  'วันเกิด ${DateFormat('d MMM y', 'th').format(DateTime.parse(dog.birthday).toLocal())}',
+                                  'วันเกิด ${DateFormat('d MMMM', 'th').format(DateTime.parse(dog.birthday.toString()).toLocal())} ${DateTime.parse(dog.birthday.toString()).toLocal().year + 543}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey.shade600,
