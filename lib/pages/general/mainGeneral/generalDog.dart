@@ -480,7 +480,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
                                 ),
                               ),
                               Text(
-                                'วันเกิด ${DateFormat('d MMMM y', 'th').format(DateTime.parse(dog.birthday.toString()).toLocal())}',
+                                'วันเกิด ${DateFormat('d MMMM', 'th').format(DateTime.parse(dog.birthday.toString()).toLocal())} ${DateTime.parse(dog.birthday.toString()).toLocal().year + 543}',
                                 style: TextStyle(
                                   color: Color(0xFF916B44).withOpacity(0.7),
                                 ),

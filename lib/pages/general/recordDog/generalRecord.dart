@@ -432,7 +432,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                   SizedBox(height: 2),
                                                   Text(
                                                     record.injectionDate != null
-                                                        ? "วันที่ฉีด: ${DateFormat('d MMMM y', 'th').format(DateTime.parse(record.injectionDate!).toLocal())}"
+                                                        ? 'วันที่ฉีด: ${DateFormat('d MMMM', 'th').format(DateTime.parse(record.injectionDate!).toLocal())} ${DateTime.parse(record.injectionDate!).toLocal().year + 543}'
                                                         : "ไม่มีข้อมูลวันที่ฉีด",
                                                     style: TextStyle(
                                                       fontSize: 13,

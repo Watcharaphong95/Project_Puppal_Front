@@ -110,6 +110,9 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         _loadingData = false;
       });
     }
+    eventMap.forEach((key, value) {
+      log('$key: ${value.map((dog) => dog.dogId).toList()}');
+    });
   }
 
   @override
@@ -306,7 +309,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               )
             : SingleChildScrollView(
                 child: Container(
-                  padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
+                  padding: EdgeInsets.fromLTRB(0, screenHeight * 0.01, 0, 0),
                   height: screenHeight * 0.85,
                   // decoration: BoxDecoration(
                   //   image: DecorationImage(
@@ -345,6 +348,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                               headerStyle: HeaderStyle(
                                 formatButtonVisible: false,
                                 titleCentered: true,
+                                titleTextFormatter: (date, locale) {
+                                  final buddhistYear = date.year + 543;
+                                  final month = DateFormat.MMMM('th')
+                                      .format(date); // ชื่อเดือน
+                                  return '$month พ.ศ. $buddhistYear';
+                                },
                               ),
                               calendarStyle: CalendarStyle(
                                 todayDecoration: BoxDecoration(
@@ -468,10 +477,20 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                             vertical: screenHeight * 0.005),
                         child: Row(
                           children: [
+                            Container(
+                              width: 4,
+                              height: screenHeight * 0.03,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF8D6E63),
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                            ),
                             Text(
-                              DateFormat('d MMMM y', 'th').format(_selectedDay),
+                              "  ${DateFormat('d MMMM', 'th').format(_selectedDay)} ${_selectedDay.year + 543}",
                               style: TextStyle(
-                                  fontSize: 24, fontStyle: FontStyle.italic),
+                                  fontSize: 24,
+                                  color: Color(0xFF8D6E63),
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -538,29 +557,64 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                           );
                                         }).toList(),
                                       )
-                                    : Container(
-                                        // color: Colors.amber,
-                                        width: screenWidth,
-                                        height: screenHeight * 0.1,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Center(
-                                              child: Text(
-                                                'ไม่มีนัดวันนี้',
-                                                style: TextStyle(
-                                                    fontSize: 32,
-                                                    color: Colors.grey),
+                                    : Padding(
+                                        padding: EdgeInsets.fromLTRB(
+                                            0, screenHeight * 0.025, 0, 0),
+                                        child: Container(
+                                          // color: Colors.amber,
+                                          width: screenWidth,
+                                          height: screenHeight * 0.15,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: EdgeInsets.all(
+                                                    screenWidth * 0.02),
+                                                decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: Color(0xFFF4EFE6)),
+                                                child: Icon(
+                                                  MdiIcons.calendar,
+                                                  size: screenWidth * 0.08,
+                                                  color: Color(0xFF8D6E63),
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                              Padding(
+                                                padding: EdgeInsets.fromLTRB(0,
+                                                    screenHeight * 0.025, 0, 0),
+                                                child: Column(
+                                                  children: [
+                                                    Text(
+                                                      'ไม่มีข้อมูลการจองฉีดวัคซีนของวันนี้',
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: Color(
+                                                              0xFF8D6E63)),
+                                                    ),
+                                                    Text(
+                                                      'โปรดเลือกวันที่เพื่อดูข้อมูล',
+                                                      style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Color(
+                                                              0xFF8D6E63)),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                 Card(
+                                  color: Color(0xFF916B44),
                                   elevation: 2,
                                   child: InkWell(
                                     onTap: () {
+                                      GeneralAppNavigation
+                                          .printStack(); // ก่อนนำทาง
                                       // log(_selectedDay.toString());
                                       final localSelectedDay = DateTime(
                                         _selectedDay.year,
@@ -594,21 +648,23 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                       entry.value.isNotEmpty),
                                             )),
                                       );
+                                      GeneralAppNavigation.printStack();
                                     },
                                     child: ListTile(
-                                      title: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                      title: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
+                                          Text(
+                                            'จองคลินิก  ',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600),
+                                          ),
                                           Icon(
                                             FontAwesomeIcons.plus,
-                                            color: Colors.grey,
+                                            color: Colors.white,
                                           ),
-                                          Text(
-                                            'จองคลินิก',
-                                            style:
-                                                TextStyle(color: Colors.grey),
-                                          )
                                         ],
                                       ),
                                     ),
@@ -695,69 +751,84 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       opacity: isDisabled ? 0.5 : 1.0,
       child: IgnorePointer(
         ignoring: isDisabled,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: creamLightBrown, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Status Indicator
-              if (e.status != null)
-                Container(
-                  width: 8,
-                  height: screenHeight * 0.075,
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(e.status),
-                    borderRadius: BorderRadius.circular(50),
+        child: Stack(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: creamLightBrown, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                )
-              else
-                const SizedBox.shrink(),
-              const SizedBox(width: 12),
-              // Image or Pet Icon Fallback
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: primaryBrown, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: e.image != null && e.image.isNotEmpty
-                      ? Image.network(
-                          e.image,
-                          width: screenWidth * 0.15,
-                          height: screenHeight * 0.075,
-                          fit: BoxFit.cover,
-                          color: isDisabled ? Colors.grey : null,
-                          colorBlendMode:
-                              isDisabled ? BlendMode.saturation : null,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey.shade300,
-                              highlightColor: Colors.grey.shade100,
-                              child: Container(
-                                width: screenWidth * 0.2,
-                                height: screenHeight * 0.1,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Status Indicator
+                  if (e.status != null)
+                    Container(
+                      width: 8,
+                      height: screenHeight * 0.075,
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(e.status),
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  const SizedBox(width: 12),
+                  // Image or Pet Icon Fallback
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: primaryBrown, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: e.image != null && e.image.isNotEmpty
+                          ? Image.network(
+                              e.image,
+                              width: screenWidth * 0.15,
+                              height: screenHeight * 0.075,
+                              fit: BoxFit.cover,
+                              color: isDisabled ? Colors.grey : null,
+                              colorBlendMode:
+                                  isDisabled ? BlendMode.saturation : null,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.grey.shade100,
+                                  child: Container(
+                                    width: screenWidth * 0.2,
+                                    height: screenHeight * 0.1,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: screenWidth * 0.2,
+                                  height: screenHeight * 0.1,
+                                  color: lightBeige,
+                                  child: const Icon(
+                                    Icons.pets,
+                                    color: primaryBrown,
+                                    size: 40,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
                               width: screenWidth * 0.2,
                               height: screenHeight * 0.1,
                               color: lightBeige,
@@ -766,132 +837,135 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                 color: primaryBrown,
                                 size: 40,
                               ),
-                            );
-                          },
-                        )
-                      : Container(
-                          width: screenWidth * 0.2,
-                          height: screenHeight * 0.1,
-                          color: lightBeige,
-                          child: const Icon(
-                            Icons.pets,
-                            color: primaryBrown,
-                            size: 40,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Content Column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Time
-                    if (e.status != 0 && e.time != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDisabled
-                                  ? Colors.grey
-                                  : Colors.grey.shade600,
                             ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Content Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Time
+                        if (e.status != 0 && e.time != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                'เวลา: ${e.time} - ${addMinutesToTime(e.time, 30)}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDisabled
+                                      ? Colors.grey
+                                      : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    // Name and Age
-                    Text(
-                      e.name ?? 'Unknown Pet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDisabled ? Colors.grey : primaryBrown,
-                      ),
-                    ),
-                    Text(
-                      e.birthday != null
-                          ? 'อายุ ${getDogAge(e.birthday)}'
-                          : 'อายุไม่ระบุ',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: isDisabled ? Colors.grey : Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Vaccines
-                    if (e.vaccines != null &&
-                        e.vaccines.isNotEmpty &&
-                        e.vaccines.any(
-                            (vaccine) => vaccine.toString().trim().isNotEmpty))
-                      SizedBox(
-                        width: screenWidth * 0.3,
-                        child: Text(
-                          'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                        // Name and Age
+                        Text(
+                          e.name ?? 'Unknown Pet',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: isDisabled ? Colors.grey : Colors.black87,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDisabled ? Colors.grey : primaryBrown,
                           ),
                         ),
-                      ),
-                    // Clinic
-                    if (e.status != 0 && e.clinicName != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(
+                        Text(
+                          e.birthday != null
+                              ? 'อายุ ${getDogAge(e.birthday)}'
+                              : 'อายุไม่ระบุ',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color:
+                                isDisabled ? Colors.grey : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Vaccines
+                        if (e.vaccines != null &&
+                            e.vaccines.isNotEmpty &&
+                            e.vaccines.any((vaccine) =>
+                                vaccine.toString().trim().isNotEmpty))
+                          SizedBox(
+                            width: screenWidth * 0.3,
                             child: Text(
-                              'คลินิก: ${e.clinicName}',
+                              'วัคซีน: ${e.vaccines.where((vaccine) => vaccine.toString().trim().isNotEmpty).join(', ')}',
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              textAlign: TextAlign.end,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDisabled
-                                    ? Colors.grey
-                                    : Colors.grey.shade700,
+                                color:
+                                    isDisabled ? Colors.grey : Colors.black87,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12), // Optional spacing before the arrow
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFFE9CBAF).withOpacity(0.15),
-                        Color(0xFFE9CBAF).withOpacity(0.05),
+                        // Clinic
+                        if (e.status != 0 && e.clinicName != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'คลินิก: ${e.clinicName}',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDisabled
+                                        ? Colors.grey
+                                        : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: Color(0xFFE9CBAF).withOpacity(0.3),
-                      width: 1,
+                  ),
+                  const SizedBox(
+                      height: 12), // Optional spacing before the arrow
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFE9CBAF).withOpacity(0.15),
+                            Color(0xFFE9CBAF).withOpacity(0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Color(0xFFE9CBAF).withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: isDisabled ? Colors.grey : primaryBrown,
+                      ),
                     ),
                   ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: isDisabled ? Colors.grey : primaryBrown,
-                  ),
+                ],
+              ),
+            ),
+            if (e.type != 0)
+              Positioned(
+                top: screenHeight * 0.02,
+                right: screenWidth * 0.075,
+                child: Icon(
+                  Icons.star,
+                  color: Colors.amber,
+                  size: 20,
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -1420,8 +1494,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           "clinicEmail": data['clinicEmail'],
           "generalEmail": box.read('email'),
           "userName": box.read('generalName'),
-          "date": DateFormat('d MMMM y เวลา HH:mm', 'th')
-              .format(DateTime.parse(data['date'].toString()).toLocal())
+          "date":
+              '${DateFormat('d MMMM', 'th').format(DateTime.parse(data['date'].toString()).toLocal())} ${DateTime.parse(data['date'].toString()).toLocal().year + 543}'
         };
 
         var resNotifyClinic = await http.post(
@@ -1716,6 +1790,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         image: dogData != null ? dogData['image'] as String : '',
         birthday: dogData != null ? dogData['birthday'] as String : '',
         vaccines: vaccines,
+        type: fs.type,
         time: DateFormat('HH:mm').format(dateTime),
         clinicName: clinicData != null ? clinicData['name'] as String : '',
         clinicImage: clinicData != null ? clinicData['image'] as String : '',
@@ -1778,6 +1853,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
             ? [appointment['vaccine'] as String]
             : [''],
         time: '',
+        type: 0,
         clinicName: clinicData != null ? clinicData['name'] as String : '',
         clinicImage: clinicData != null ? clinicData['image'] as String : '',
         clinicPhone: clinicData != null ? clinicData['phone'] as String : '',

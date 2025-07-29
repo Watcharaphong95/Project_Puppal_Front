@@ -298,59 +298,70 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                       child: TextField(
                         controller: searchDogCtl,
                         onChanged: (value) {
-                          setState(() {
-                            if (value.isEmpty) {
-                              filterDogs = dogs;
-                            } else {
-                              filterDogs = dogs.where((dog) {
-                                return dog.name
-                                    .toLowerCase()
-                                    .contains(value.toLowerCase());
-                              }).toList();
-                            }
-                          });
+                          if (value.isEmpty) {
+                            filterDogs = dogs;
+                          }
+                          filterDogs = dogs.where((dog) {
+                            return dog.name
+                                .toLowerCase()
+                                .contains(value.toLowerCase());
+                          }).toList();
+                          setState(() {});
                         },
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF916B44),
+                          fontWeight: FontWeight.w500,
+                        ),
                         decoration: InputDecoration(
-                          hintText: 'ค้นหาสุนัข...',
-                          hintStyle: TextStyle(color: Colors.grey[400]),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 16),
                           prefixIcon: Container(
-                            padding: EdgeInsets.all(12),
+                            margin: EdgeInsets.all(12),
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFE9CBAF).withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Icon(
                               FontAwesomeIcons.magnifyingGlass,
-                              color: Color(0xFFDBA871),
-                              size: 18,
+                              color: Color(0xFF916B44),
+                              size: 20,
                             ),
                           ),
                           suffixIcon: searchDogCtl.text.isNotEmpty
-                              ? Container(
-                                  margin: EdgeInsets.only(right: 8),
-                                  child: IconButton(
-                                    icon: Container(
-                                      padding: EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[100],
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.grey[600],
-                                        size: 16,
-                                      ),
+                              ? InkWell(
+                                  onTap: () {
+                                    searchDogCtl.clear();
+                                    FocusScope.of(context).unfocus();
+                                    setState(() {
+                                      filterDogs =
+                                          List<DogsGetEmail>.from(dogs);
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.all(12),
+                                    padding: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFDBA871).withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    onPressed: () {
-                                      searchDogCtl.clear();
-                                      FocusScope.of(context).unfocus();
-                                      setState(() {
-                                        filterDogs =
-                                            List<DogsGetEmail>.from(dogs);
-                                      });
-                                    },
+                                    child: Icon(
+                                      Icons.clear,
+                                      color: Color(0xFF916B44),
+                                      size: 20,
+                                    ),
                                   ),
                                 )
                               : null,
+                          border: InputBorder.none,
+                          hintText: 'ค้นหาสุนัข',
+                          hintStyle: TextStyle(
+                            color: Color(0xFF916B44).withOpacity(0.5),
+                            fontSize: 16,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -401,7 +412,7 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                                 ),
                                 SizedBox(height: 8),
                                 Text(
-                                  'เริ่มต้นลงทะเบียนสุนัขของคุณ',
+                                  'เริ่มต้นลงทะเบียนที่หน้าสุนัขของคุณ',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[500],
@@ -411,7 +422,8 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                             ),
                           )
                         : Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.05),
                             child: GridView.builder(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
@@ -536,7 +548,9 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                                                     ),
                                                     padding:
                                                         EdgeInsets.symmetric(
-                                                            vertical: 8),
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.01),
                                                   ),
                                                   child: Text(
                                                     'ดูประวัติ',

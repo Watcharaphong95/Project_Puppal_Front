@@ -12,6 +12,7 @@ import 'package:puppal_application/model/dogPost.dart';
 import 'package:puppal_application/model/injectionRecordPost.dart';
 import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/general/mainGeneral/generalDog.dart';
+import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 
@@ -214,7 +215,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
               while (Get.isDialogOpen ?? false) {
                 Get.back();
               }
-              GeneralAppNavigation.offAll(0);
+              Get.off(() => GeneralMainBottomNavigate(indexPage: 0));
             });
       } else {
         showAlertNoClose(
