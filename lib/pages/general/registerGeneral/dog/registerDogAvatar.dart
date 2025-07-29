@@ -58,6 +58,7 @@ class _RegisterdogavatarPageState extends State<RegisterdogavatarPage> {
           style: TextStyle(
               color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
         ),
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Color(0xFFDBA871),
       ),
       body: Container(

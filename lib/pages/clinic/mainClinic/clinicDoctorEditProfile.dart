@@ -19,6 +19,7 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicOpeningHours.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorProfile.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
@@ -292,7 +293,6 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
                                       onConfirm: () {
                                         updatedataDoctor(doctor.careerNo);
                                       },
-                                      context: context,
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -896,28 +896,40 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
     try {
       final response = await http.delete(Uri.parse("$url/doctor/$careerNo"));
 
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: '65011212077@msu.ac.th',
+        password: '1234',
+      );
+
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        log("User not logged in. Cannot upload.");
+        return;
+      }
+      try {
+        var imagePathAll = imageCtl.text.split('/');
+        var imagePath = imagePathAll.last;
+
+        await supabase.storage.from('doctor-image').remove([imagePath]);
+      } catch (e) {
+        log("Error during upload: $e");
+      }
+
       if (response.statusCode == 200) {
-        print('✅ ลบข้อมูลสำเร็จ');
-        Get.snackbar("สำเร็จ", "ลบคุณหมอเรียบร้อยแล้ว",
-            backgroundColor: Colors.green, colorText: Colors.white);
-      } else if (response.statusCode == 404) {
-        print('❌ ไม่พบข้อมูลที่จะลบ: ${response.body}');
-        Get.snackbar("ไม่พบข้อมูล", "ไม่พบคุณหมอที่ต้องการลบ",
-            backgroundColor: Colors.orange, colorText: Colors.white);
+        showAlertNoClose(
+            title: 'ลบหมอเสร็จสิ้น',
+            message: '',
+            onConfirm: () {
+              Get.off(() => Clinicmainbottomnavigate(indexPage: 3));
+            });
       } else {
-        print('❌ ลบข้อมูลไม่สำเร็จ: ${response.body}');
-        Get.snackbar("เกิดข้อผิดพลาด", "ไม่สามารถลบคุณหมอได้",
-            backgroundColor: Colors.red, colorText: Colors.white);
+        showAlertNoClose(
+            title: 'เกิดข้อผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
       }
     } catch (e) {
       print('❌ error: $e');
       Get.snackbar("ข้อผิดพลาด", "ลบข้อมูลล้มเหลว: $e",
           backgroundColor: Colors.red, colorText: Colors.white);
-    } finally {
-      if (Get.isDialogOpen!) {
-        Get.back(); // ปิด loading dialog อย่างปลอดภัย
-      }
-      Get.back();
     }
   }
 
@@ -934,83 +946,83 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
   void showAlertNoClose({
     required String title,
     required String message,
+    VoidCallback? onConfirm, // Optional action
   }) {
     Get.defaultDialog(
       title: '',
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.all(16),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7CCC8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 24,
-              color: const Color(0xFFA1887F),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Color(0xFF8D6E63),
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            message,
-            style: const TextStyle(
-              color: Color(0xFFA1887F),
-              fontSize: 14,
-              height: 1.4,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Single confirm button
-          SizedBox(
-            width: double.infinity,
-            height: 40,
-            child: ElevatedButton(
-              onPressed: () {
-                Get.back();
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF795548),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 2,
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
               ),
-              child: const Text(
-                'ตกลง',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       backgroundColor: const Color(0xFFF5F0E8),
       barrierDismissible: false,
@@ -1921,49 +1933,146 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
   }
 
   void showAlert({
-    required BuildContext context,
     required String title,
     required String message,
     VoidCallback? onConfirm,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF3F3),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF795548),
-          ),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFF795548)),
-            child: const Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (onConfirm != null) onConfirm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF795548),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with subtle animation potential
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: const Color(0xFFA1887F),
+              ),
             ),
-            child: const Text('ตกลง'),
-          ),
-        ],
+
+            const SizedBox(height: 16),
+
+            // Title with better typography
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Message with improved readability
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced button row
+            Row(
+              children: [
+                // Cancel button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF8D6E63),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: const Color(0xFFD7CCC8),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Confirm button
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Color(0xFF795548),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA1887F).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (onConfirm != null) onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'ตกลง',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 }

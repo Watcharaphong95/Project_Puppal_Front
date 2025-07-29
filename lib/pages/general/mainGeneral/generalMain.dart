@@ -622,32 +622,33 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                         _selectedDay.day,
                                       );
                                       GeneralAppNavigation.toWidget(
-                                        DogselectPage(
-                                            date: _selectedDay,
-                                            dogHasAppointment:
-                                                eventMap[localSelectedDay]
-                                                        ?.map(
-                                                            (dog) => dog.dogId)
-                                                        .toList() ??
-                                                    [],
-                                            dogData: Map.fromEntries(
-                                              eventMap.entries
-                                                  // 1. Keep only dates before now
-                                                  .where((entry) => entry.key
-                                                      .isBefore(DateTime.now()))
-                                                  // 2. Map to new entries with filtered dog lists (only status == 0)
-                                                  .map((entry) => MapEntry(
-                                                        entry.key,
-                                                        entry.value
-                                                            .where((dog) =>
-                                                                dog.status == 0)
-                                                            .toList(),
-                                                      ))
-                                                  // 3. Keep only entries where filtered list is not empty
-                                                  .where((entry) =>
-                                                      entry.value.isNotEmpty),
-                                            )),
-                                      );
+                                          DogselectPage(
+                                              date: _selectedDay,
+                                              dogHasAppointment: eventMap[
+                                                          localSelectedDay]
+                                                      ?.map((dog) => dog.dogId)
+                                                      .toList() ??
+                                                  [],
+                                              dogData: Map.fromEntries(
+                                                eventMap.entries
+                                                    // 1. Keep only dates before now
+                                                    .where((entry) => entry.key
+                                                        .isBefore(
+                                                            DateTime.now()))
+                                                    // 2. Map to new entries with filtered dog lists (only status == 0)
+                                                    .map((entry) => MapEntry(
+                                                          entry.key,
+                                                          entry.value
+                                                              .where((dog) =>
+                                                                  dog.status ==
+                                                                  0)
+                                                              .toList(),
+                                                        ))
+                                                    // 3. Keep only entries where filtered list is not empty
+                                                    .where((entry) =>
+                                                        entry.value.isNotEmpty),
+                                              )),
+                                          title: 'เลือกสุนัข');
                                       GeneralAppNavigation.printStack();
                                     },
                                     child: ListTile(

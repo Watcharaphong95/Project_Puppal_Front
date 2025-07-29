@@ -83,6 +83,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
       currentIndex = index;
       navController.updateIndex(index);
     });
+    log('Index: ${currentIndex.toString()}');
   }
 
   Widget? buildAppBar() {

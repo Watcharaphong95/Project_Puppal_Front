@@ -295,6 +295,7 @@ class _DogprofilePageState extends State<DogprofilePage> {
                 color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
           ),
           centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: Color(0xFFDBA871)),
       body: _loadingData
           ? Center(
@@ -1133,12 +1134,19 @@ class _DogprofilePageState extends State<DogprofilePage> {
       'ธันวาคม': '12',
     };
 
-    String thaiToIsoDate(String thaiDate) {
-      final parts = thaiDate.split('-');
-      final day = parts[0].padLeft(2, '0');
-      final month = thaiMonthMap[parts[1]] ?? '01';
-      final year = parts[2];
-      return '$year-$month-$day';
+    String parseDateToIso(String input) {
+      if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(input.trim())) {
+        // ถ้าเป็น yyyy-MM-dd อยู่แล้ว
+        return input;
+      } else {
+        // คาดว่าเป็นวัน-เดือนไทย-ปี เช่น 1-มกราคม-2566
+        final parts = input.split('-');
+        if (parts.length != 3) return '2000-01-01'; // fallback
+        final day = parts[0].padLeft(2, '0');
+        final month = thaiMonthMap[parts[1].trim()] ?? '01';
+        final year = parts[2];
+        return '$year-$month-$day';
+      }
     }
 
     DogsUpdateDataPut req = DogsUpdateDataPut(
@@ -1149,7 +1157,7 @@ class _DogprofilePageState extends State<DogprofilePage> {
         gender: genderCtl.text,
         color: colorCtl.text,
         defect: defectCtl.text,
-        birthday: thaiToIsoDate(birthdayCtl.text),
+        birthday: parseDateToIso(birthdayCtl.text),
         congentialDisease: diseaseCtl.text,
         sterilization: int.parse(sterilizationCtl.text),
         hair: hairCtl.text,
@@ -1193,7 +1201,7 @@ class _DogprofilePageState extends State<DogprofilePage> {
       defectCtl.text = dog[0].defect;
       birthdayShowCtl.text = dog[0].birthday.toString().replaceFirstMapped(
           RegExp(r'(\d{4})$'), (m) => '${int.parse(m[1]!) + 543}');
-
+      birthdayCtl.text = dog[0].birthday.toString();
       diseaseCtl.text = dog[0].congentialDisease;
       sterilizationCtl.text =
           (dog[0].sterilization.toString() == '1') ? 'ทำแล้ว' : 'ยังไม่ทำ';

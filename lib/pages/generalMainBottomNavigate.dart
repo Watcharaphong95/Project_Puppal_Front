@@ -112,7 +112,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                   fontWeight: FontWeight.w600),
             ),
             actions: navController.currentIndex.value == 0 ||
-                    navController.currentIndex.value == 6
+                    navController.pageTitles.containsValue('เลือกสุนัข')
                 ? [
                     IconButton(
                       onPressed: () {
@@ -217,7 +217,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                         child: Icon(FontAwesomeIcons.syringe,
                             color: Color(0xFF916b44)),
                       ),
-                      title: Text('ประวัติการฉีดยา'),
+                      title: Text('ประวัติการฉีดวัคซีน'),
                       onTap: () {
                         setState(() {
                           Get.back();

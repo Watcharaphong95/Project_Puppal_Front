@@ -8,6 +8,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicRegisterDoctor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

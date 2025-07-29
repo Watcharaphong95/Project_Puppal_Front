@@ -256,12 +256,14 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
         title: const Text('ลงทะเบียนสุนัข',
             style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w600)),
         backgroundColor: Color(0xFFDBA871),
+
         // ADD LINE UNDER APPBAR IF WANT TO USE
         // bottom: PreferredSize(
         //   preferredSize: Size.fromHeight(1.0),

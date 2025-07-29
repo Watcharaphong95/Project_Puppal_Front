@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
@@ -17,8 +18,10 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDocter.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Clinicregisterdoctor extends StatefulWidget {
   const Clinicregisterdoctor({super.key});
@@ -77,13 +80,16 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         ),
         backgroundColor: Color(0xFFDBA871),
         iconTheme: IconThemeData(color: Colors.white),
-
         elevation: 0,
         centerTitle: true,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          onPressed: () async {
+            doctorListController.doctorList.clear();
+            await deleteImageSupabase();
+            Get.off(() => Clinicmainbottomnavigate(indexPage: 3));
+          },
+        ),
       ),
 
       body: _loadingData
@@ -383,6 +389,29 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
     doctorListController.doctorList.clear();
   }
 
+  Future<void> deleteImageSupabase() async {
+    await Supabase.instance.client.auth.signInWithPassword(
+      email: '65011212077@msu.ac.th',
+      password: '1234',
+    );
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      log("User not logged in. Cannot upload.");
+      return;
+    }
+    try {
+      for (var doc in doctorListController.doctorList) {
+        var imagePathAll = doc.image.split('/');
+        var imagePath = imagePathAll.last;
+
+        await supabase.storage.from('doctor-image').remove([imagePath]);
+      }
+    } catch (e) {
+      log("Error during upload: $e");
+    }
+  }
+
   Future<int?> getSpecialIdByName(String specialName) async {
     try {
       final res =
@@ -471,9 +500,8 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              // Get.to(() => Cliniclistdoctors());
-              Get.back();
-              Get.back();
+              doctorListController.doctorList.clear();
+              Get.off(() => Clinicmainbottomnavigate(indexPage: 3));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF795548),

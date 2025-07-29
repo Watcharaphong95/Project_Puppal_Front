@@ -173,11 +173,11 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
 
                         // License Number Field
                         _buildModernTextField(
-                          label: 'เลขใบอนุญาตประกอบวิชาชีพ',
-                          controller: careerNoCtl,
-                          icon: Icons.assignment_outlined,
-                          screenHeight: screenHeight,
-                        ),
+                            label: 'เลขใบอนุญาตประกอบวิชาชีพ',
+                            controller: careerNoCtl,
+                            icon: Icons.assignment_outlined,
+                            screenHeight: screenHeight,
+                            keyboardType: TextInputType.number),
 
                         SizedBox(height: 40),
                       ],
@@ -243,6 +243,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    TextInputType? keyboardType, // Add this optional parameter
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,6 +278,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
           ),
           child: TextField(
             controller: controller,
+            keyboardType: keyboardType, // Use the parameter here
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -481,6 +483,23 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
       );
       return;
     }
+
+    if (careerNoCtl.text.trim().isEmpty || careerNoCtl.text.trim().length < 5) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกเลขใบอนุญาตประกอบวิชาชีพให้ครบ 5 หลัก',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
     int? selectedSpecialId;
 
     onChanged:
@@ -929,8 +948,7 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                                     },
                                     shape: RoundedRectangleBorder(
                                       side: BorderSide(
-                                        color:
-                                            Color(0xFF916B44), // กรอบสีน้ำตาล
+                                        color: Color(0xFF916B44),
                                         width: 1.5,
                                       ),
                                       borderRadius: BorderRadius.circular(16),
@@ -940,33 +958,249 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                               ),
 
                             if (tempSelected.isNotEmpty)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: () async {
-                                    final confirm =
-                                        await confirmDeleteSpecialDialog(
-                                            context);
-                                    if (!confirm)
-                                      return; // ถ้าไม่ยืนยัน ให้หยุดการทำงาน
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Remove All Selected Button (No Database Action)
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      setModalState(() {
+                                        tempSelected.clear();
+                                      });
+                                    },
+                                    icon: Icon(Icons.clear_all,
+                                        color: Color(0xFF916B44)),
+                                    label: Text(
+                                      'ยกเลิกทั้งหมด',
+                                      style:
+                                          TextStyle(color: Color(0xFF916B44)),
+                                    ),
+                                  ),
 
-                                    for (final item in tempSelected) {
-                                      await deleteSpecialByObject(item);
-                                    }
+                                  // Delete from Database Button (With Enhanced Caution)
+                                  TextButton.icon(
+                                    onPressed: () async {
+                                      // Enhanced confirmation dialog
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            title: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.warning_amber,
+                                                  color: Colors.red,
+                                                  size: 28,
+                                                ),
+                                                SizedBox(width: 8),
+                                                Text(
+                                                  'คำเตือน!',
+                                                  style: TextStyle(
+                                                    color: Colors.red,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'คุณกำลังจะลบข้อมูลต่อไปนี้ออกจากฐานข้อมูลถาวร:',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 12),
+                                                Container(
+                                                  padding: EdgeInsets.all(12),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    border: Border.all(
+                                                      color: Colors.red
+                                                          .withOpacity(0.3),
+                                                    ),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: tempSelected
+                                                        .map((item) {
+                                                      return Padding(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                vertical: 2),
+                                                        child: Text(
+                                                          '• $item',
+                                                          style: TextStyle(
+                                                            color:
+                                                                Colors.red[700],
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Container(
+                                                  padding: EdgeInsets.all(12),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.orange
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.info_outline,
+                                                        color:
+                                                            Colors.orange[700],
+                                                        size: 20,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          'การกระทำนี้ไม่สามารถยกเลิกได้!',
+                                                          style: TextStyle(
+                                                            color: Colors
+                                                                .orange[700],
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(false),
+                                                child: Text(
+                                                  'ยกเลิก',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF916B44),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'ลบถาวร',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
 
-                                    setState(() {
-                                      selectedSpecialty.removeWhere((item) =>
-                                          tempSelected.contains(item));
-                                    });
+                                      if (confirm == true) {
+                                        // Show loading indicator
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (context) => Center(
+                                            child: CircularProgressIndicator(
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF916B44),
+                                              ),
+                                            ),
+                                          ),
+                                        );
 
-                                    tempSelected.clear();
-                                    Navigator.pop(context); // ปิด modal
-                                  },
-                                  icon: Icon(Icons.delete_forever,
-                                      color: Colors.red),
-                                  label: Text('ลบทั้งหมด',
-                                      style: TextStyle(color: Colors.red)),
-                                ),
+                                        try {
+                                          // Delete from database
+                                          for (final item in tempSelected) {
+                                            await deleteSpecialByObject(item);
+                                          }
+
+                                          // Update UI state
+                                          setState(() {
+                                            selectedSpecialty.removeWhere(
+                                                (item) => tempSelected
+                                                    .contains(item));
+                                          });
+
+                                          tempSelected.clear();
+
+                                          // Close loading dialog
+                                          Navigator.pop(context);
+                                          // Close modal
+                                          Navigator.pop(context);
+
+                                          // Show success message
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('ลบข้อมูลเรียบร้อยแล้ว'),
+                                              backgroundColor: Colors.green,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          // Close loading dialog
+                                          Navigator.pop(context);
+
+                                          // Show error message
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('เกิดข้อผิดพลาด: $e'),
+                                              backgroundColor: Colors.red,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    icon: Icon(Icons.delete_forever,
+                                        color: Colors.red),
+                                    label: Text(
+                                      'ลบถาวร',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
                               ),
                             SizedBox(height: 10),
 
@@ -1140,15 +1374,14 @@ class _ClinicadddoctorState extends State<Clinicadddoctor> {
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
-                                    color: Color(0xFF916B44), // สีน้ำตาล
+                                    color: Color(0xFF916B44),
                                     width: 2,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
-                                    color:
-                                        Color(0xFF916B44), // สีน้ำตาลเหมือนกัน
+                                    color: Color(0xFF916B44),
                                     width: 2,
                                   ),
                                 ),
