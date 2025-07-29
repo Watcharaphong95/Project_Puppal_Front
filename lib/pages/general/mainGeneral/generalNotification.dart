@@ -375,16 +375,19 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
                                             SizedBox(height: 4),
 
                                             // Message
-                                            Text(
-                                              notification.message,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Color(0xFF5D4037),
-                                                fontWeight: FontWeight.w500,
-                                                height: 1.4,
+                                            Container(
+                                              width: screenWidth * 0.675,
+                                              child: Text(
+                                                notification.message,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Color(0xFF5D4037),
+                                                  fontWeight: FontWeight.w500,
+                                                  height: 1.4,
+                                                ),
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              maxLines: 3,
-                                              overflow: TextOverflow.ellipsis,
                                             ),
 
                                             SizedBox(height: 8),
@@ -403,12 +406,12 @@ class _GeneralnotificationPageState extends State<GeneralnotificationPage> {
                                       ),
 
                                       // More options or read status
-                                      Icon(
-                                        Icons.chevron_right_rounded,
-                                        color:
-                                            Color(0xFF916B44).withOpacity(0.5),
-                                        size: 20,
-                                      ),
+                                      // Icon(
+                                      //   Icons.chevron_right_rounded,
+                                      //   color:
+                                      //       Color(0xFF916B44).withOpacity(0.5),
+                                      //   size: 20,
+                                      // ),
                                     ],
                                   ),
                                 ],

@@ -90,6 +90,7 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
       // GeneralAppNavigation.clearStack();
       navController.updateIndex(index);
     });
+    GeneralAppNavigation.printStack();
     log('Index: ${currentIndex.toString()}');
   }
 

@@ -183,7 +183,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                 },
                                 child: AnimatedContainer(
                                   duration: Duration(milliseconds: 200),
-                                  margin: EdgeInsets.only(right: 16),
+                                  margin: EdgeInsets.only(
+                                      right: screenWidth * 0.04),
                                   padding: EdgeInsets.all(4),
                                   decoration: BoxDecoration(
                                     color: isSelected
@@ -295,7 +296,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                   // Vaccine Records Section
                   Expanded(
                     child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      margin:
+                          EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -375,7 +377,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                         itemBuilder: (context, index) {
                                           final record = dogRecord[index];
                                           return Container(
-                                            margin: EdgeInsets.only(bottom: 12),
+                                            margin: EdgeInsets.only(
+                                                bottom: screenHeight * 0.01),
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius:
