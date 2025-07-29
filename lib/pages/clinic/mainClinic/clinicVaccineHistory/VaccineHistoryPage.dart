@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/appointmentClinic.dart';
@@ -836,6 +837,15 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         locale: 'th_TH',
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(DateTime.now().year + 10),
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextFormatter: (date, locale) {
+            final buddhistYear = date.year + 543;
+            final thaiMonth = DateFormat.MMMM('th_TH').format(date);
+            return '$thaiMonth พ.ศ. $buddhistYear';
+          },
+        ),
         focusedDay: focusedDay,
         selectedDayPredicate: (day) => isSameDay(selectedDay, day),
         onDaySelected: (selected, focused) {
@@ -933,10 +943,6 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
 
           return dayEvents;
         },
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-        ),
         calendarStyle: const CalendarStyle(
           todayDecoration: BoxDecoration(
             color: Color(0xFFE6C29C),

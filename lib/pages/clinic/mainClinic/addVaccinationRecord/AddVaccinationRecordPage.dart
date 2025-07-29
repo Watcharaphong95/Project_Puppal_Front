@@ -21,6 +21,7 @@ import 'package:http/http.dart' as http;
 import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
+import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddVaccinationRecordPage extends StatefulWidget {
@@ -203,24 +204,24 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
-      // appBar: AppBar(
-      //   title: const Text(
-      //     "บันทึกข้อมูลการฉีดวัคซีน",
-      //     style: TextStyle(
-      //       fontWeight: FontWeight.w600,
-      //       fontSize: 24,
-      //       color: Colors.white,
-      //     ),
-      //   ),
-      //   backgroundColor: Color(0xFFDBA871),
-      //   iconTheme: IconThemeData(color: Colors.white),
-      //   elevation: 0,
-      //   centerTitle: true,
-      //   // leading: IconButton(
-      //   //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-      //   //   onPressed: () => Navigator.pop(context),
-      //   // ),
-      // ),
+      appBar: AppBar(
+        title: const Text(
+          "บันทึกข้อมูลการฉีดวัคซีน",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
+        elevation: 0,
+        centerTitle: true,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
+      ),
       body: _loadingData
           ? SizedBox(
               child: Center(child: CircularProgressIndicator()),
@@ -296,166 +297,81 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
                       const SizedBox(height: 24),
 
-                      // Vaccine Selection
-                      _buildFormCard(
-                        title: "วัคซีนป้องกันโรค",
+                      // Vaccine Selection with Modern Style
+                      _buildModernTextField(
+                        label: "วัคซีนป้องกันโรค",
+                        controller: vaccineController,
                         icon: Icons.vaccines,
-                        child: TextFormField(
-                          controller: vaccineController,
-                          decoration: InputDecoration(
-                            hintText: vaccineController.text,
-                            filled: true,
-                            fillColor: lightColor.withOpacity(0.5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: primaryColor, width: 2),
-                            ),
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'กรุณากรอกชื่อวัคซีน'
-                              : null,
-                        ),
+                        screenHeight: MediaQuery.of(context).size.height,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'กรุณากรอกชื่อวัคซีน'
+                            : null,
                       ),
-                      const SizedBox(height: 16),
 
-                      // Batch Number
-                      _buildFormCard(
+                      const SizedBox(height: 20),
+
+                      // Batch Number with Image
+                      _buildModernImageField(
                         title: "หมายเลขชุดวัคซีน",
                         icon: Icons.qr_code,
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 180,
-                          child: ElevatedButton(
-                            onPressed: _pickImage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: lightColor.withOpacity(0.5),
-                              foregroundColor: Colors.black87,
-                              padding: EdgeInsets.zero,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: (_imageFile != null &&
-                                      _imageFile!.existsSync())
-                                  ? Image.file(
-                                      _imageFile!,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      color: lightColor.withOpacity(0.3),
-                                      alignment: Alignment.center,
-                                      child: Icon(
-                                        Icons.camera_alt,
-                                        size: 48,
-                                        color: Color(0xFF916B44),
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      _buildFormCard(
-                        title: "เลือกสัตวแพทย์",
-                        icon: Icons.person_outline,
-                        child: buildDoctorDropdown(),
                       ),
 
-                      const SizedBox(height: 16),
-                      _buildFormCard(
-                        title: "วันที่ฉีดวัคซีน",
+                      const SizedBox(height: 20),
+
+                      // Doctor Dropdown
+                      buildDoctorDropdown(),
+
+                      const SizedBox(height: 20),
+
+                      // Vaccination Date
+                      _buildModernDateField(
+                        label: "วันที่ฉีดวัคซีน",
+                        controller: dateController,
                         icon: Icons.calendar_month,
-                        child: TextFormField(
-                          controller: dateController,
-                          readOnly: true,
-                          onTap: () async {
-                            await pickDate(context, vaccinationDate, (date) {
-                              setState(() {
-                                vaccinationDate = date;
-                                dateController.text = formatThaiDateTime(date);
-                              });
+                        screenHeight: MediaQuery.of(context).size.height,
+                        onTap: () async {
+                          await pickDate(context, vaccinationDate, (date) {
+                            setState(() {
+                              vaccinationDate = date;
+                              dateController.text = formatThaiDateTime(date);
                             });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'เลือกวันที่ฉีด',
-                            filled: true,
-                            fillColor: lightColor.withOpacity(0.5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: primaryColor, width: 2),
-                            ),
-                            suffixIcon: Icon(
-                              Icons.calendar_month,
-                              color: primaryColor,
-                            ),
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'กรุณาเลือกวันที่ฉีดวัคซีน'
-                              : null,
-                        ),
+                          });
+                        },
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'กรุณาเลือกวันที่ฉีดวัคซีน'
+                            : null,
                       ),
 
-                      const SizedBox(height: 16),
-                      _buildFormCard(
-                          title: "วันนัดครั้งถัดไป",
-                          icon: Icons.calendar_month,
-                          child: TextFormField(
-                            controller: nextDateController,
-                            readOnly: true,
-                            onTap: () async {
-                              await pickDate(context, nextAppointmentDate,
-                                  (date) {
-                                setState(() {
-                                  nextAppointmentDate = date;
-                                  nextDateController.text =
-                                      formatThaiDateTime(date);
-                                });
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'เลือกวันนัดครั้งถัดไป',
-                              filled: true,
-                              fillColor: lightColor.withOpacity(0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: primaryColor, width: 2),
-                              ),
-                              suffixIcon: Icon(Icons.calendar_month,
-                                  color: primaryColor),
-                            ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'กรุณาเลือกวันนัดครั้งถัดไป'
-                                : null,
-                          )),
+                      const SizedBox(height: 20),
+
+                      // Next Appointment Date
+                      _buildModernDateField(
+                        label: "วันนัดครั้งถัดไป",
+                        controller: nextDateController,
+                        icon: Icons.calendar_month,
+                        screenHeight: MediaQuery.of(context).size.height,
+                        onTap: () async {
+                          await pickDate(context, nextAppointmentDate, (date) {
+                            setState(() {
+                              nextAppointmentDate = date;
+                              nextDateController.text =
+                                  formatThaiDateTime(date);
+                            });
+                          });
+                        },
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'กรุณาเลือกวันนัดครั้งถัดไป'
+                            : null,
+                      ),
+
                       const SizedBox(height: 32),
+
+                      // Submit Button
                       Container(
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [primaryColor, secondaryColor],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
+                          color: primaryColor,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
@@ -476,13 +392,27 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text(
-                            'บันทึกประวัติ',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: const Row(
+                            mainAxisSize:
+                                MainAxisSize.min, // ให้ขนาดพอดีกับเนื้อหา
+                            children: [
+                              Icon(
+                                Icons.save,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              SizedBox(
+                                  width:
+                                      8), // เว้นระยะห่างระหว่างไอคอนกับข้อความ
+                              Text(
+                                'บันทึกประวัติ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -492,6 +422,641 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                 ),
               ),
             ),
+    );
+  }
+
+  // Helper Methods
+
+  Widget _buildModernTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required double screenHeight,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              border: InputBorder.none,
+              hintText: 'กรอก$label',
+              hintStyle: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.5),
+                fontSize: 16,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernDateField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required double screenHeight,
+    required VoidCallback onTap,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            readOnly: true,
+            onTap: onTap,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF916B44),
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: EdgeInsets.all(12),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE9CBAF).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF916B44),
+                  size: 20,
+                ),
+              ),
+              suffixIcon: Icon(
+                Icons.keyboard_arrow_down,
+                color: Color(0xFF916B44),
+              ),
+              border: InputBorder.none,
+              hintText: 'เลือก$label',
+              hintStyle: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.5),
+                fontSize: 16,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernImageField({
+    required String title,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          height: 180,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            onPressed: _pickImage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Color(0xFF916B44),
+              padding: EdgeInsets.zero,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: (_imageFile != null && _imageFile!.existsSync())
+                  ? Image.file(
+                      _imageFile!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFE9CBAF).withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 32,
+                              color: Color(0xFF916B44),
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'แตะเพื่อถ่ายรูป',
+                            style: TextStyle(
+                              color: Color(0xFF916B44).withOpacity(0.7),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernDropdownField({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Color(0xFFE9CBAF),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF916B44).withOpacity(0.05),
+                offset: Offset(0, 2),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+                Expanded(
+                  child: Flexible(
+                    // หรือจะไม่ใส่ก็ได้ถ้าไม่จำเป็น
+                    child: Container(
+                      constraints: BoxConstraints(minHeight: 56),
+                      padding: EdgeInsets.only(right: 20),
+                      child: child,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  buildDoctorDropdown() {
+    if (reserveList.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              "เลือกสัตวแพทย์",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF916B44),
+              ),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Text(
+              "กำลังโหลดข้อมูลการจอง...",
+              style: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.7),
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final email = reserveList[0].clinicEmail;
+    if (email == null || email.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              "เลือกสัตวแพทย์",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF916B44),
+              ),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Text(
+              "ไม่มีอีเมลสำหรับดึงรายชื่อสัตวแพทย์",
+              style: TextStyle(
+                color: Color(0xFF916B44).withOpacity(0.7),
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            "เลือกสัตวแพทย์",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        FutureBuilder<List<DoctorPost>>(
+          future: getdoctorList(email),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Color(0xFFE9CBAF),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.05),
+                      offset: Offset(0, 2),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  child: Row(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE9CBAF).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF916B44)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          "กำลังโหลด...",
+                          style: TextStyle(
+                            color: Color(0xFF916B44).withOpacity(0.5),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Color(0xFF916B44),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data!.isEmpty) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Color(0xFFE9CBAF),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.05),
+                      offset: Offset(0, 2),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  child: Row(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE9CBAF).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.person_outline,
+                          color: Color(0xFF916B44),
+                          size: 20,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          "ไม่พบรายชื่อสัตวแพทย์",
+                          style: TextStyle(
+                            color: Color(0xFF916B44).withOpacity(0.5),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Color(0xFF916B44),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final doctors = snapshot.data!;
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Color(0xFFE9CBAF),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF916B44).withOpacity(0.05),
+                    offset: Offset(0, 2),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: DropdownButtonFormField<String>(
+                value: selectedDoctor?.careerNo,
+                items: doctors.map((doctor) {
+                  return DropdownMenuItem<String>(
+                    value: doctor.careerNo,
+                    child: Text(
+                      doctor.name ?? 'ไม่ระบุชื่อ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF916B44),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newId) {
+                  if (newId != null) {
+                    setState(() {
+                      selectedDoctor =
+                          doctors.firstWhere((doc) => doc.careerNo == newId);
+                    });
+                  }
+                },
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF916B44),
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  prefixIcon: Container(
+                    margin: EdgeInsets.all(12),
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE9CBAF).withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.person_outline,
+                      color: Color(0xFF916B44),
+                      size: 20,
+                    ),
+                  ),
+                  suffixIcon: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Color(0xFF916B44),
+                  ),
+                  border: InputBorder.none,
+                  hintText: 'เลือกสัตวแพทย์',
+                  hintStyle: TextStyle(
+                    color: Color(0xFF916B44).withOpacity(0.5),
+                    fontSize: 16,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                ),
+                dropdownColor: Colors.white,
+                icon: SizedBox.shrink(), // ซ่อน default icon
+                validator: (value) =>
+                    value == null ? 'กรุณาเลือกสัตวแพทย์' : null,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -775,60 +1340,232 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
       json.decode(str).map((x) => DoctorPost.fromJson(x)));
 
-  Widget buildDoctorDropdown() {
-    if (reserveList.isEmpty) {
-      return Text("กำลังโหลดข้อมูลการจอง...");
-    }
-    final email = reserveList[0].clinicEmail;
-    if (email == null || email.isEmpty) {
-      return Text("ไม่มีอีเมลสำหรับดึงรายชื่อสัตวแพทย์");
-    }
+  // Widget buildDoctorDropdown() {
+  //   if (reserveList.isEmpty) {
+  //     return Text("กำลังโหลดข้อมูลการจอง...");
+  //   }
+  //   final email = reserveList[0].clinicEmail;
+  //   if (email == null || email.isEmpty) {
+  //     return Text("ไม่มีอีเมลสำหรับดึงรายชื่อสัตวแพทย์");
+  //   }
+  //   return FutureBuilder<List<DoctorPost>>(
+  //     future: getdoctorList(email),
+  //     builder: (context, snapshot) {
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         return Center(child: CircularProgressIndicator());
+  //       } else if (snapshot.hasError ||
+  //           !snapshot.hasData ||
+  //           snapshot.data!.isEmpty) {
+  //         return Text("ไม่พบรายชื่อสัตวแพทย์");
+  //       }
+  //       final doctors = snapshot.data!;
+  //       return DropdownButtonFormField<String>(
+  //         value: selectedDoctor?.careerNo,
+  //         items: doctors.map((doctor) {
+  //           return DropdownMenuItem<String>(
+  //             value: doctor.careerNo,
+  //             child: Text(doctor.name ?? 'ไม่ระบุชื่อ'),
+  //           );
+  //         }).toList(),
+  //         onChanged: (String? newId) {
+  //           if (newId != null) {
+  //             setState(() {
+  //               selectedDoctor =
+  //                   doctors.firstWhere((doc) => doc.careerNo == newId);
+  //             });
+  //           }
+  //         },
+  //         decoration: InputDecoration(
+  //           filled: true,
+  //           fillColor: lightColor.withOpacity(0.5),
+  //           border: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(12),
+  //             borderSide: BorderSide.none,
+  //           ),
+  //           focusedBorder: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(12),
+  //             borderSide: BorderSide(color: primaryColor, width: 2),
+  //           ),
+  //         ),
+  //         validator: (value) => value == null ? 'กรุณาเลือกสัตวแพทย์' : null,
+  //       );
+  //     },
+  //   );
+  // }
 
-    return FutureBuilder<List<DoctorPost>>(
-      future: getdoctorList(email),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError ||
-            !snapshot.hasData ||
-            snapshot.data!.isEmpty) {
-          return Text("ไม่พบรายชื่อสัตวแพทย์");
-        }
-
-        final doctors = snapshot.data!;
-        return DropdownButtonFormField<String>(
-          value: selectedDoctor?.careerNo,
-          items: doctors.map((doctor) {
-            return DropdownMenuItem<String>(
-              value: doctor.careerNo,
-              child: Text(doctor.name ?? 'ไม่ระบุชื่อ'),
-            );
-          }).toList(),
-          onChanged: (String? newId) {
-            if (newId != null) {
-              setState(() {
-                selectedDoctor =
-                    doctors.firstWhere((doc) => doc.careerNo == newId);
-              });
-            }
-          },
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: lightColor.withOpacity(0.5),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: primaryColor, width: 2),
-            ),
-          ),
-          validator: (value) => value == null ? 'กรุณาเลือกสัตวแพทย์' : null,
-        );
-      },
-    );
-  }
+  // Widget buildDoctorDropdown() {
+  //   if (reserveList.isEmpty) {
+  //     return Padding(
+  //       padding: EdgeInsets.symmetric(vertical: 18),
+  //       child: Text(
+  //         "กำลังโหลดข้อมูลการจอง...",
+  //         style: TextStyle(
+  //           color: Color(0xFF916B44).withOpacity(0.5),
+  //           fontSize: 16,
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //   final email = reserveList[0].clinicEmail;
+  //   if (email == null || email.isEmpty) {
+  //     return Padding(
+  //       padding: EdgeInsets.symmetric(vertical: 18),
+  //       child: Text(
+  //         "ไม่มีอีเมลสำหรับดึงรายชื่อสัตวแพทย์",
+  //         style: TextStyle(
+  //           color: Color(0xFF916B44).withOpacity(0.5),
+  //           fontSize: 16,
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //   return FutureBuilder<List<DoctorPost>>(
+  //     future: getdoctorList(email),
+  //     builder: (context, snapshot) {
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         return Padding(
+  //           padding: EdgeInsets.symmetric(vertical: 18),
+  //           child: Row(
+  //             children: [
+  //               SizedBox(
+  //                 width: 16,
+  //                 height: 16,
+  //                 child: CircularProgressIndicator(
+  //                   strokeWidth: 2,
+  //                   valueColor:
+  //                       AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
+  //                 ),
+  //               ),
+  //               SizedBox(width: 12),
+  //               Text(
+  //                 "กำลังโหลดรายชื่อสัตวแพทย์...",
+  //                 style: TextStyle(
+  //                   color: Color(0xFF916B44).withOpacity(0.7),
+  //                   fontSize: 16,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         );
+  //       }
+  //       if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+  //         return Padding(
+  //           padding: EdgeInsets.symmetric(vertical: 18),
+  //           child: Text(
+  //             "ไม่พบรายชื่อสัตวแพทย์",
+  //             style: TextStyle(
+  //               color: Color(0xFF916B44).withOpacity(0.5),
+  //               fontSize: 16,
+  //             ),
+  //           ),
+  //         );
+  //       }
+  //       final doctors = snapshot.data!;
+  //       return Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             "เลือกสัตวแพทย์",
+  //             style: TextStyle(
+  //               fontSize: 16,
+  //               fontWeight: FontWeight.w600,
+  //               color: Color(0xFF916B44),
+  //             ),
+  //           ),
+  //           SizedBox(height: 8),
+  //           Container(
+  //             decoration: BoxDecoration(
+  //               color: Colors.white,
+  //               borderRadius: BorderRadius.circular(16),
+  //               border: Border.all(color: Color(0xFFE9CBAF), width: 1.5),
+  //               boxShadow: [
+  //                 BoxShadow(
+  //                   color: Color(0xFF916B44).withOpacity(0.05),
+  //                   offset: Offset(0, 2),
+  //                   blurRadius: 10,
+  //                 ),
+  //               ],
+  //             ),
+  //             child: DropdownButtonFormField<String>(
+  //               value: selectedDoctor?.careerNo,
+  //               items: doctors.map((doctor) {
+  //                 return DropdownMenuItem<String>(
+  //                   value: doctor.careerNo,
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(
+  //                         doctor.name ?? 'ไม่ระบุชื่อ',
+  //                         style: TextStyle(
+  //                           fontSize: 16,
+  //                           fontWeight: FontWeight.w500,
+  //                           color: Color(0xFF916B44),
+  //                         ),
+  //                       ),
+  //                       if (doctor.careerNo != null)
+  //                         Text(
+  //                           'รหัสใบอนุญาต: ${doctor.careerNo}',
+  //                           style: TextStyle(
+  //                             fontSize: 12,
+  //                             color: Color(0xFF916B44).withOpacity(0.6),
+  //                           ),
+  //                         ),
+  //                     ],
+  //                   ),
+  //                 );
+  //               }).toList(),
+  //               onChanged: (String? newId) {
+  //                 if (newId != null) {
+  //                   setState(() {
+  //                     selectedDoctor =
+  //                         doctors.firstWhere((doc) => doc.careerNo == newId);
+  //                   });
+  //                 }
+  //               },
+  //               decoration: InputDecoration(
+  //                 prefixIcon: Container(
+  //                   margin: EdgeInsets.all(12),
+  //                   padding: EdgeInsets.all(8),
+  //                   decoration: BoxDecoration(
+  //                     color: Color(0xFFE9CBAF).withOpacity(0.3),
+  //                     borderRadius: BorderRadius.circular(10),
+  //                   ),
+  //                   child: Icon(
+  //                     Icons.person_outline,
+  //                     color: Color(0xFF916B44),
+  //                     size: 20,
+  //                   ),
+  //                 ),
+  //                 border: InputBorder.none,
+  //                 hintText: 'เลือกสัตวแพทย์',
+  //                 hintStyle: TextStyle(
+  //                   color: Color(0xFF916B44).withOpacity(0.5),
+  //                   fontSize: 16,
+  //                 ),
+  //                 contentPadding: EdgeInsets.symmetric(
+  //                   horizontal: 20,
+  //                   vertical: 18,
+  //                 ),
+  //               ),
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 color: Color(0xFF916B44),
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //               dropdownColor: Colors.white,
+  //               icon: Icon(
+  //                 Icons.keyboard_arrow_down,
+  //                 color: Color(0xFF916B44),
+  //               ),
+  //               validator: (value) =>
+  //                   value == null ? 'กรุณาเลือกสัตวแพทย์' : null,
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<List<DoctorPost>> getdoctorList(String clinicEmail) async {
     log("📥 clinicEmail: $clinicEmail");
@@ -955,45 +1692,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   Future<void> InsertionjectionRecord(
       AppointmentPost appReq, String imageUrl, String docId) async {
     try {
-      // ✅ แสดง loading ก่อนส่ง
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF916B44)),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'กำลังเตรียมข้อมูล...',
-                  style: TextStyle(
-                    color: Color(0xFF916B44),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
+      showLoadingDialog();
       // ✅ log ข้อมูลก่อนส่ง appointment
       final appointmentJson = appReq.toJson();
       log("📤 กำลังส่ง appointment: ${jsonEncode(appointmentJson)}");
@@ -1087,8 +1786,10 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
           }
           log('✅ บันทึก clinicinjectionRecord สำเร็จ');
           await updatestatus(reserveList[0].docId, 3);
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => ClinicmainPage()));
+          // Navigator.of(context).pushReplacement(
+          //     MaterialPageRoute(builder: (_) => ClinicmainPage()));
+          // Clinicappnavigator.toWidget(ClinicmainPage());
+          Get.back();
         } else {
           log("❌ clinicinjectionRecord ล้มเหลว: ${injRes.statusCode} ${injRes.body}");
           showTopNotification(
@@ -1115,6 +1816,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         isSuccess: false,
       );
     }
+    Get.back();
   }
 
   Future<void> sendNotificationInjectioncompleted(
@@ -1174,6 +1876,56 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     } catch (e) {
       print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
     }
+  }
+
+  void showLoadingDialog({String? message}) {
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0E8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD7CCC8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFA1887F)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message ?? "กำลังโหลด...",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFA1887F),
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   Future<void> updatestatus(String docId, int status) async {
@@ -1307,14 +2059,15 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF916B44),
-                      Color(0xFFDBA871),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  // gradient: const LinearGradient(
+                  //   colors: [
+                  //     Color(0xFF916B44),
+                  //     Color(0xFFDBA871),
+                  //   ],
+                  //   begin: Alignment.topLeft,
+                  //   end: Alignment.bottomRight,
+                  // ),
+                  color: Color(0xFF916B44),
                   boxShadow: [
                     BoxShadow(
                       color: Color(0xFF916B44).withOpacity(0.3),

@@ -364,7 +364,9 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                             ),
                             SizedBox(width: 12),
                             Text(
-                              "การจองวันนี้",
+                              _selectedDay != null
+                                  ? formatThaiDate(_selectedDay!)
+                                  : 'กรุณาเลือกวันที่',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -1072,7 +1074,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                   ),
                                                   child: InkWell(
                                                     onTap: () {
-                                                      Clinicappnavigator.toWidget(
+                                                      Get.to(() =>
                                                           Calendarbookingdetailpage(
                                                               docId:
                                                                   item.docId));
@@ -1107,6 +1109,41 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
               ],
             ),
     );
+  }
+
+// ฟังก์ชันแปลงวันที่เป็นวันภาษาไทย + พ.ศ.
+  String formatThaiDate(DateTime date) {
+    const thaiDays = [
+      'วันอาทิตย์',
+      'วันจันทร์',
+      'วันอังคาร',
+      'วันพุธ',
+      'วันพฤหัสบดี',
+      'วันศุกร์',
+      'วันเสาร์'
+    ];
+    const thaiMonths = [
+      '',
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม'
+    ];
+
+    final weekday = thaiDays[date.weekday % 7];
+    final day = date.day;
+    final month = thaiMonths[date.month];
+    final year = date.year + 543;
+
+    return "$day $month $year";
   }
 
   Future<void> _showAppointmentPopup(
@@ -1557,6 +1594,15 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
         locale: 'th_TH',
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(DateTime.now().year + 10),
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextFormatter: (date, locale) {
+            final buddhistYear = date.year + 543;
+            final thaiMonth = DateFormat.MMMM('th_TH').format(date);
+            return '$thaiMonth พ.ศ. $buddhistYear';
+          },
+        ),
         focusedDay: focusedDay,
         selectedDayPredicate: (day) => isSameDay(selectedDay, day),
         onDaySelected: (selected, focused) {
@@ -1658,10 +1704,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
           return dayEvents;
         },
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-        ),
         calendarStyle: const CalendarStyle(
           todayDecoration: BoxDecoration(
             color: Color(0xFFE6C29C),
@@ -1802,7 +1844,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
   }
 
   Future<DogDetailsPost?> getdog(int dogId) async {
-    log("Fetching dog info for ID: $dogId");
+    // log("Fetching dog info for ID: $dogId");
     try {
       final res = await http.get(Uri.parse("$url/dog/getdog/$dogId"));
       if (res.statusCode == 200) {

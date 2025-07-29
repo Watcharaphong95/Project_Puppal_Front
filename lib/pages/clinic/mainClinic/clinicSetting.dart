@@ -377,7 +377,17 @@ class _ClinicsettingState extends State<Clinicsetting> {
                             ),
 
                             SizedBox(height: 16),
+                            _buildModernMenuItem(
+                              icon: Icons.timelapse_outlined,
+                              title: 'แก้ไขเวลาเปิดปิด',
+                              subtitle: 'แก้ไขเวลาเปิด-ปิดคลินิก',
+                              onTap: () {
+                                Get.to(() => Clinicopeninghours());
+                              },
+                              screenWidth: screenWidth,
+                            ),
 
+                            SizedBox(height: 16),
                             // Change Password
                             _buildModernMenuItem(
                               icon: Icons.lock_outline,

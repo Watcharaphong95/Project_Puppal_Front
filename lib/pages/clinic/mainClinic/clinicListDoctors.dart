@@ -9,6 +9,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/addDoctors/clinicAddDoctor.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/clinicDoctorEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:http/http.dart' as http;
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
@@ -304,31 +305,84 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
-                      TextField(
-                        onChanged: (text) {
-                          if (text.trim().isEmpty) {
-                            getDoctor();
-                          } else {
-                            searcheDoctor(names);
-                          }
-                        },
-                        controller: names,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          hintText: 'ค้นหา',
-                          prefixIcon: const Icon(Icons.search,
-                              color: Color(0xFF916B44)),
-                          hintStyle: const TextStyle(color: Color(0xFF916B44)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFDBA871)),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFE9CBAF),
+                            width: 1.5,
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: Color(0xFF916B44), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF916B44).withOpacity(0.05),
+                              offset: Offset(0, 2),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: names,
+                          onChanged: (text) {
+                            if (text.trim().isEmpty) {
+                              getDoctor();
+                            } else {
+                              searcheDoctor(names);
+                            }
+                          },
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF916B44),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            prefixIcon: Container(
+                              margin: EdgeInsets.all(12),
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFE9CBAF).withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.search,
+                                color: Color(0xFF916B44),
+                                size: 20,
+                              ),
+                            ),
+                            suffixIcon: names.text.isNotEmpty
+                                ? InkWell(
+                                    onTap: () {
+                                      names.clear();
+                                      FocusScope.of(context).unfocus();
+                                      getDoctor();
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.all(12),
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFFDBA871).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.clear,
+                                        color: Color(0xFF916B44),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            hintText: 'ค้นหาแพทย์',
+                            hintStyle: TextStyle(
+                              color: Color(0xFF916B44).withOpacity(0.5),
+                              fontSize: 16,
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -420,15 +474,36 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                           ),
                                                   ),
                                                   const SizedBox(height: 10),
-                                                  Text(
-                                                    doctor.name,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: Color(0xFF916B44),
-                                                    ),
-                                                    textAlign: TextAlign.center,
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceAround,
+                                                    children: [
+                                                      Text(
+                                                        doctor.name,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                      Text(
+                                                        doctor.surname,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color:
+                                                              Color(0xFF916B44),
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ],
                                                   ),
                                                   const SizedBox(height: 10),
                                                   ElevatedButton(
@@ -450,7 +525,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                     onPressed: () {
                                                       Get.to(
                                                         () =>
-                                                            Clinicdoctorprofile(
+                                                            Clinicdoctoreditprofile(
                                                                 name: doctor
                                                                     .name),
                                                       );

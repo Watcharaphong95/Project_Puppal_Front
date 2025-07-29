@@ -471,7 +471,9 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              Get.to(() => Cliniclistdoctors());
+              // Get.to(() => Cliniclistdoctors());
+              Get.back();
+              Get.back();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF795548),

@@ -154,7 +154,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'การจองปกติ',
+                                  'คำขอปกติ',
                                   style: TextStyle(
                                     color: isNormalSelected
                                         ? Colors.white
@@ -471,6 +471,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                 ),
               );
             }
+
             return StatefulBuilder(
               builder: (context, setState) {
                 bool pressed = false;
@@ -481,9 +482,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                   onTapCancel: () => setState(() => pressed = false),
                   onTap: () async {
                     showLoadingDialog();
-
                     final reserveData = await getReserveBook(docId);
-
                     if (reserveData != null) {
                       final generalEmail = reserveData['generalEmail'];
                       final dogDogIdRaw = reserveData['dogDogId'];
@@ -492,12 +491,10 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           : int.tryParse(dogDogIdRaw.toString()) ?? 0;
 
                       final dogDetails = await getdog(dogDogId);
-
                       if (generalEmail != null && generalEmail.isNotEmpty) {
                         await getGeneral(generalEmail);
                       }
 
-                      // ✅ ปิด loading ก่อนเปิด popup
                       if (Get.isDialogOpen ?? false) {
                         Get.back();
                       }
@@ -512,9 +509,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       if (Get.isDialogOpen ?? false) {
                         Get.back();
                       }
-
                       log("⚠️ ไม่พบข้อมูล reserve สำหรับ docId: $docId");
-                      // สามารถใช้ Get.snackbar หรือแสดง AlertDialog แจ้งเตือนได้
                     }
                   },
                   child: AnimatedContainer(
@@ -553,9 +548,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                             width: 74,
                             height: 80,
                             decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(20), // กรอบนอก
-                              gradient: LinearGradient(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
@@ -564,16 +558,17 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                 ],
                               ),
                             ),
-                            padding: const EdgeInsets.all(3), // ขอบด้านในหน่อยๆ
+                            padding: const EdgeInsets.all(3),
                             child: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(17), // รูปโค้งมน
+                              borderRadius: BorderRadius.circular(17),
                               child: FutureBuilder<DogDetailsPost?>(
-                                future: getdog(reserve['dogDogId'] is int
-                                    ? reserve['dogDogId'] as int
-                                    : int.tryParse(
-                                            reserve['dogDogId'].toString()) ??
-                                        0),
+                                future: getdog(
+                                  reserve['dogDogId'] is int
+                                      ? reserve['dogDogId'] as int
+                                      : int.tryParse(
+                                              reserve['dogDogId'].toString()) ??
+                                          0,
+                                ),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
@@ -588,13 +583,12 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                           ],
                                         ),
                                       ),
-                                      child: Center(
+                                      child: const Center(
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
-                                          ),
+                                                  Colors.white),
                                         ),
                                       ),
                                     );
@@ -612,7 +606,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                           ],
                                         ),
                                       ),
-                                      child: Icon(
+                                      child: const Icon(
                                         Icons.pets,
                                         size: 32,
                                         color: Color(0xFF916B44),
@@ -635,7 +629,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                           ],
                                         ),
                                       ),
-                                      child: Icon(
+                                      child: const Icon(
                                         Icons.broken_image,
                                         size: 32,
                                         color: Color(0xFF916B44),
@@ -699,12 +693,18 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                                     Icon(Icons.schedule_outlined,
                                         size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      time,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
+                                    Flexible(
+                                      // ✅ ป้องกัน overflow
+                                      child: Text(
+                                        time,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        softWrap: false,
                                       ),
                                     ),
                                   ],
@@ -715,9 +715,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           // arrow button
                           GestureDetector(
                             onTap: () {
-                              Get.to(
-                                () => BookingdetailPage(docid: docId),
-                              );
+                              Get.to(() => BookingdetailPage(docid: docId));
                             },
                             child: Container(
                               padding: const EdgeInsets.all(12),

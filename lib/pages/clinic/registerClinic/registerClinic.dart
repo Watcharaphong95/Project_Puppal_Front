@@ -160,7 +160,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
                   // เบอร์โทรศัพท์
                   _buildModernTextField(
-<<<<<<< HEAD
                     label: 'เบอร์โทรศัพท์',
                     controller: phoneCtl,
                     icon: Icons.phone_outlined,
@@ -170,13 +169,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
                       FilteringTextInputFormatter.digitsOnly
                     ], // ✅ ตัวเลขเท่านั้น
                   ),
-=======
-                      label: 'เบอร์โทรศัพท์',
-                      controller: phoneCtl,
-                      icon: Icons.phone_outlined,
-                      screenHeight: screenHeight,
-                      isPhone: true),
->>>>>>> bbf01d377725da23bdbe412254282c7df11ebecf
 
                   // รหัสผ่าน
                   _buildPasswordTextField(
@@ -414,12 +406,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
-<<<<<<< HEAD
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters, // ✅ เพิ่มตรงนี้
-=======
-    bool isPhone = false, // พารามิเตอร์ใหม่
->>>>>>> bbf01d377725da23bdbe412254282c7df11ebecf
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,12 +442,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
           ),
           child: TextField(
             controller: controller,
-<<<<<<< HEAD
             keyboardType: keyboardType,
             inputFormatters: inputFormatters, // ✅ เพิ่มตรงนี้
-=======
-            keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
->>>>>>> bbf01d377725da23bdbe412254282c7df11ebecf
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
