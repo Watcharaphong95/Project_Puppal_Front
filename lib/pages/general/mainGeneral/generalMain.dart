@@ -692,7 +692,29 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   Widget dogInfoCard(dynamic e) {
-    final bool isDisabled = e == null || DateTime.now().isAfter(_selectedDay);
+    // Parse time string "HH:mm"
+    var hour = 00;
+    var minute = 00;
+    try {
+      if (e.time != null) {
+        final parts = e.time.split(':');
+        hour = int.parse(parts[0]);
+        minute = int.parse(parts[1]);
+      }
+    } catch (e) {
+      print("⚠️ Error parsing time: $e");
+    }
+
+    final selectedDateTime = DateTime(
+      _selectedDay.year,
+      _selectedDay.month,
+      _selectedDay.day,
+      hour,
+      minute,
+    );
+
+    final bool isDisabled =
+        e == null || DateTime.now().isAfter(selectedDateTime);
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
