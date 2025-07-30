@@ -165,11 +165,11 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
 
                         // License Number Field
                         _buildModernTextField(
-                          label: 'เลขใบอนุญาตประกอบวิชาชีพ',
-                          controller: careerNoCtl,
-                          icon: Icons.assignment_outlined,
-                          screenHeight: screenHeight,
-                        ),
+                            label: 'เลขใบอนุญาตประกอบวิชาชีพ',
+                            controller: careerNoCtl,
+                            icon: Icons.assignment_outlined,
+                            screenHeight: screenHeight,
+                            keyboardType: TextInputType.number),
 
                         SizedBox(height: 40),
                       ],
@@ -235,6 +235,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    TextInputType? keyboardType, // Add this optional parameter
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,6 +270,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
           ),
           child: TextField(
             controller: controller,
+            keyboardType: keyboardType, // Use the parameter here
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -1300,6 +1302,23 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
       );
       return;
     }
+
+    if (careerNoCtl.text.trim().isEmpty || careerNoCtl.text.trim().length < 5) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกเลขใบอนุญาตประกอบวิชาชีพให้ครบ 5 หลัก',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
     int? selectedSpecialId;
 
     onChanged:

@@ -156,7 +156,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            Color(0xFFDBA871), // Golden Brown for buttons
+                            Color(0xFF916b44), // Golden Brown for buttons
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

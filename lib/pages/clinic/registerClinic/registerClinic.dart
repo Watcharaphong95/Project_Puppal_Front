@@ -811,12 +811,23 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
                 : TimeOfDay(hour: 8, minute: 0))
             : (closeCtl.text.isNotEmpty
                 ? _parseTimeString(closeCtl.text)
-                : TimeOfDay(hour: 17, minute: 0)),
+                : _parseTimeString(openCtl.text)),
+        openTime: !isOpen && openCtl.text.isNotEmpty
+            ? _parseTimeString(openCtl.text)
+            : null, // Pass opening time for closing picker
         onTimeSelected: (time) {
           setState(() {
             if (isOpen) {
               openCtl.text =
                   "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+
+              // Clear closing time if it's now invalid (earlier than or equal to opening time)
+              if (closeCtl.text.isNotEmpty) {
+                final closeTime = _parseTimeString(closeCtl.text);
+                if (_isTimeEarlierOrEqual(closeTime, time)) {
+                  closeCtl.text = '';
+                }
+              }
             } else {
               closeCtl.text =
                   "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
@@ -834,6 +845,13 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       hour: int.parse(parts[0]),
       minute: int.parse(parts[1]),
     );
+  }
+
+  // Helper method to check if time1 is earlier than or equal to time2
+  bool _isTimeEarlierOrEqual(TimeOfDay time1, TimeOfDay time2) {
+    if (time1.hour < time2.hour) return true;
+    if (time1.hour > time2.hour) return false;
+    return time1.minute <= time2.minute;
   }
 
 // Method สำหรับเลือกจำนวนคำขอ (ปรับปรุงแล้ว)
@@ -1073,12 +1091,15 @@ class TimePickerBottomSheet extends StatefulWidget {
   final bool isOpenTime;
   final TimeOfDay? initialTime;
   final Function(TimeOfDay) onTimeSelected;
+  final TimeOfDay?
+      openTime; // Add this parameter to pass opening time for closing picker
 
   const TimePickerBottomSheet({
     Key? key,
     required this.isOpenTime,
     this.initialTime,
     required this.onTimeSelected,
+    this.openTime, // Optional opening time for validation
   }) : super(key: key);
 
   @override
@@ -1096,17 +1117,52 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
   // เวลาที่เหมาะสมสำหรับคลินิก
   List<int> get availableHours {
     if (widget.isOpenTime) {
-      // เวลาเปิด: 6:00 - 12:00
-      return List.generate(7, (index) => 6 + index); // 6,7,8,9,10,11,12
+      // เวลาเปิด: แสดงทุกชั่วโมง 0-23
+      return List.generate(24, (index) => index); // 0,1,2,...,23
     } else {
-      // เวลาปิด: 12:00 - 22:00
-      return List.generate(
-          11, (index) => 12 + index); // 12,13,14,15,16,17,18,19,20,21,22
+      // เวลาปิด: แสดงเฉพาะชั่วโมงที่มากกว่าเวลาเปิด
+      if (widget.openTime != null) {
+        final openHour = widget.openTime!.hour;
+        final openMinute = widget.openTime!.minute;
+
+        List<int> hours = [];
+
+        // Add hours after opening hour
+        for (int hour = openHour + 1; hour <= 23; hour++) {
+          hours.add(hour);
+        }
+
+        // If opening minute is 0, also allow same hour with 30 minutes
+        if (openMinute == 0) {
+          hours.insert(0, openHour);
+        }
+
+        return hours.isEmpty ? [openHour + 1] : hours;
+      } else {
+        // Default fallback if no opening time provided
+        return List.generate(
+            11, (index) => 12 + index); // 12,13,14,15,16,17,18,19,20,21,22
+      }
     }
   }
 
   // นาทีทีละ 30 นาที
-  List<int> get availableMinutes => [0, 30];
+  List<int> get availableMinutes {
+    if (!widget.isOpenTime && widget.openTime != null) {
+      final openHour = widget.openTime!.hour;
+      final openMinute = widget.openTime!.minute;
+
+      // If selected hour is same as opening hour, only show minutes after opening minute
+      if (selectedHour == openHour) {
+        if (openMinute == 0) {
+          return [30]; // Only 30 minutes available
+        } else {
+          return []; // No available minutes if opening is at 30
+        }
+      }
+    }
+    return [0, 30]; // Default: 0 and 30 minutes
+  }
 
   @override
   void initState() {
@@ -1123,8 +1179,11 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
     if (!availableHours.contains(selectedHour)) {
       selectedHour = availableHours.first;
     }
-    if (!availableMinutes.contains(selectedMinute)) {
-      selectedMinute = availableMinutes.first;
+
+    // Update available minutes after setting hour
+    final currentAvailableMinutes = availableMinutes;
+    if (!currentAvailableMinutes.contains(selectedMinute)) {
+      selectedMinute = currentAvailableMinutes.first;
     }
   }
 
@@ -1227,15 +1286,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
           Expanded(
             child: Column(
               children: [
-                // SizedBox(height: 10),
-                // Text(
-                //   'เลือกเวลา',
-                //   style: TextStyle(
-                //     fontSize: 18,
-                //     fontWeight: FontWeight.bold,
-                //     color: primaryColor,
-                //   ),
-                // ),
                 SizedBox(height: 10),
                 Expanded(
                   child: Container(
@@ -1299,11 +1349,24 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                                 physics: FixedExtentScrollPhysics(),
                                 controller: FixedExtentScrollController(
                                   initialItem:
-                                      availableHours.indexOf(selectedHour),
+                                      availableHours.contains(selectedHour)
+                                          ? availableHours.indexOf(selectedHour)
+                                          : 0,
                                 ),
                                 onSelectedItemChanged: (index) {
                                   setState(() {
                                     selectedHour = availableHours[index];
+
+                                    // Update minutes when hour changes (for closing time)
+                                    final currentAvailableMinutes =
+                                        availableMinutes;
+                                    if (!currentAvailableMinutes
+                                        .contains(selectedMinute)) {
+                                      selectedMinute =
+                                          currentAvailableMinutes.isNotEmpty
+                                              ? currentAvailableMinutes.first
+                                              : 0;
+                                    }
                                   });
                                 },
                                 childDelegate: ListWheelChildBuilderDelegate(
@@ -1361,56 +1424,79 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                             // Minute Picker
                             Expanded(
                               flex: 2,
-                              child: ListWheelScrollView.useDelegate(
-                                itemExtent: 50,
-                                diameterRatio: 2.5,
-                                perspective: 0.002,
-                                squeeze: 1.0,
-                                physics: FixedExtentScrollPhysics(),
-                                controller: FixedExtentScrollController(
-                                  initialItem:
-                                      availableMinutes.indexOf(selectedMinute),
-                                ),
-                                onSelectedItemChanged: (index) {
-                                  setState(() {
-                                    selectedMinute = availableMinutes[index];
-                                  });
-                                },
-                                childDelegate: ListWheelChildBuilderDelegate(
-                                  childCount: availableMinutes.length,
-                                  builder: (context, index) {
-                                    if (index < 0 ||
-                                        index >= availableMinutes.length)
-                                      return null;
-                                    final minute = availableMinutes[index];
-                                    final isSelected = minute == selectedMinute;
+                              child: availableMinutes.isNotEmpty
+                                  ? ListWheelScrollView.useDelegate(
+                                      itemExtent: 50,
+                                      diameterRatio: 2.5,
+                                      perspective: 0.002,
+                                      squeeze: 1.0,
+                                      physics: FixedExtentScrollPhysics(),
+                                      controller: FixedExtentScrollController(
+                                        initialItem: availableMinutes
+                                                .contains(selectedMinute)
+                                            ? availableMinutes
+                                                .indexOf(selectedMinute)
+                                            : 0,
+                                      ),
+                                      onSelectedItemChanged: (index) {
+                                        setState(() {
+                                          selectedMinute =
+                                              availableMinutes[index];
+                                        });
+                                      },
+                                      childDelegate:
+                                          ListWheelChildBuilderDelegate(
+                                        childCount: availableMinutes.length,
+                                        builder: (context, index) {
+                                          if (index < 0 ||
+                                              index >= availableMinutes.length)
+                                            return null;
+                                          final minute =
+                                              availableMinutes[index];
+                                          final isSelected =
+                                              minute == selectedMinute;
 
-                                    return Opacity(
-                                      opacity: (index -
-                                                      availableMinutes.indexOf(
-                                                          selectedMinute))
-                                                  .abs() <=
-                                              1
-                                          ? 1.0
-                                          : 0.3,
-                                      child: Center(
-                                        child: Text(
-                                          minute.toString().padLeft(2, '0'),
-                                          style: TextStyle(
-                                            fontSize: isSelected ? 28 : 22,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                            color: isSelected
-                                                ? primaryColor
-                                                : primaryColor.withOpacity(0.6),
-                                          ),
+                                          return Opacity(
+                                            opacity: (index -
+                                                            availableMinutes
+                                                                .indexOf(
+                                                                    selectedMinute))
+                                                        .abs() <=
+                                                    1
+                                                ? 1.0
+                                                : 0.3,
+                                            child: Center(
+                                              child: Text(
+                                                minute
+                                                    .toString()
+                                                    .padLeft(2, '0'),
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      isSelected ? 28 : 22,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                  color: isSelected
+                                                      ? primaryColor
+                                                      : primaryColor
+                                                          .withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        '00',
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryColor.withOpacity(0.3),
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
+                                    ),
                             ),
                           ],
                         ),
@@ -1432,7 +1518,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      // backgroundColor: Colors.grey.shade,
                       side: BorderSide(color: primaryColor, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1454,9 +1539,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: primaryColor,
-                      // gradient: LinearGradient(
-                      //   colors:primaryColor,
-                      // ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -1467,12 +1549,15 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        widget.onTimeSelected(
-                          TimeOfDay(hour: selectedHour, minute: selectedMinute),
-                        );
-                        Navigator.pop(context);
-                      },
+                      onPressed: availableMinutes.isNotEmpty
+                          ? () {
+                              widget.onTimeSelected(
+                                TimeOfDay(
+                                    hour: selectedHour, minute: selectedMinute),
+                              );
+                              Navigator.pop(context);
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,

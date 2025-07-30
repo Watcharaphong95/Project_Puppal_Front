@@ -219,14 +219,16 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            Color(0xFFDBA871), // Golden Brown for buttons
+                            Color(0xFF916b44), // Golden Brown for buttons
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 6,
                         shadowColor: Colors.black26,
                       ),
-                      onPressed: userRegisterNextButton,
+                      onPressed: () {
+                        userRegisterNextButton();
+                      },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Text(
@@ -576,9 +578,11 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     controller.phone.value = phoneCtl.text;
     controller.address.value = addressCtl.text;
 
+    Get.back();
+
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
 
-    Get.back();
+    // Get.back();
 
     if (res.statusCode == 200) {
       Get.snackbar(

@@ -111,8 +111,8 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                   fontSize: 24,
                   fontWeight: FontWeight.w600),
             ),
-            actions: navController.currentIndex.value == 0 ||
-                    navController.pageTitles.containsValue('เลือกสุนัข')
+            actions: (navController.currentIndex.value == 0 ||
+                    navController.currentIndex.value == 6)
                 ? [
                     IconButton(
                       onPressed: () {

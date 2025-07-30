@@ -48,7 +48,8 @@ class _UseravatarPageState extends State<UseravatarPage> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xFF916B44),
+        backgroundColor: Color(0xFFDBA871),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         // decoration: BoxDecoration(

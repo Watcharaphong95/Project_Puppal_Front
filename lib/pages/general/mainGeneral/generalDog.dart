@@ -271,6 +271,7 @@ class _GeneraldogPageState extends State<GeneraldogPage> {
         ),
       ),
       body: Container(
+        height: screenHeight,
         decoration: BoxDecoration(color: Color(0xFFFAF8F5)),
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, 10, 20, 0),

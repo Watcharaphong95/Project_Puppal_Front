@@ -320,363 +320,370 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                   // ),
                   color: Color(0xFFFAF8F5),
                   // color: Colors.amber,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: screenHeight * 0.01,
-                      ),
-                      Center(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFEF7FF),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: SizedBox(
-                            width: screenWidth * 0.9,
-                            child: TableCalendar(
-                              locale: 'th_TH',
-                              firstDay: DateTime(2020, 1, 1),
-                              lastDay: DateTime(DateTime.now().year + 10),
-                              focusedDay: _focusedDay,
-                              headerStyle: HeaderStyle(
-                                formatButtonVisible: false,
-                                titleCentered: true,
-                                titleTextFormatter: (date, locale) {
-                                  final buddhistYear = date.year + 543;
-                                  final month = DateFormat.MMMM('th')
-                                      .format(date); // ชื่อเดือน
-                                  return '$month พ.ศ. $buddhistYear';
-                                },
-                              ),
-                              calendarStyle: CalendarStyle(
-                                todayDecoration: BoxDecoration(
-                                    color: Color(0xFFE6C29C),
-                                    shape: BoxShape.circle),
-                                selectedDecoration: BoxDecoration(
-                                    color: Color(0xFFDBA871),
-                                    shape: BoxShape.circle),
-                              ),
-                              selectedDayPredicate: (day) {
-                                return isSameDay(_selectedDay, day);
-                              },
-                              onDaySelected: (selectedDay, focusedDay) {
-                                if (mounted) {
-                                  setState(() {
-                                    _focusedDay = focusedDay;
-                                    _selectedDay = selectedDay;
-                                    box.write('focusedDay', focusedDay);
-                                    events = getEventsForDay(_selectedDay);
-                                  });
-                                }
-                              },
-                              onPageChanged: (focusedDay) {
-                                _focusedDay = focusedDay;
-                              },
-                              eventLoader: getEventsForDay,
-                              calendarBuilders: CalendarBuilders(
-                                markerBuilder: (context, date, events) {
-                                  if (events.isEmpty) return SizedBox.shrink();
-
-                                  const int maxDots = 3; // Maximum dots to show
-                                  final int eventCount = events.length;
-                                  final List<dynamic> displayEvents =
-                                      events.take(maxDots).toList();
-
-                                  return Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      // Display dots for first few events
-                                      ...displayEvents.map((event) {
-                                        Color dotColor;
-                                        switch ((event as Dog).status) {
-                                          case 0:
-                                            dotColor = Colors.red;
-                                            break;
-                                          case 1:
-                                            dotColor = Colors.yellow.shade600;
-                                            break;
-                                          case 2:
-                                            dotColor = Colors.lightBlueAccent;
-                                            break;
-                                          case 3:
-                                            dotColor =
-                                                Colors.lightGreen.shade400;
-                                            break;
-                                          default:
-                                            dotColor = Colors.grey;
-                                        }
-
-                                        return Container(
-                                          width: 6,
-                                          height: 6,
-                                          margin: EdgeInsets.symmetric(
-                                              horizontal: 0.5),
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: dotColor,
-                                          ),
-                                        );
-                                      }).toList(),
-
-                                      // Show "+X" if there are more events
-                                      if (eventCount > maxDots)
-                                        Container(
-                                          margin: EdgeInsets.only(
-                                            left: 2,
-                                          ),
-                                          child: Text(
-                                            '+${eventCount - maxDots}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              // fontWeight: FontWeight.bold,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  );
-                                },
-
-                                /// 👇 Grey out past dates
-                                defaultBuilder: (context, day, focusedDay) {
-                                  final isPast = day.isBefore(
-                                      DateTime.now().subtract(Duration(
-                                    hours: DateTime.now().hour,
-                                    minutes: DateTime.now().minute,
-                                    seconds: DateTime.now().second,
-                                  )));
-
-                                  if (isPast) {
-                                    return Center(
-                                      child: Text(
-                                        '${day.day}',
-                                        style: TextStyle(
-                                            color: Colors.grey.shade400),
-                                      ),
-                                    );
-                                  }
-
-                                  return null; // default rendering
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Divider(),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.1,
-                            vertical: screenHeight * 0.005),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: screenHeight * 0.03,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF8D6E63),
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                            ),
-                            Text(
-                              "  ${DateFormat('d MMMM', 'th').format(_selectedDay)} ${_selectedDay.year + 543}",
-                              style: TextStyle(
-                                  fontSize: 24,
-                                  color: Color(0xFF8D6E63),
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.025),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                0, 0, 0, screenHeight * 0.05),
-                            child: Column(
-                              children: [
-                                getEventsForDay(_selectedDay).isNotEmpty
-                                    ? Column(
-                                        children: events.map((e) {
-                                          return InkWell(
-                                            onTap: () {
-                                              if (DateTime.now()
-                                                  .isAfter(_selectedDay)) {
-                                                return;
-                                              }
-
-                                              if (e.status != 0) {
-                                                showReserveInfoAlert(
-                                                    context, e);
-                                              } else {
-                                                GeneralAppNavigation.toWidget(
-                                                  ClinicsearchPage(
-                                                    dogId: e.dogId,
-                                                    vaccineName:
-                                                        e.vaccines.join(', '),
-                                                    date: _selectedDay,
-                                                    aid: e.aid,
-                                                    reserveId: e.reserveId,
-                                                    dogData: Map.fromEntries(
-                                                      eventMap.entries
-                                                          .where((entry) => entry
-                                                              .key
-                                                              .isBefore(DateTime
-                                                                  .now()))
-                                                          .map((entry) =>
-                                                              MapEntry(
-                                                                entry.key,
-                                                                entry.value
-                                                                    .where((dog) =>
-                                                                        dog.status ==
-                                                                            0 &&
-                                                                        dog.dogId ==
-                                                                            e.dogId)
-                                                                    .toList(),
-                                                              ))
-                                                          .where((entry) =>
-                                                              entry.value
-                                                                  .isNotEmpty),
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            borderRadius: BorderRadius.circular(
-                                                16), // Match dogInfoCard's border radius
-                                            child: dogInfoCard(e),
-                                          );
-                                        }).toList(),
-                                      )
-                                    : Padding(
-                                        padding: EdgeInsets.fromLTRB(
-                                            0, screenHeight * 0.025, 0, 0),
-                                        child: Container(
-                                          // color: Colors.amber,
-                                          width: screenWidth,
-                                          height: screenHeight * 0.15,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Container(
-                                                padding: EdgeInsets.all(
-                                                    screenWidth * 0.02),
-                                                decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Color(0xFFF4EFE6)),
-                                                child: Icon(
-                                                  MdiIcons.calendar,
-                                                  size: screenWidth * 0.08,
-                                                  color: Color(0xFF8D6E63),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsets.fromLTRB(0,
-                                                    screenHeight * 0.025, 0, 0),
-                                                child: Column(
-                                                  children: [
-                                                    Text(
-                                                      'ไม่มีข้อมูลการจองฉีดวัคซีนของวันนี้',
-                                                      style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: Color(
-                                                              0xFF8D6E63)),
-                                                    ),
-                                                    Text(
-                                                      'โปรดเลือกวันที่เพื่อดูข้อมูล',
-                                                      style: TextStyle(
-                                                          fontSize: 16,
-                                                          color: Color(
-                                                              0xFF8D6E63)),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                Card(
-                                  color: Color(0xFF916B44),
-                                  elevation: 2,
-                                  child: InkWell(
-                                    onTap: () {
-                                      GeneralAppNavigation
-                                          .printStack(); // ก่อนนำทาง
-                                      // log(_selectedDay.toString());
-                                      final localSelectedDay = DateTime(
-                                        _selectedDay.year,
-                                        _selectedDay.month,
-                                        _selectedDay.day,
-                                      );
-                                      GeneralAppNavigation.toWidget(
-                                          DogselectPage(
-                                              date: _selectedDay,
-                                              dogHasAppointment: eventMap[
-                                                          localSelectedDay]
-                                                      ?.map((dog) => dog.dogId)
-                                                      .toList() ??
-                                                  [],
-                                              dogData: Map.fromEntries(
-                                                eventMap.entries
-                                                    // 1. Keep only dates before now
-                                                    .where((entry) => entry.key
-                                                        .isBefore(
-                                                            DateTime.now()))
-                                                    // 2. Map to new entries with filtered dog lists (only status == 0)
-                                                    .map((entry) => MapEntry(
-                                                          entry.key,
-                                                          entry.value
-                                                              .where((dog) =>
-                                                                  dog.status ==
-                                                                  0)
-                                                              .toList(),
-                                                        ))
-                                                    // 3. Keep only entries where filtered list is not empty
-                                                    .where((entry) =>
-                                                        entry.value.isNotEmpty),
-                                              )),
-                                          title: 'เลือกสุนัข');
-                                      GeneralAppNavigation.printStack();
-                                    },
-                                    child: ListTile(
-                                      title: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'จองคลินิก  ',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          Icon(
-                                            FontAwesomeIcons.plus,
-                                            color: Colors.white,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, screenHeight * 0.025, 0, 0),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFFEF7FF),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
                                 ),
                               ],
                             ),
+                            child: SizedBox(
+                              width: screenWidth * 0.9,
+                              child: TableCalendar(
+                                locale: 'th_TH',
+                                firstDay: DateTime(2020, 1, 1),
+                                lastDay: DateTime(DateTime.now().year + 10),
+                                focusedDay: _focusedDay,
+                                headerStyle: HeaderStyle(
+                                  formatButtonVisible: false,
+                                  titleCentered: true,
+                                  titleTextFormatter: (date, locale) {
+                                    final buddhistYear = date.year + 543;
+                                    final month = DateFormat.MMMM('th')
+                                        .format(date); // ชื่อเดือน
+                                    return '$month พ.ศ. $buddhistYear';
+                                  },
+                                ),
+                                calendarStyle: CalendarStyle(
+                                  todayDecoration: BoxDecoration(
+                                      color: Color(0xFFE6C29C),
+                                      shape: BoxShape.circle),
+                                  selectedDecoration: BoxDecoration(
+                                      color: Color(0xFFDBA871),
+                                      shape: BoxShape.circle),
+                                ),
+                                selectedDayPredicate: (day) {
+                                  return isSameDay(_selectedDay, day);
+                                },
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  if (mounted) {
+                                    setState(() {
+                                      _focusedDay = focusedDay;
+                                      _selectedDay = selectedDay;
+                                      box.write('focusedDay', focusedDay);
+                                      events = getEventsForDay(_selectedDay);
+                                    });
+                                  }
+                                },
+                                onPageChanged: (focusedDay) {
+                                  _focusedDay = focusedDay;
+                                },
+                                eventLoader: getEventsForDay,
+                                calendarBuilders: CalendarBuilders(
+                                  markerBuilder: (context, date, events) {
+                                    if (events.isEmpty)
+                                      return SizedBox.shrink();
+
+                                    const int maxDots =
+                                        3; // Maximum dots to show
+                                    final int eventCount = events.length;
+                                    final List<dynamic> displayEvents =
+                                        events.take(maxDots).toList();
+
+                                    return Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        // Display dots for first few events
+                                        ...displayEvents.map((event) {
+                                          Color dotColor;
+                                          switch ((event as Dog).status) {
+                                            case 0:
+                                              dotColor = Colors.red;
+                                              break;
+                                            case 1:
+                                              dotColor = Colors.yellow.shade600;
+                                              break;
+                                            case 2:
+                                              dotColor = Colors.lightBlueAccent;
+                                              break;
+                                            case 3:
+                                              dotColor =
+                                                  Colors.lightGreen.shade400;
+                                              break;
+                                            default:
+                                              dotColor = Colors.grey;
+                                          }
+
+                                          return Container(
+                                            width: 6,
+                                            height: 6,
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: 0.5),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: dotColor,
+                                            ),
+                                          );
+                                        }).toList(),
+
+                                        // Show "+X" if there are more events
+                                        if (eventCount > maxDots)
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                              left: 2,
+                                            ),
+                                            child: Text(
+                                              '+${eventCount - maxDots}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                // fontWeight: FontWeight.bold,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+
+                                  /// 👇 Grey out past dates
+                                  defaultBuilder: (context, day, focusedDay) {
+                                    final isPast = day.isBefore(
+                                        DateTime.now().subtract(Duration(
+                                      hours: DateTime.now().hour,
+                                      minutes: DateTime.now().minute,
+                                      seconds: DateTime.now().second,
+                                    )));
+
+                                    if (isPast) {
+                                      return Center(
+                                        child: Text(
+                                          '${day.day}',
+                                          style: TextStyle(
+                                              color: Colors.grey.shade400),
+                                        ),
+                                      );
+                                    }
+
+                                    return null; // default rendering
+                                  },
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        Divider(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.1,
+                              vertical: screenHeight * 0.005),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: screenHeight * 0.03,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF8D6E63),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                              ),
+                              Text(
+                                "  ${DateFormat('d MMMM', 'th').format(_selectedDay)} ${_selectedDay.year + 543}",
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    color: Color(0xFF8D6E63),
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.025),
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                  0, 0, 0, screenHeight * 0.05),
+                              child: Column(
+                                children: [
+                                  getEventsForDay(_selectedDay).isNotEmpty
+                                      ? Column(
+                                          children: events.map((e) {
+                                            return InkWell(
+                                              onTap: () {
+                                                if (DateTime.now()
+                                                    .isAfter(_selectedDay)) {
+                                                  return;
+                                                }
+
+                                                if (e.status != 0) {
+                                                  showReserveInfoAlert(
+                                                      context, e);
+                                                } else {
+                                                  GeneralAppNavigation.toWidget(
+                                                    ClinicsearchPage(
+                                                      dogId: e.dogId,
+                                                      vaccineName:
+                                                          e.vaccines.join(', '),
+                                                      date: _selectedDay,
+                                                      aid: e.aid,
+                                                      reserveId: e.reserveId,
+                                                      dogData: Map.fromEntries(
+                                                        eventMap.entries
+                                                            .where((entry) =>
+                                                                entry.key.isBefore(
+                                                                    DateTime
+                                                                        .now()))
+                                                            .map(
+                                                                (entry) =>
+                                                                    MapEntry(
+                                                                      entry.key,
+                                                                      entry
+                                                                          .value
+                                                                          .where((dog) =>
+                                                                              dog.status == 0 &&
+                                                                              dog.dogId == e.dogId)
+                                                                          .toList(),
+                                                                    ))
+                                                            .where((entry) =>
+                                                                entry.value
+                                                                    .isNotEmpty),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              borderRadius: BorderRadius.circular(
+                                                  16), // Match dogInfoCard's border radius
+                                              child: dogInfoCard(e),
+                                            );
+                                          }).toList(),
+                                        )
+                                      : Padding(
+                                          padding: EdgeInsets.fromLTRB(
+                                              0, screenHeight * 0.025, 0, 0),
+                                          child: Container(
+                                            // color: Colors.amber,
+                                            width: screenWidth,
+                                            height: screenHeight * 0.15,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.all(
+                                                      screenWidth * 0.02),
+                                                  decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Color(0xFFF4EFE6)),
+                                                  child: Icon(
+                                                    MdiIcons.calendar,
+                                                    size: screenWidth * 0.08,
+                                                    color: Color(0xFF8D6E63),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.fromLTRB(
+                                                      0,
+                                                      screenHeight * 0.025,
+                                                      0,
+                                                      0),
+                                                  child: Column(
+                                                    children: [
+                                                      Text(
+                                                        'ไม่มีข้อมูลการจองฉีดวัคซีนของวันนี้',
+                                                        style: TextStyle(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Color(
+                                                                0xFF8D6E63)),
+                                                      ),
+                                                      Text(
+                                                        'โปรดเลือกวันที่เพื่อดูข้อมูล',
+                                                        style: TextStyle(
+                                                            fontSize: 16,
+                                                            color: Color(
+                                                                0xFF8D6E63)),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                  Card(
+                                    color: Color(0xFF916B44),
+                                    elevation: 2,
+                                    child: InkWell(
+                                      onTap: () {
+                                        GeneralAppNavigation
+                                            .printStack(); // ก่อนนำทาง
+                                        // log(_selectedDay.toString());
+                                        final localSelectedDay = DateTime(
+                                          _selectedDay.year,
+                                          _selectedDay.month,
+                                          _selectedDay.day,
+                                        );
+                                        GeneralAppNavigation.toWidget(
+                                            DogselectPage(
+                                                date: _selectedDay,
+                                                dogHasAppointment:
+                                                    eventMap[localSelectedDay]
+                                                            ?.map((dog) =>
+                                                                dog.dogId)
+                                                            .toList() ??
+                                                        [],
+                                                dogData: Map.fromEntries(
+                                                  eventMap.entries
+                                                      // 1. Keep only dates before now
+                                                      .where((entry) =>
+                                                          entry.key.isBefore(
+                                                              DateTime.now()))
+                                                      // 2. Map to new entries with filtered dog lists (only status == 0)
+                                                      .map((entry) => MapEntry(
+                                                            entry.key,
+                                                            entry.value
+                                                                .where((dog) =>
+                                                                    dog.status ==
+                                                                    0)
+                                                                .toList(),
+                                                          ))
+                                                      // 3. Keep only entries where filtered list is not empty
+                                                      .where((entry) => entry
+                                                          .value.isNotEmpty),
+                                                )),
+                                            title: 'เลือกสุนัข');
+                                        GeneralAppNavigation.printStack();
+                                      },
+                                      child: ListTile(
+                                        title: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'จองคลินิก  ',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                            Icon(
+                                              FontAwesomeIcons.plus,
+                                              color: Colors.white,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

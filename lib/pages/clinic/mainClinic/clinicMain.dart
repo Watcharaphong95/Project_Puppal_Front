@@ -1612,7 +1612,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
             events = getEventsForDay(selected);
           });
         },
-        onPageChanged: onPageChanged,
+        // onPageChanged: onPageChanged,
         calendarBuilders:
             CalendarBuilders(markerBuilder: (context, day, events) {
           // ✅ กรองเฉพาะ event ที่มี status == 2

@@ -253,80 +253,82 @@ class _DogselectPageState extends State<DogselectPage> {
   Widget _buildEmptyState() {
     return Container(
       padding: EdgeInsets.all(40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                FontAwesomeIcons.dog,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
             ),
-            child: Icon(
-              FontAwesomeIcons.dog,
-              size: 48,
-              color: Colors.grey.shade400,
+            SizedBox(height: 24),
+            Text(
+              'ยังไม่มีสุนัขที่ลงทะเบียน',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(height: 24),
-          Text(
-            'ยังไม่มีสุนัขที่ลงทะเบียน',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+            SizedBox(height: 12),
+            Text(
+              'เพิ่มข้อมูลสุนัขของคุณเพื่อเริ่มจองฉีดวัคซีน',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 12),
-          Text(
-            'เพิ่มข้อมูลสุนัขของคุณเพื่อเริ่มจองฉีดวัคซีน',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24),
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(0xFFDBA871).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'กดปุ่ม ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
+            SizedBox(height: 24),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFFDBA871).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'กดปุ่ม ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFDBA871),
-                    borderRadius: BorderRadius.circular(8),
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFDBA871),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      FontAwesomeIcons.plus,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
-                  child: Icon(
-                    FontAwesomeIcons.plus,
-                    color: Colors.white,
-                    size: 16,
+                  Text(
+                    ' ด้านบนเพื่อเพิ่มสุนัข',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
-                ),
-                Text(
-                  ' ด้านบนเพื่อเพิ่มสุนัข',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -829,7 +829,7 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
               ),
               content: Container(
                 width: double.maxFinite,
-                height: screenHeight * 0.5,
+                height: screenHeight * 0.525,
                 child: TableCalendar<DateTime>(
                   firstDay: DateTime(2000, 1, 1),
                   lastDay: DateTime.now(),

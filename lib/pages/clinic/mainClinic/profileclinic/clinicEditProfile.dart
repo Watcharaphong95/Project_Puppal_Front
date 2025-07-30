@@ -430,7 +430,7 @@ class _CliniceditprofileState extends State<EitprofilePage> {
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                               child: Container(
-                                                height: screenHeight * 0.55,
+                                                height: screenHeight * 0.54,
                                                 decoration: BoxDecoration(
                                                   borderRadius:
                                                       BorderRadius.circular(10),

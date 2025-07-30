@@ -1129,6 +1129,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
           filterClinics = clinics.where((clinic) {
             return clinic.name.toLowerCase().contains(value.toLowerCase());
           }).toList();
+          setState(() {});
         },
         decoration: InputDecoration(
           hintText: 'ค้นหาคลินิก',
