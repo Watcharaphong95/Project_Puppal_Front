@@ -652,7 +652,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
   }
 
   Future<void> userRegisterNextButton() async {
-    showLoadingDialog();
     if (nameCtl.text.trim().isEmpty ||
         emailCtl.text.trim().isEmpty ||
         passwordCtl.text.trim().isEmpty ||
@@ -662,7 +661,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
         closeCtl.text.trim().isEmpty ||
         selectedWeekdays.isEmpty ||
         numPerTimeCtl.text.trim().isEmpty) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -679,9 +677,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     }
 
     // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
@@ -700,7 +697,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
     // Email format check
     RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกอีเมลที่ถูกต้อง',
@@ -728,8 +724,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
         !hasLower ||
         !hasDigit ||
         !hasSpecial) {
-      Get.back();
-
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
@@ -747,7 +741,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
 // Password match check
     if (passwordCtl.text != confirmPasswordCtl.text) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านไม่ตรงกัน',
@@ -762,6 +755,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       );
       return;
     }
+
+    showLoadingDialog();
 
     controller.name.value = nameCtl.text;
     controller.email.value = emailCtl.text;

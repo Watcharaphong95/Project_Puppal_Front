@@ -179,6 +179,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                         ),
                         child: TextField(
                           controller: emailCtl,
+                          enabled: false,
                           readOnly: true,
                           style: TextStyle(
                             fontSize: 16,
@@ -320,22 +321,26 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                         icon: Icons.access_time_outlined,
                         screenHeight: screenHeight,
                       ),
-                      Positioned(
-                        child: TextField(
-                          controller: openCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
+                      Stack(
+                        children: [
+                          Positioned(
+                            child: TextField(
+                              controller: openCtl,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.arrow_drop_down),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 18,
+                                ),
+                                hintText: "เลือกเวลาเปิดคลินิก",
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                              onTap: () => _showCustomTimePicker(isOpen: true),
                             ),
-                            hintText: "เลือกเวลาเปิดคลินิก",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: () => _showCustomTimePicker(isOpen: true),
-                        ),
+                          )
+                        ],
                       ),
                     ],
                   ),
@@ -352,22 +357,26 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                         icon: Icons.access_time_outlined,
                         screenHeight: screenHeight,
                       ),
-                      Positioned(
-                        child: TextField(
-                          controller: closeCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
+                      Stack(
+                        children: [
+                          Positioned(
+                            child: TextField(
+                              controller: closeCtl,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.arrow_drop_down),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 18,
+                                ),
+                                hintText: "เลือกเวลาปิดคลินิก",
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                              onTap: () => _showCustomTimePicker(isOpen: false),
                             ),
-                            hintText: "เลือกเวลาปิดคลินิก",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: () => _showCustomTimePicker(isOpen: false),
-                        ),
+                          )
+                        ],
                       ),
                     ],
                   ),
@@ -384,22 +393,26 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                         icon: Icons.format_list_numbered_outlined,
                         screenHeight: screenHeight,
                       ),
-                      Positioned(
-                        child: TextField(
-                          controller: numPerTimeCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
+                      Stack(
+                        children: [
+                          Positioned(
+                            child: TextField(
+                              controller: numPerTimeCtl,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.arrow_drop_down),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 18,
+                                ),
+                                hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                              onTap: _showSelectNum,
                             ),
-                            hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: _showSelectNum,
-                        ),
+                          )
+                        ],
                       ),
                     ],
                   ),
@@ -840,7 +853,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     }
 
     // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -875,6 +888,8 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
       return;
     }
 
+    showLoadingDialog();
+
     controller.name.value = nameCtl.text;
     controller.email.value = emailCtl.text;
     controller.password.value = '';
@@ -886,7 +901,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     controller.address.value = addressCtl.text;
 
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
-
+    Get.back();
     if (res.statusCode == 200) {
       Get.snackbar(
         'ข้อผิดพลาด',

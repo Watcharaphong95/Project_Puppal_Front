@@ -136,6 +136,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
                   label: 'อีเมล',
                   controller: emailCtl,
                   readOnly: true,
+                  enable: false,
                   icon: Icons.email,
                 ),
                 buildInputField(
@@ -190,6 +191,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
     required String label,
     required TextEditingController controller,
     bool readOnly = false,
+    bool enable = true,
     bool isPhone = false,
     IconData? icon,
   }) {
@@ -212,6 +214,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
           child: TextField(
             controller: controller,
             readOnly: readOnly,
+            enabled: enable,
             keyboardType: isPhone ? TextInputType.phone : null,
             style: const TextStyle(color: Color(0xFF916B44)),
             decoration: InputDecoration(
@@ -247,7 +250,6 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
   }
 
   Future<void> userRegisterNextButton() async {
-    showLoadingDialog();
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -289,7 +291,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
     }
 
 // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -305,6 +307,8 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
       );
       return;
     }
+
+    showLoadingDialog();
 
     controller.username.value = usernameCtl.text;
     controller.name.value = nameCtl.text;

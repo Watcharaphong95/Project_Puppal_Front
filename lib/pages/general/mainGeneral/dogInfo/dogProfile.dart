@@ -1501,9 +1501,10 @@ class _DogprofilePageState extends State<DogprofilePage> {
                   textAlign: TextAlign.center,
                 ),
               ),
+
               content: Container(
                 width: double.maxFinite,
-                height: screenHeight * 0.5,
+                height: screenHeight * 0.525,
                 child: TableCalendar<DateTime>(
                   firstDay: DateTime(2000, 1, 1),
                   lastDay: DateTime.now(),
@@ -1540,28 +1541,199 @@ class _DogprofilePageState extends State<DogprofilePage> {
                     ),
                   ),
 
-                  // Header styling with Buddhist Era
+                  // Custom header with year/month selectors
                   headerStyle: HeaderStyle(
                     formatButtonVisible: false,
                     titleCentered: true,
-                    leftChevronIcon: Icon(
-                      Icons.chevron_left,
-                      color: Color(0xFF916B44),
-                    ),
-                    rightChevronIcon: Icon(
-                      Icons.chevron_right,
-                      color: Color(0xFF916B44),
-                    ),
+                    leftChevronVisible: false, // Hide default chevrons
+                    rightChevronVisible: false,
                     titleTextStyle: TextStyle(
                       color: Color(0xFF916B44),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
-                    titleTextFormatter: (date, locale) {
-                      // Convert to Buddhist Era for display
-                      int buddhistYear = date.year + 543;
-                      String monthName = DateFormat.MMMM('th').format(date);
-                      return '$monthName พ.ศ. $buddhistYear';
+                  ),
+
+                  // Custom header builder with dropdowns
+                  calendarBuilders: CalendarBuilders(
+                    headerTitleBuilder: (context, day) {
+                      return Container(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Previous month button
+                            IconButton(
+                              onPressed: () {
+                                DateTime newDate = DateTime(
+                                    focusedDate.year, focusedDate.month - 1, 1);
+                                // Ensure new date doesn't exceed bounds
+                                if (newDate.isAfter(DateTime(2000, 1, 1))) {
+                                  setState(() {
+                                    focusedDate = newDate;
+                                  });
+                                }
+                              },
+                              icon: Icon(
+                                Icons.chevron_left,
+                                color: Color(0xFF916B44),
+                                size: 20,
+                              ),
+                            ),
+
+                            // Month and Year dropdowns
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Month dropdown
+                                  Flexible(
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 4),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Color(0xFF916B44)
+                                                .withOpacity(0.3)),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<int>(
+                                          value: focusedDate.month,
+                                          style: TextStyle(
+                                            color: Color(0xFF916B44),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          dropdownColor: Colors.white,
+                                          isExpanded: true,
+                                          items: List.generate(12, (index) {
+                                            int month = index + 1;
+                                            return DropdownMenuItem<int>(
+                                              value: month,
+                                              child: Text(
+                                                DateFormat.MMMM('th').format(
+                                                    DateTime(2024, month)),
+                                                style: TextStyle(
+                                                    color: Color(0xFF916B44),
+                                                    fontSize: 12),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            );
+                                          }),
+                                          onChanged: (int? newMonth) {
+                                            if (newMonth != null) {
+                                              DateTime newDate = DateTime(
+                                                  focusedDate.year,
+                                                  newMonth,
+                                                  1);
+                                              // Ensure the new date doesn't exceed lastDay
+                                              DateTime now = DateTime.now();
+                                              if (newDate.isAfter(now)) {
+                                                newDate = DateTime(
+                                                    now.year, now.month, 1);
+                                              }
+                                              setState(() {
+                                                focusedDate = newDate;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  SizedBox(width: 4),
+
+                                  // Year dropdown
+                                  Flexible(
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 4),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Color(0xFF916B44)
+                                                .withOpacity(0.3)),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<int>(
+                                          value: focusedDate.year,
+                                          style: TextStyle(
+                                            color: Color(0xFF916B44),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          dropdownColor: Colors.white,
+                                          isExpanded: true,
+                                          items: List.generate(
+                                            DateTime.now().year - 2000 + 1,
+                                            (index) {
+                                              int year = 2000 + index;
+                                              int buddhistYear = year + 543;
+                                              return DropdownMenuItem<int>(
+                                                value: year,
+                                                child: Text(
+                                                  'พ.ศ. $buddhistYear',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF916B44),
+                                                      fontSize: 12),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              );
+                                            },
+                                          )
+                                              .reversed
+                                              .toList(), // Show recent years first
+                                          onChanged: (int? newYear) {
+                                            if (newYear != null) {
+                                              DateTime newDate = DateTime(
+                                                  newYear,
+                                                  focusedDate.month,
+                                                  1);
+                                              // Ensure the new date doesn't exceed lastDay
+                                              DateTime now = DateTime.now();
+                                              if (newDate.isAfter(now)) {
+                                                newDate = DateTime(
+                                                    now.year, now.month, 1);
+                                              }
+                                              setState(() {
+                                                focusedDate = newDate;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Next month button
+                            IconButton(
+                              onPressed: () {
+                                DateTime newDate = DateTime(
+                                    focusedDate.year, focusedDate.month + 1, 1);
+                                // Ensure new date doesn't exceed bounds
+                                DateTime now = DateTime.now();
+                                if (newDate.isBefore(now) ||
+                                    isSameDay(newDate, now)) {
+                                  setState(() {
+                                    focusedDate = newDate;
+                                  });
+                                }
+                              },
+                              icon: Icon(
+                                Icons.chevron_right,
+                                color: Color(0xFF916B44),
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   ),
 
@@ -1614,7 +1786,7 @@ class _DogprofilePageState extends State<DogprofilePage> {
                     String formattedDate_data =
                         "${selectedDate.day}-${DateFormat.MMMM('th').format(selectedDate)}-${selectedDate.year}";
 
-                    this.setState(() {
+                    setState(() {
                       birthdayCtl.text = formattedDate_data;
                       birthdayShowCtl.text = formattedDate;
                       _dataChange = true;

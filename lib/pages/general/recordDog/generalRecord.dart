@@ -159,7 +159,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                         ),
                         SizedBox(height: 16),
                         SizedBox(
-                          height: screenHeight * 0.15,
+                          height: screenHeight * 0.16,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: dogs.length,

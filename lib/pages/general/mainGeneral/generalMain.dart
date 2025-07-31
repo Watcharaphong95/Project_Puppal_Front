@@ -876,6 +876,33 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Status Text
+                        if (e.status != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color:
+                                  _getStatusColor(e.status).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color:
+                                    _getStatusColor(e.status).withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              _getStatusText(e.status),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDisabled
+                                    ? Colors.grey
+                                    : _getStatusTextColor(e.status),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 4),
                         // Time
                         if (e.status != 0 && e.time != null)
                           Row(
@@ -989,10 +1016,32 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
               Positioned(
                 top: screenHeight * 0.02,
                 right: screenWidth * 0.075,
-                child: Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                  size: 20,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    border: Border.all(color: Colors.orange, width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'พิเศษ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -1014,6 +1063,38 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
         return Colors.lightGreen.shade400;
       default:
         return Colors.grey;
+    }
+  }
+
+// Helper function to get status text
+  String _getStatusText(int status) {
+    switch (status) {
+      case 0:
+        return 'ยังไม่จอง';
+      case 1:
+        return 'รอคลินิกยอมรับ';
+      case 2:
+        return 'คลินิกยอมรับแล้ว';
+      case 3:
+        return 'ฉีดเสร็จสิ้น';
+      default:
+        return 'ไม่ทราบสถานะ';
+    }
+  }
+
+// Helper function to get readable status text color
+  Color _getStatusTextColor(int status) {
+    switch (status) {
+      case 0:
+        return Colors.red.shade700;
+      case 1:
+        return Colors.orange.shade700;
+      case 2:
+        return Colors.blue.shade700;
+      case 3:
+        return Colors.green.shade700;
+      default:
+        return Colors.grey.shade700;
     }
   }
 
