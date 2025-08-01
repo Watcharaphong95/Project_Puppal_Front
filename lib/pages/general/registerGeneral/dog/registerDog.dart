@@ -1113,14 +1113,6 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
                     String formattedDate_data =
                         "${selectedDate.day}-${DateFormat.MMMM('th').format(selectedDate)}-${selectedDate.year}";
 
-                    // Use the outer setState (assuming this is inside a StatefulWidget)
-                    // Make sure to replace 'this.setState' with the correct reference
-                    // to your widget's setState method
-                    // this.setState(() {
-                    //   birthdayCtl.text = formattedDate_data;
-                    //   birthdayShowCtl.text = formattedDate;
-                    // });
-
                     setState(() {
                       birthdayCtl.text = formattedDate_data;
                       birthdayShowCtl.text = formattedDate;
@@ -1424,11 +1416,11 @@ class _RegisterdogPageState extends State<RegisterdogPage> {
       builder: (context) {
         final List<Map<String, dynamic>> genderOptions = [
           {
-            'label': 'ชาย',
+            'label': 'เพศผู้',
             'icon': Icons.male,
           },
           {
-            'label': 'หญิง',
+            'label': 'เพศเมีย',
             'icon': Icons.female,
           },
         ];

@@ -1835,11 +1835,11 @@ class _DogprofilePageState extends State<DogprofilePage> {
       builder: (context) {
         final List<Map<String, dynamic>> genderOptions = [
           {
-            'label': 'ชาย',
+            'label': 'เพศผู้',
             'icon': Icons.male,
           },
           {
-            'label': 'หญิง',
+            'label': 'เพศเมีย',
             'icon': Icons.female,
           },
         ];

@@ -126,6 +126,9 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
+      builder: (context, child) {
+        return SafeArea(child: child ?? Container());
+      },
       home: const LoadingcheckPage(),
     );
   }

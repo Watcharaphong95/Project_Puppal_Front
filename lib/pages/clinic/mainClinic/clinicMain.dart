@@ -88,6 +88,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
     // if (_isDisposed) return;
     // box.write('type', 'clinic');
+    _selectedDay = DateTime.now();
 
     setState(() {
       _loadingData = false;
@@ -380,43 +381,47 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       // Events List
                       Expanded(
                           child: events.isEmpty
-                              ? Container(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 80,
-                                        height: 80,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.3),
-                                          borderRadius:
-                                              BorderRadius.circular(40),
+                              ? SingleChildScrollView(
+                                  child: Container(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 80,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(40),
+                                          ),
+                                          child: Icon(
+                                            Icons.calendar_today_outlined,
+                                            size: 40,
+                                            color: Color(0xFF916B44),
+                                          ),
                                         ),
-                                        child: Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 40,
-                                          color: Color(0xFF916B44),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          "ไม่มีข้อมูลการจองของวันนี้",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF916B44),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        "ไม่มีข้อมูลการจองของวันนี้",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF916B44),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "โปรดเลือกวันที่เพื่อดูข้อมูล",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF916B44)
+                                                .withOpacity(0.6),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        "โปรดเลือกวันที่เพื่อดูข้อมูล",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Color(0xFF916B44)
-                                              .withOpacity(0.6),
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 )
                               : ListView.builder(

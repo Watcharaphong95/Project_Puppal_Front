@@ -9,6 +9,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/main.dart';
+import 'package:puppal_application/model/clinicEditProfilePost.dart';
+import 'package:puppal_application/model/clinicPost.dart';
+import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
@@ -22,6 +26,7 @@ import 'package:puppal_application/pages/general/profile/resetPassword/recoveryP
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Clinicsetting extends StatefulWidget {
   const Clinicsetting({super.key});
@@ -39,6 +44,9 @@ class _ClinicsettingState extends State<Clinicsetting> {
   String avatarImage = '';
   bool _loadingData = true;
 
+  late ClinicPost clinicData;
+  List<DoctorPost> doctorsList = [];
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +57,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
     await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
+    await getClinicData();
     log(box.read('email'));
     var resGeneral =
         await http.get(Uri.parse("$url/clinic/name/${box.read('email')}"));
@@ -406,7 +415,14 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               icon: Icons.delete_outline,
                               title: 'ลบโปรไฟล์',
                               subtitle: 'ลบบัญชีผู้ใช้งาน',
-                              onTap: () {},
+                              onTap: () {
+                                showAlert(
+                                    title: 'คุณต้องการลบบัญชีคลินิก?',
+                                    message: 'ข้อมูลทั้งหมดจะหายไปอย่างถาวร!',
+                                    onConfirm: () {
+                                      deleteProfile();
+                                    });
+                              },
                               screenWidth: screenWidth,
                               isDangerous: true,
                             ),
@@ -418,8 +434,11 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               width: double.infinity,
                               height: 56,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  // Handle logout
+                                onPressed: () async {
+                                  await FirebaseMessaging.instance
+                                      .deleteToken();
+                                  box.erase();
+                                  Get.offAll(() => IndexPage());
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
@@ -553,6 +572,193 @@ class _ClinicsettingState extends State<Clinicsetting> {
           ],
         ),
       ),
+    );
+  }
+
+  ClinicEditProfilePost clinicEditProfilePostFromJson(String str) =>
+      ClinicEditProfilePost.fromJson(json.decode(str)[0]);
+
+  Future<void> getClinicData() async {
+    await getDoctor();
+    final res =
+        await http.get(Uri.parse("$url/clinic/profile/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      final List<dynamic> jsonData = json.decode(res.body);
+      final ClinicPost data = ClinicPost.fromJson(jsonData.first);
+      clinicData = data;
+    }
+  }
+
+  List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
+      json.decode(str).map((x) => DoctorPost.fromJson(x)));
+
+  Future<void> getDoctor() async {
+    var res = await http
+        .get(Uri.parse("$url/doctor/searchemail/${box.read('email')}"));
+    if (res.statusCode == 200) {
+      var data = doctorPostFromJson(res.body);
+      setState(() {
+        doctorsList = data;
+        _loadingData = false;
+      });
+    } else {
+      setState(() {
+        _loadingData = false;
+      });
+    }
+  }
+
+  Future<void> deleteProfile() async {
+    showLoadingDialog();
+    var res = await http.delete(Uri.parse("$url/clinic/${box.read('email')}"));
+    await deletePictureSupabase();
+    var resUpdateType = await http
+        .put(Uri.parse("$url/user/deleteClinic/${box.read('email')}"));
+    Get.back();
+    if (res.statusCode == 200 && resUpdateType.statusCode == 200) {
+      showAlertNoClose(
+          title: 'บัญชีของคุณถูกลบแล้ว',
+          message: 'ขอบคุณที่ใช้บริการแอปของเรา',
+          onConfirm: () {
+            box.erase();
+            Get.offAll(() => IndexPage());
+          });
+    } else {
+      showAlertNoClose(title: 'ผิดพลาด', message: 'กรุณาลองใหม่อีกครั้ง');
+    }
+  }
+
+  Future<void> deletePictureSupabase() async {
+    await Supabase.instance.client.auth.signInWithPassword(
+      email: '65011212077@msu.ac.th',
+      password: '1234',
+    );
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      log("User not logged in. Cannot delete.");
+      return;
+    }
+    try {
+      var imagePathAll = clinicData.image.split('/');
+      var imagePath = imagePathAll.lastWhere(
+          (e) => e.contains('.jpg') || e.contains('.png'),
+          orElse: () => '');
+
+      log('imagePath: $imagePath');
+
+      final deleteRes =
+          await supabase.storage.from('clinic-image').remove([imagePath]);
+
+      if (deleteRes.isEmpty) {
+        log('Delete user picture failed.');
+        return;
+      }
+
+      if (doctorsList.isNotEmpty) {
+        for (var dog in doctorsList) {
+          var dogImagePathAll = dog.image.split('/');
+          var dogimagePath = dogImagePathAll.lastWhere(
+              (e) => e.contains('.jpg') || e.contains('.png'),
+              orElse: () => '');
+          var deleteDogImageRes = await supabase.storage
+              .from('doctor-image')
+              .remove([dogimagePath]);
+          if (deleteDogImageRes.isEmpty) {
+            log('Delete dog picture failed.');
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      log("Error during upload: $e");
+    }
+  }
+
+  void showAlertNoClose({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm, // Optional action
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: PopScope(
+        canPop: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD7CCC8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                size: 24,
+                color: Color(0xFFA1887F),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Color(0xFF8D6E63),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFA1887F),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (onConfirm != null) {
+                    onConfirm();
+                  } else {
+                    Get.back(); // Default action
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF795548),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'ตกลง',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
     );
   }
 

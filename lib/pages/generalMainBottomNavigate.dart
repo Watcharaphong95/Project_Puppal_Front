@@ -329,100 +329,103 @@ class _GeneralMainBottomNavigateState extends State<GeneralMainBottomNavigate> {
                 }
               }
             },
-            child: Stack(
-              children: [
-                // Main page content - full screen
-                Container(
-                  color: Color(0xFFFAF8F5),
-                  height: screenHeight,
-                  padding: EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.0725),
-                  child: SafeArea(bottom: false, child: getCurrentPage()),
-                ),
-                // Floating bottom navigation bar
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: navController.currentIndex.value > 2
-                      ? // Custom navigation bar when index > 2 (all buttons unselected)
-                      Container(
-                          height: 60.0,
-                          decoration: BoxDecoration(
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  // Main page content - full screen
+                  Container(
+                    color: Color(0xFFFAF8F5),
+                    height: screenHeight,
+                    padding:
+                        EdgeInsets.fromLTRB(0, 0, 0, screenHeight * 0.0725),
+                    child: SafeArea(bottom: false, child: getCurrentPage()),
+                  ),
+                  // Floating bottom navigation bar
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: navController.currentIndex.value > 2
+                        ? // Custom navigation bar when index > 2 (all buttons unselected)
+                        Container(
+                            height: 60.0,
+                            decoration: BoxDecoration(
+                              color: Color(0xFFDBA871)
+                                  .withOpacity(0.9), // Semi-transparent
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(30),
+                                topRight: Radius.circular(30),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                // Dog button - unselected
+                                GestureDetector(
+                                  onTap: () => onTap(0),
+                                  child: Container(
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(
+                                      FontAwesomeIcons.dog,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                // Calendar button - unselected
+                                GestureDetector(
+                                  onTap: () => onTap(1),
+                                  child: Container(
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(
+                                      FontAwesomeIcons.calendar,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                // Bell button - unselected
+                                GestureDetector(
+                                  onTap: () => onTap(2),
+                                  child: Container(
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(
+                                      FontAwesomeIcons.bell,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : // Normal CurvedNavigationBar when index <= 2
+                        CurvedNavigationBar(
+                            index: navController.currentIndex.value,
+                            height: 60.0,
+                            items: <Widget>[
+                              Icon(FontAwesomeIcons.dog,
+                                  size: 30, color: Colors.white),
+                              Icon(FontAwesomeIcons.calendar,
+                                  size: 30, color: Colors.white),
+                              Icon(FontAwesomeIcons.bell,
+                                  size: 30, color: Colors.white),
+                            ],
                             color: Color(0xFFDBA871)
                                 .withOpacity(0.9), // Semi-transparent
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(30),
-                              topRight: Radius.circular(30),
-                            ),
+                            buttonBackgroundColor:
+                                Color(0xFFE9CBAF).withOpacity(0.9),
+                            backgroundColor: Colors.transparent,
+                            animationCurve: Curves.easeInOut,
+                            animationDuration: Duration(milliseconds: 500),
+                            onTap: (index) {
+                              onTap(index);
+                            },
+                            letIndexChange: (index) => true,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              // Dog button - unselected
-                              GestureDetector(
-                                onTap: () => onTap(0),
-                                child: Container(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(
-                                    FontAwesomeIcons.dog,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              // Calendar button - unselected
-                              GestureDetector(
-                                onTap: () => onTap(1),
-                                child: Container(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(
-                                    FontAwesomeIcons.calendar,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              // Bell button - unselected
-                              GestureDetector(
-                                onTap: () => onTap(2),
-                                child: Container(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(
-                                    FontAwesomeIcons.bell,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : // Normal CurvedNavigationBar when index <= 2
-                      CurvedNavigationBar(
-                          index: navController.currentIndex.value,
-                          height: 60.0,
-                          items: <Widget>[
-                            Icon(FontAwesomeIcons.dog,
-                                size: 30, color: Colors.white),
-                            Icon(FontAwesomeIcons.calendar,
-                                size: 30, color: Colors.white),
-                            Icon(FontAwesomeIcons.bell,
-                                size: 30, color: Colors.white),
-                          ],
-                          color: Color(0xFFDBA871)
-                              .withOpacity(0.9), // Semi-transparent
-                          buttonBackgroundColor:
-                              Color(0xFFE9CBAF).withOpacity(0.9),
-                          backgroundColor: Colors.transparent,
-                          animationCurve: Curves.easeInOut,
-                          animationDuration: Duration(milliseconds: 500),
-                          onTap: (index) {
-                            onTap(index);
-                          },
-                          letIndexChange: (index) => true,
-                        ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ));

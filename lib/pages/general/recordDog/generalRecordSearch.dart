@@ -428,7 +428,7 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
-                                childAspectRatio: 0.7,
+                                childAspectRatio: 0.65,
                                 mainAxisSpacing: 16,
                                 crossAxisSpacing: 16,
                               ),
@@ -522,7 +522,7 @@ class _GeneralrecordsearchPageState extends State<GeneralrecordsearchPage> {
                                               ),
                                               SizedBox(
                                                 width: double.infinity,
-                                                height: 36,
+                                                height: screenHeight * 0.045,
                                                 child: ElevatedButton(
                                                   onPressed: () {
                                                     GeneralAppNavigation

@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -60,14 +61,18 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
   @override
   void initState() {
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-    });
+    init();
     if (box.read('emailGoogleRegister') != null) {
       emailCtl.text = box.read('emailGoogleRegister');
     } else {
       emailCtl.text = box.read('email');
     }
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
   }
 
   @override
@@ -82,10 +87,10 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Color(0xFF916B44),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: SingleChildScrollView(
           child: Container(
-            // height: screenHeight * 0.9,
             color: Color(0xFFFAF8F5),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -220,11 +225,11 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
 
                   // เบอร์โทรศัพท์
                   _buildModernTextField(
-                    label: 'เบอร์โทรศัพท์',
-                    controller: phoneCtl,
-                    icon: Icons.phone_outlined,
-                    screenHeight: screenHeight,
-                  ),
+                      label: 'เบอร์โทรศัพท์',
+                      controller: phoneCtl,
+                      icon: Icons.phone_outlined,
+                      screenHeight: screenHeight,
+                      keyboardType: TextInputType.phone),
 
                   SizedBox(height: 24),
 
@@ -311,110 +316,31 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
 
                   SizedBox(height: 24),
 
-                  // เวลาเปิดคลินิก (ใช้ _buildModernTextField แต่ต้องปรับให้ readOnly + onTap)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'เวลาเปิดคลินิก',
-                        controller: openCtl,
-                        icon: Icons.access_time_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Stack(
-                        children: [
-                          Positioned(
-                            child: TextField(
-                              controller: openCtl,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                suffixIcon: Icon(Icons.arrow_drop_down),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                                hintText: "เลือกเวลาเปิดคลินิก",
-                                hintStyle: TextStyle(color: Colors.grey),
-                              ),
-                              onTap: () => _showCustomTimePicker(isOpen: true),
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
+                  _buildTimeTextField(
+                    label: 'เวลาเปิดคลินิก',
+                    controller: openCtl,
+                    hintText: "เลือกเวลาเปิดคลินิก",
+                    onTap: () => _showCustomTimePicker(isOpen: true),
+                    screenHeight: screenHeight,
                   ),
-
-                  SizedBox(height: 16),
-
-                  // เวลาปิดคลินิก (แบบเดียวกับเวลาเปิด)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'เวลาปิดคลินิก',
-                        controller: closeCtl,
-                        icon: Icons.access_time_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Stack(
-                        children: [
-                          Positioned(
-                            child: TextField(
-                              controller: closeCtl,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                suffixIcon: Icon(Icons.arrow_drop_down),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                                hintText: "เลือกเวลาปิดคลินิก",
-                                hintStyle: TextStyle(color: Colors.grey),
-                              ),
-                              onTap: () => _showCustomTimePicker(isOpen: false),
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
+                  SizedBox(height: 24),
+// เวลาปิดคลินิก
+                  _buildTimeTextField(
+                    label: 'เวลาปิดคลินิก',
+                    controller: closeCtl,
+                    hintText: "เลือกเวลาปิดคลินิก",
+                    onTap: () => _showCustomTimePicker(isOpen: false),
+                    screenHeight: screenHeight,
                   ),
-
                   SizedBox(height: 24),
 
                   // จำนวนคำขอต่อช่วงเวลา
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'จำนวนคำขอต่อช่วงเวลา',
-                        controller: numPerTimeCtl,
-                        icon: Icons.format_list_numbered_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Stack(
-                        children: [
-                          Positioned(
-                            child: TextField(
-                              controller: numPerTimeCtl,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                suffixIcon: Icon(Icons.arrow_drop_down),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                                hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
-                                hintStyle: TextStyle(color: Colors.grey),
-                              ),
-                              onTap: _showSelectNum,
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
+                  _buildTimeTextField(
+                    label: 'จำนวนคำขอต่อช่วงเวลา',
+                    controller: numPerTimeCtl,
+                    hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
+                    onTap: _showSelectNum,
+                    screenHeight: screenHeight,
                   ),
 
                   SizedBox(height: 24),
@@ -460,12 +386,99 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
         ));
   }
 
+  Widget _buildTimeTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+    required VoidCallback onTap,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 16),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.access_time,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    controller.text.isEmpty ? hintText : controller.text,
+                    style: TextStyle(
+                      color: controller.text.isEmpty
+                          ? Color(0xFF916B44).withOpacity(0.5)
+                          : Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: controller.text.isEmpty
+                          ? FontWeight.normal
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xFFDBA871),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 // Modern Text Field Widget
   Widget _buildModernTextField({
     required String label,
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters, // ✅ เพิ่มตรงนี้
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,6 +513,8 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
           ),
           child: TextField(
             controller: controller,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters, // ✅ เพิ่มตรงนี้
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -900,25 +915,26 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     controller.numPerTime.value = int.parse(numPerTimeCtl.text);
     controller.address.value = addressCtl.text;
 
-    var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
+    // var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
     Get.back();
-    if (res.statusCode == 200) {
-      Get.snackbar(
-        'ข้อผิดพลาด',
-        'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
-        colorText: Colors.white,
-        borderRadius: 12,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-        snackStyle: SnackStyle.FLOATING,
-        isDismissible: true,
-      );
-      return;
-    } else {
-      Get.to(() => CliniclocationselectPage());
-    }
+    Get.to(() => CliniclocationselectPage());
+    // if (res.statusCode == 200) {
+    //   Get.snackbar(
+    //     'ข้อผิดพลาด',
+    //     'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
+    //     snackPosition: SnackPosition.TOP,
+    //     backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+    //     colorText: Colors.white,
+    //     borderRadius: 12,
+    //     margin: const EdgeInsets.all(16),
+    //     duration: const Duration(seconds: 2),
+    //     snackStyle: SnackStyle.FLOATING,
+    //     isDismissible: true,
+    //   );
+    //   return;
+    // } else {
+    //   Get.to(() => CliniclocationselectPage());
+    // }
   }
 
   void _showOpenSelectTime() async {
