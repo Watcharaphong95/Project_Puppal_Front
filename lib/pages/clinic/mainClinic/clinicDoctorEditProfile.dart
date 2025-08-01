@@ -296,7 +296,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey[400],
+                                    backgroundColor: Color(0xFF916B44),
                                     foregroundColor: Colors.white,
                                     padding: EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(

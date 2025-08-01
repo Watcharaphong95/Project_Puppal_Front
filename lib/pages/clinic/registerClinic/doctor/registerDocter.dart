@@ -1287,7 +1287,8 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
     if (nameCtl.text.trim().isEmpty ||
         surnameCtl.text.trim().isEmpty ||
         selectedSpecialty == null ||
-        careerNoCtl.text.trim().isEmpty) {
+        careerNoCtl.text.trim().isEmpty ||
+        selectedSpecialty.isEmpty) {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',

@@ -86,7 +86,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
             'สมัครคลินิก',
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Color(0xFF916B44),
+          backgroundColor: Color(0xFFDBA871),
           iconTheme: IconThemeData(color: Colors.white),
         ),
         body: SingleChildScrollView(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -614,6 +615,29 @@ class _ClinicsettingState extends State<Clinicsetting> {
     await deletePictureSupabase();
     var resUpdateType = await http
         .put(Uri.parse("$url/user/deleteClinic/${box.read('email')}"));
+
+    final docRef = FirebaseFirestore.instance
+        .collection('reserve')
+        .where('clinicEmail', isEqualTo: box.read('email'));
+
+    final snapshot = await docRef.get();
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      if (data['status'] != 3) {
+        await doc.reference.delete();
+      }
+    }
+
+    final notificationSnapshot = await FirebaseFirestore.instance
+        .collection('generalNotifications')
+        .where('clinicNotifications', isEqualTo: box.read('email'))
+        .get();
+
+    for (var doc in notificationSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
     Get.back();
     if (res.statusCode == 200 && resUpdateType.statusCode == 200) {
       showAlertNoClose(

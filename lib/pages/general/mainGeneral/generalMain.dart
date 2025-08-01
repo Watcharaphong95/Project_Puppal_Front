@@ -964,7 +964,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  'คลินิก: ${e.clinicName}',
+                                  'คลินิก: ${e.clinicName?.isNotEmpty == true ? e.clinicName : "ไม่พบข้อมูลคลินิก"}',
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   textAlign: TextAlign.end,
@@ -1305,7 +1305,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        e.clinicName ?? 'ไม่พบชื่อคลินิก',
+                                        '${e.clinicName?.isNotEmpty == true ? e.clinicName : "ไม่พบข้อมูลคลินิก"}',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -1324,7 +1324,7 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                           SizedBox(width: 4),
                                           Expanded(
                                             child: Text(
-                                              e.clinicPhone ?? 'ไม่พบเบอร์โทร',
+                                              '${e.clinicPhone?.isNotEmpty == true ? e.clinicPhone : 'ไม่พบเบอร์โทร'}',
                                               style: TextStyle(
                                                 color: Color(0xFF916B44)
                                                     .withOpacity(0.7),
@@ -1346,11 +1346,15 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  openMap(double.parse(e.clinicLat),
-                                      double.parse(e.clinicLng));
+                                  e.clinicName == ''
+                                      ? null
+                                      : openMap(double.parse(e.clinicLat),
+                                          double.parse(e.clinicLng));
                                 },
                                 icon: Icon(Icons.map, size: 20),
-                                label: Text('ดูแผนที่คลินิก'),
+                                label: Text(
+                                  '${e.clinicName?.isNotEmpty == true ? e.clinicName : 'ไม่พบคลินิก'}',
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
                                       Color(0xFFDBA871).withOpacity(0.2),

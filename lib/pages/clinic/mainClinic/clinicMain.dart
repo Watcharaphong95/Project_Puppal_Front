@@ -1389,13 +1389,20 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       const SizedBox(height: 24),
 
                       // Details
-                      _buildPopupDetailRow('ชื่อ :', generalData.name),
-                      _buildPopupDetailRow('นามสกุล :', generalData.surname),
-                      _buildPopupDetailRow('เบอร์โทร :', generalData.phone),
-                      _buildPopupDetailRow('วันที่จอง :',
-                          _formatDateString(reserveData['date'])),
                       _buildPopupDetailRow(
-                          'เวลาจอง :', _formatDate(reserveData['date'])),
+                          'ชื่อ :', generalData.name ?? 'ไม่มีข้อมูล'),
+                      _buildPopupDetailRow(
+                          'นามสกุล :', generalData.surname ?? 'ไม่มีข้อมูล'),
+                      _buildPopupDetailRow(
+                          'เบอร์โทร :', generalData.phone ?? 'ไม่มีข้อมูล'),
+                      _buildPopupDetailRow(
+                        'วันที่จอง :',
+                        _formatDateString(reserveData['date']) ?? 'ไม่มีข้อมูล',
+                      ),
+                      _buildPopupDetailRow(
+                        'เวลาจอง :',
+                        _formatDate(reserveData['date']) ?? 'ไม่มีข้อมูล',
+                      ),
 
                       const SizedBox(height: 32),
 

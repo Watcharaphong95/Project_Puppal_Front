@@ -185,6 +185,7 @@ class _ClinicaddavatarState extends State<Clinicaddavatar>
         surname: controller.surname.value,
         careerNo: controller.careerNo.value,
         image: controller.image.value,
+        special: controller.special.value,
       );
 
       doctorList.addDoctor(newDoctor);

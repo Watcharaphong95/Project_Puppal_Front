@@ -283,14 +283,14 @@ class _ClinictimeselectPageState extends State<ClinictimeselectPage> {
                           SizedBox(height: 16),
                           if (clinic.doctors.isNotEmpty)
                             Container(
-                              height: 140,
+                              height: screenHeight * 0.17,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: clinic.doctors.length,
                                 itemBuilder: (context, index) {
                                   final doctor = clinic.doctors[index];
                                   return Container(
-                                    width: 120,
+                                    width: screenWidth * 0.23,
                                     margin: EdgeInsets.only(right: 16),
                                     child: Column(
                                       children: [

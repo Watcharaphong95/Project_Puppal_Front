@@ -39,6 +39,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   final box = GetStorage();
 
   List<SpecialPost> special = [];
+  List<int> doctorSpecial = [];
   String? selectedSpecialty;
 
   String? get specialName => null;
@@ -719,17 +720,33 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
       if (res.statusCode == 200 || res.statusCode == 201) {
         var jsonResponse = json.decode(res.body);
         String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+        if (doc.special != null && doc.special!.isNotEmpty) {
+          // แยกตาม comma แล้ว trim ช่องว่าง
+          List<String> specialNames = doc.special!
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
 
-        for (var special in special) {
-          if (special.specialId == null) {
+          for (var name in specialNames) {
+            final id = await getSpecialIdByName(name);
+            if (id != null) {
+              doctorSpecial.add(id);
+            } else {
+              log("ไม่พบ specialId สำหรับ '$name'");
+            }
+          }
+        }
+        for (var special in doctorSpecial) {
+          if (special == null) {
             log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
             continue;
           }
-          log("doctorId: ${doc.careerNo}, specialId: ${special.specialId}");
+          log("doctorId: ${doc.careerNo}, specialId: ${special}");
 
           await docspecialAdd(
             doctorId: doc.careerNo,
-            specialId: special.specialId!,
+            specialId: special,
           );
         }
       } else {

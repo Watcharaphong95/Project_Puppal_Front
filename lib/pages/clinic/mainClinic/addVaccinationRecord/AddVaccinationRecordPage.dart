@@ -22,7 +22,6 @@ import 'package:puppal_application/model/reservebooking.dart';
 import 'package:puppal_application/model/reserveclinicfirebase.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
-import 'package:puppal_application/pages/general/recordDog/generalRecord.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -52,6 +51,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   // final controller = Get.find<ClinicinjectionRecordPost>();
   final TextEditingController batchController = TextEditingController();
   TextEditingController vaccineController = TextEditingController();
+  TextEditingController nextVaccineController = TextEditingController();
   TextEditingController dateController = TextEditingController();
   TextEditingController nextDateController = TextEditingController();
   DoctorPost? selectedDoctor;
@@ -237,6 +237,18 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
                       const SizedBox(height: 20),
 
+                      _buildModernTextField(
+                        label: "วัคซีนป้องกันโรครอบถัดไป",
+                        controller: nextVaccineController,
+                        icon: Icons.vaccines,
+                        screenHeight: MediaQuery.of(context).size.height,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'กรุณากรอกชื่อวัคซีน'
+                            : null,
+                      ),
+
+                      const SizedBox(height: 20),
+
                       // Next Appointment Date
                       _buildModernDateField(
                         label: "วันนัดครั้งถัดไป",
@@ -280,8 +292,8 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
                                 title: 'บันทึกประวัติการฉีดยา?',
                                 message: '',
                                 context: context,
-                                onConfirm: () {
-                                  injectionAdd();
+                                onConfirm: () async {
+                                  await injectionAdd();
                                 });
                           },
                           style: ElevatedButton.styleFrom(
@@ -659,7 +671,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
           Padding(
             padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              "เลือกสัตวแพทย์",
+              "เลือกสัตว์แพทย์",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1633,33 +1645,21 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
 
   Future<List<DoctorPost>> getdoctorList(String clinicEmail) async {
     log("📥 clinicEmail: $clinicEmail");
-
-    final doctor = await getdoctor(clinicEmail);
-    if (doctor != null) {
-      return [doctor];
-    } else {
-      return [];
-    }
-  }
-
-  Future<DoctorPost?> getdoctor(String clinicEmail) async {
-    log("📥 clinicEmail: $clinicEmail");
     try {
       var res =
           await http.get(Uri.parse("$url/doctor/searchemail/$clinicEmail"));
+
       if (res.statusCode == 200) {
         final List<DoctorPost> doctorList = doctorPostFromJson(res.body);
-        if (doctorList.isNotEmpty) {
-          return doctorList.first;
-        }
-        return null; // กรณีไม่มีข้อมูล
+        log("✅ Found ${doctorList.length} doctors for $clinicEmail");
+        return doctorList;
       } else {
-        log("❌ Failed to load doctor: ${res.statusCode}");
-        return null;
+        log("❌ Failed to load doctor list: ${res.statusCode}");
+        return [];
       }
     } catch (e) {
-      log("❌ Exception while fetching doctor info: $e");
-      return null;
+      log("❌ Exception while fetching doctor list: $e");
+      return [];
     }
   }
 
@@ -1680,23 +1680,13 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
   }
 
   Future<void> injectionAdd() async {
-    showLoadingDialog();
-    // เช็คว่า reserveList มีข้อมูลไหม
-    if (reserveList.isEmpty) {
-      log("⚠️ reserveList is empty");
-      showTopNotification(
-        context,
-        'ไม่สามารถดำเนินการได้: ไม่พบข้อมูลการจอง',
-        isSuccess: false,
-      );
-      return;
-    }
-
     // เช็คว่าข้อมูลครบ (วัคซีน, วันที่, รูปภาพ, วันที่นัดถัดไป)
     if (vaccineController.text.trim().isEmpty ||
+        nextVaccineController.text.trim().isEmpty ||
         dateController.text.trim().isEmpty ||
         _imageFile == null ||
-        nextDateController.text.trim().isEmpty) {
+        nextDateController.text.trim().isEmpty ||
+        reserveList.isEmpty) {
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -1709,9 +1699,11 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         snackStyle: SnackStyle.FLOATING,
         isDismissible: true,
       );
-      Get.back();
+
       return;
     }
+
+    showLoadingDialog();
 
     // log ตรวจสอบค่า vaccine ก่อนส่ง
     log("📌 vaccineController.text ก่อนส่ง: ${vaccineController.text}");
@@ -1748,7 +1740,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     AppointmentPost appReq = AppointmentPost(
       dogId: dogId,
       generalUserEmail: reserveList[0].generalEmail,
-      vaccine: vaccineController.text,
+      vaccine: nextVaccineController.text,
       date: nextDate,
     );
 
@@ -2175,6 +2167,148 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       log("Error during upload: $e");
       return '';
     }
+  }
+
+  void showAlert({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+    required BuildContext context,
+  }) {
+    Get.defaultDialog(
+      title: '',
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.all(16),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon with subtle animation potential
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD7CCC8),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 24,
+              color: const Color(0xFFA1887F),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Title with better typography
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Color(0xFF8D6E63),
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Message with improved readability
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFFA1887F),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 20),
+
+          // Enhanced button row
+          Row(
+            children: [
+              // Cancel button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  child: TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF8D6E63),
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: const Color(0xFFD7CCC8),
+                          width: 1,
+                        ),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ยกเลิก',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              // Confirm button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color(0xFF795548),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFA1887F).withOpacity(0.3),
+                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                      if (onConfirm != null) onConfirm();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'ตกลง',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFFF5F0E8),
+      barrierDismissible: false,
+      radius: 16,
+    );
   }
 }
 

@@ -42,6 +42,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
   final box = GetStorage();
 
   List<SpecialPost> special = [];
+  List<int> doctorSpecial = [];
   String? selectedSpecialty;
   bool _loadingData = true;
 
@@ -311,7 +312,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
               context: context,
               title: 'เพิ่มหมอ?',
               message: 'คุณต้องการเพิ่มหมอทั้งหมดนี้ใช่หรือไม่?',
-              onConfirm: doctorAdd,
+              onConfirm: registerClinicAndAddDoctor,
             );
           },
           style: ElevatedButton.styleFrom(
@@ -359,7 +360,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       List<SpecialPost> allResults = [];
 
       for (var name in names) {
-        final res = await http.get(Uri.parse("$url/special/search?name=$name"));
+        final res = await http.get(Uri.parse("$url/special/search/$name"));
 
         if (res.statusCode == 200) {
           var jsonData = json.decode(res.body);
@@ -384,8 +385,8 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
     }
   }
 
-  void registerClinicAndAddDoctor() {
-    doctorAdd();
+  Future<void> registerClinicAndAddDoctor() async {
+    await doctorAdd();
     doctorListController.doctorList.clear();
   }
 
@@ -414,8 +415,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
 
   Future<int?> getSpecialIdByName(String specialName) async {
     try {
-      final res =
-          await http.get(Uri.parse("$url/special/search?name=$specialName"));
+      final res = await http.get(Uri.parse("$url/special/search/$specialName"));
 
       if (res.statusCode == 200) {
         var jsonData = json.decode(res.body);
@@ -460,17 +460,34 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       if (res.statusCode == 200 || res.statusCode == 201) {
         var jsonResponse = json.decode(res.body);
         String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+        if (doc.special != null && doc.special!.isNotEmpty) {
+          // แยกตาม comma แล้ว trim ช่องว่าง
+          List<String> specialNames = doc.special!
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
 
-        for (var special in special) {
-          if (special.specialId == null) {
+          for (var name in specialNames) {
+            final id = await getSpecialIdByName(name);
+            if (id != null) {
+              doctorSpecial.add(id);
+            } else {
+              log("ไม่พบ specialId สำหรับ '$name'");
+            }
+          }
+        }
+        log(doctorSpecial.join(','));
+        for (var special in doctorSpecial) {
+          if (special == null) {
             log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
             continue;
           }
-          log("doctorId: ${doc.careerNo}, specialId: ${special.specialId}");
+          log("doctorId: ${doc.careerNo}, specialId: ${special}");
 
           await docspecialAdd(
             doctorId: doc.careerNo,
-            specialId: special.specialId!,
+            specialId: special,
           );
         }
       } else {

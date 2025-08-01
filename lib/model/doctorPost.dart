@@ -14,16 +14,17 @@ class DoctorPost {
   String name;
   String surname;
   String careerNo;
+  String? special;
 
   String image;
 
-  DoctorPost({
-    required this.userEmail,
-    required this.name,
-    required this.surname,
-    required this.careerNo,
-    required this.image,
-  });
+  DoctorPost(
+      {required this.userEmail,
+      required this.name,
+      required this.surname,
+      required this.careerNo,
+      required this.image,
+      this.special});
 
   factory DoctorPost.fromJson(Map<String, dynamic> json) => DoctorPost(
         userEmail: json["user_email"],
@@ -31,6 +32,7 @@ class DoctorPost {
         surname: json["surname"],
         careerNo: json["careerNo"],
         image: json["image"],
+        special: json["special"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -39,5 +41,6 @@ class DoctorPost {
         "surname": surname,
         "careerNo": careerNo,
         "image": image,
+        "special": special,
       };
 }
