@@ -1699,7 +1699,6 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         snackStyle: SnackStyle.FLOATING,
         isDismissible: true,
       );
-
       return;
     }
 

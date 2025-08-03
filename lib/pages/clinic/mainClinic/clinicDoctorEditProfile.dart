@@ -26,8 +26,8 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Clinicdoctoreditprofile extends StatefulWidget {
-  final String? name;
-  const Clinicdoctoreditprofile({super.key, this.name});
+  final String? careerNo;
+  const Clinicdoctoreditprofile({super.key, this.careerNo});
 
   @override
   State<Clinicdoctoreditprofile> createState() =>
@@ -51,18 +51,26 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
   List<DoctorPost> doctorsList = [];
   bool _loadingData = true;
   List<String> selectedSpecialty = [];
+  List<String> tempSelectSpecial = [];
   List<SpecialPost> special = [];
   List<GetDocSpecialIdPost> docSpecialList = [];
   List<String> unselectedSpecialties = [];
 
   File? _imageFile;
 
+  bool dataChange = false;
+
+  String? initialName;
+  String? initialSurname;
+  String? initialImage;
+  List<String> initialSpecialties = [];
+
   @override
   void initState() {
     super.initState();
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
-      searcheDoctor(this.widget.name ?? '');
+      searcheDoctor(this.widget.careerNo);
       getSpecialData();
       setState(() {
         _loadingData = false;
@@ -208,21 +216,33 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
                               children: [
                                 // Name Field
                                 _buildModernTextField(
-                                  label: 'ชื่อ',
-                                  controller: nameCtl,
-                                  icon: Icons.person_outline,
-                                  screenHeight: screenHeight,
-                                ),
+                                    label: 'ชื่อ',
+                                    controller: nameCtl,
+                                    icon: Icons.person_outline,
+                                    screenHeight: screenHeight,
+                                    onChanged: (value) {
+                                      if (nameCtl.text != initialName) {
+                                        dataChange = true;
+                                      } else {
+                                        dataChange = false;
+                                      }
+                                    }),
 
                                 SizedBox(height: 24),
 
                                 // Surname Field
                                 _buildModernTextField(
-                                  label: 'นามสกุล',
-                                  controller: surnameCtl,
-                                  icon: Icons.person_outline,
-                                  screenHeight: screenHeight,
-                                ),
+                                    label: 'นามสกุล',
+                                    controller: surnameCtl,
+                                    icon: Icons.person_outline,
+                                    screenHeight: screenHeight,
+                                    onChanged: (value) {
+                                      if (surnameCtl.text != initialSurname) {
+                                        dataChange = true;
+                                      } else {
+                                        dataChange = false;
+                                      }
+                                    }),
 
                                 SizedBox(height: 24),
 
@@ -286,15 +306,17 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
                               SizedBox(width: 16),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    showAlert(
-                                      title: 'ต้องการบันทึกข้อมูล?',
-                                      message: 'ข้อมูลเก่าจะถูกลบถาวร',
-                                      onConfirm: () {
-                                        updatedataDoctor(doctor.careerNo);
-                                      },
-                                    );
-                                  },
+                                  onPressed: dataChange
+                                      ? () {
+                                          showAlert(
+                                            title: 'ต้องการบันทึกข้อมูล?',
+                                            message: 'ข้อมูลเก่าจะถูกลบถาวร',
+                                            onConfirm: () {
+                                              updatedataDoctor(doctor.careerNo);
+                                            },
+                                          );
+                                        }
+                                      : null,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Color(0xFF916B44),
                                     foregroundColor: Colors.white,
@@ -341,6 +363,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    void Function(String)? onChanged, // ✅ เพิ่ม parameter optional
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,6 +398,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
           ),
           child: TextField(
             controller: controller,
+            onChanged: onChanged, // ✅ เพิ่ม onChanged ที่นี่
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -665,27 +689,27 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
   List<DoctorPost> doctorPostFromJson(String str) => List<DoctorPost>.from(
       json.decode(str).map((x) => DoctorPost.fromJson(x)));
 
-  Future<void> searcheDoctor(name) async {
+  Future<void> searcheDoctor(careerNo) async {
     showLoadingDialog();
 
-    final keyword = name.trim();
-    // log("Keyword: $keyword");
-    if (keyword.isEmpty) return;
-
     try {
-      final res = await http
-          .get(Uri.parse("$url/doctor/searche/${box.read('email')}/$keyword"));
+      final res =
+          await http.get(Uri.parse("$url/doctor/searcheCareer/$careerNo"));
       if (res.statusCode == 200) {
         final data = doctorPostFromJson(res.body);
         for (var doctor in data) {
           // log("ชื่อหมอ: ${doctor.name}");
           // log(doctor.careerNo);
-          updatedataDoctor(doctor.careerNo);
+          // updatedataDoctor(doctor.careerNo);
           getSearchSpecial(doctor.careerNo);
           if (data.isNotEmpty) {
             nameCtl.text = data[0].name;
             surnameCtl.text = data[0].surname;
             imageCtl.text = data[0].image;
+
+            initialName = data[0].name;
+            initialSurname = data[0].surname;
+            initialImage = data[0].image;
           }
         }
         setState(() {
@@ -883,6 +907,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
       }
     }
     unselectedSpecialties.clear();
+    dataChange = false;
     Get.back();
     showAlertNoClose(
       title: 'อัพเดทเสร็จสิ้น',
@@ -1613,6 +1638,16 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
                                       setState(() {
                                         selectedSpecialty =
                                             List.from(tempSelected);
+                                        log("selected: ${selectedSpecialty.join(',')}");
+                                        log("temp: ${tempSelectSpecial.join(',')}");
+
+                                        final a = Set.from(selectedSpecialty);
+                                        final b = Set.from(tempSelectSpecial);
+
+                                        final isChanged =
+                                            a.length != b.length ||
+                                                !a.containsAll(b);
+                                        dataChange = isChanged;
                                       });
                                       Navigator.pop(context);
                                     },
@@ -1762,6 +1797,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
       }
       setState(() {
         selectedSpecialty = jsonData.map((e) => e.specialName).toList();
+        tempSelectSpecial = selectedSpecialty;
       });
     } else {
       log("Failed to load specialties: ${res.statusCode}");
@@ -1858,6 +1894,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
               final picked = await ImagePicker()
                   .pickImage(source: ImageSource.camera, imageQuality: 80);
               if (picked != null) {
+                dataChange = true;
                 setState(() => _imageFile = File(picked.path));
               }
             },

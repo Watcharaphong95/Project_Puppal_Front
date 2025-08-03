@@ -530,8 +530,8 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       Get.to(
                                                         () =>
                                                             Clinicdoctoreditprofile(
-                                                                name: doctor
-                                                                    .name),
+                                                                careerNo: doctor
+                                                                    .careerNo),
                                                       );
                                                     },
                                                     child: const Text(
