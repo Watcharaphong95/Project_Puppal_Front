@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -28,13 +29,13 @@ Future<void> main() async {
   await GetStorage.init();
   await Firebase.initializeApp();
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   FirebaseMessaging.instance.requestPermission(provisional: true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await NotificationService.initialize();
   await Supabase.initialize(
       url: 'https://ombydonicueujwrhhcnl.supabase.co',
-      anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYnlkb25pY3VldWp3cmhoY25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0OTUwNzIsImV4cCI6MjA2MTA3MTA3Mn0.KafiBfl_6rdE3os66qKn8orpsEecV-SAVq6nRW1IpyQ');
+      anonKey: dotenv.env['SUPABASE_API_KEY']!);
   Get.put(RegisterGeneralCtl());
   Get.put(registerClinicCtl());
   Get.put(registerDoctorCtl());
