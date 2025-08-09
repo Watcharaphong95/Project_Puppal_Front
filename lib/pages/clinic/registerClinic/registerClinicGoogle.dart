@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -60,14 +61,18 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
   @override
   void initState() {
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-    });
+    init();
     if (box.read('emailGoogleRegister') != null) {
       emailCtl.text = box.read('emailGoogleRegister');
     } else {
       emailCtl.text = box.read('email');
     }
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
   }
 
   @override
@@ -81,11 +86,11 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
             'สมัครคลินิก',
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Color(0xFF916B44),
+          backgroundColor: Color(0xFFDBA871),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: SingleChildScrollView(
           child: Container(
-            // height: screenHeight * 0.9,
             color: Color(0xFFFAF8F5),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -179,6 +184,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                         ),
                         child: TextField(
                           controller: emailCtl,
+                          enabled: false,
                           readOnly: true,
                           style: TextStyle(
                             fontSize: 16,
@@ -219,11 +225,11 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
 
                   // เบอร์โทรศัพท์
                   _buildModernTextField(
-                    label: 'เบอร์โทรศัพท์',
-                    controller: phoneCtl,
-                    icon: Icons.phone_outlined,
-                    screenHeight: screenHeight,
-                  ),
+                      label: 'เบอร์โทรศัพท์',
+                      controller: phoneCtl,
+                      icon: Icons.phone_outlined,
+                      screenHeight: screenHeight,
+                      keyboardType: TextInputType.phone),
 
                   SizedBox(height: 24),
 
@@ -310,98 +316,31 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
 
                   SizedBox(height: 24),
 
-                  // เวลาเปิดคลินิก (ใช้ _buildModernTextField แต่ต้องปรับให้ readOnly + onTap)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'เวลาเปิดคลินิก',
-                        controller: openCtl,
-                        icon: Icons.access_time_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Positioned(
-                        child: TextField(
-                          controller: openCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
-                            ),
-                            hintText: "เลือกเวลาเปิดคลินิก",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: () => _showCustomTimePicker(isOpen: true),
-                        ),
-                      ),
-                    ],
+                  _buildTimeTextField(
+                    label: 'เวลาเปิดคลินิก',
+                    controller: openCtl,
+                    hintText: "เลือกเวลาเปิดคลินิก",
+                    onTap: () => _showCustomTimePicker(isOpen: true),
+                    screenHeight: screenHeight,
                   ),
-
-                  SizedBox(height: 16),
-
-                  // เวลาปิดคลินิก (แบบเดียวกับเวลาเปิด)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'เวลาปิดคลินิก',
-                        controller: closeCtl,
-                        icon: Icons.access_time_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Positioned(
-                        child: TextField(
-                          controller: closeCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
-                            ),
-                            hintText: "เลือกเวลาปิดคลินิก",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: () => _showCustomTimePicker(isOpen: false),
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: 24),
+// เวลาปิดคลินิก
+                  _buildTimeTextField(
+                    label: 'เวลาปิดคลินิก',
+                    controller: closeCtl,
+                    hintText: "เลือกเวลาปิดคลินิก",
+                    onTap: () => _showCustomTimePicker(isOpen: false),
+                    screenHeight: screenHeight,
                   ),
-
                   SizedBox(height: 24),
 
                   // จำนวนคำขอต่อช่วงเวลา
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModernTextField(
-                        label: 'จำนวนคำขอต่อช่วงเวลา',
-                        controller: numPerTimeCtl,
-                        icon: Icons.format_list_numbered_outlined,
-                        screenHeight: screenHeight,
-                      ),
-                      Positioned(
-                        child: TextField(
-                          controller: numPerTimeCtl,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
-                            ),
-                            hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
-                            hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          onTap: _showSelectNum,
-                        ),
-                      ),
-                    ],
+                  _buildTimeTextField(
+                    label: 'จำนวนคำขอต่อช่วงเวลา',
+                    controller: numPerTimeCtl,
+                    hintText: "เลือกจำนวนคำขอต่อช่วงเวลา",
+                    onTap: _showSelectNum,
+                    screenHeight: screenHeight,
                   ),
 
                   SizedBox(height: 24),
@@ -447,12 +386,99 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
         ));
   }
 
+  Widget _buildTimeTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+    required VoidCallback onTap,
+    required double screenHeight,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF916B44),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Color(0xFFE9CBAF),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF916B44).withOpacity(0.05),
+                  offset: Offset(0, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 16),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE9CBAF).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.access_time,
+                    color: Color(0xFF916B44),
+                    size: 20,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    controller.text.isEmpty ? hintText : controller.text,
+                    style: TextStyle(
+                      color: controller.text.isEmpty
+                          ? Color(0xFF916B44).withOpacity(0.5)
+                          : Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: controller.text.isEmpty
+                          ? FontWeight.normal
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xFFDBA871),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 // Modern Text Field Widget
   Widget _buildModernTextField({
     required String label,
     required TextEditingController controller,
     required IconData icon,
     required double screenHeight,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters, // ✅ เพิ่มตรงนี้
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,6 +513,8 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
           ),
           child: TextField(
             controller: controller,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters, // ✅ เพิ่มตรงนี้
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF916B44),
@@ -666,12 +694,23 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                 : TimeOfDay(hour: 8, minute: 0))
             : (closeCtl.text.isNotEmpty
                 ? _parseTimeString(closeCtl.text)
-                : TimeOfDay(hour: 17, minute: 0)),
+                : _parseTimeString(openCtl.text)),
+        openTime: !isOpen && openCtl.text.isNotEmpty
+            ? _parseTimeString(openCtl.text)
+            : null, // Pass opening time for closing picker
         onTimeSelected: (time) {
           setState(() {
             if (isOpen) {
               openCtl.text =
                   "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+
+              // Clear closing time if it's now invalid (earlier than or equal to opening time)
+              if (closeCtl.text.isNotEmpty) {
+                final closeTime = _parseTimeString(closeCtl.text);
+                if (_isTimeEarlierOrEqual(closeTime, time)) {
+                  closeCtl.text = '';
+                }
+              }
             } else {
               closeCtl.text =
                   "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
@@ -689,6 +728,13 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
       hour: int.parse(parts[0]),
       minute: int.parse(parts[1]),
     );
+  }
+
+  // Helper method to check if time1 is earlier than or equal to time2
+  bool _isTimeEarlierOrEqual(TimeOfDay time1, TimeOfDay time2) {
+    if (time1.hour < time2.hour) return true;
+    if (time1.hour > time2.hour) return false;
+    return time1.minute <= time2.minute;
   }
 
 // Method สำหรับเลือกจำนวนคำขอ (ปรับปรุงแล้ว)
@@ -822,7 +868,7 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     }
 
     // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -857,6 +903,8 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
       return;
     }
 
+    showLoadingDialog();
+
     controller.name.value = nameCtl.text;
     controller.email.value = emailCtl.text;
     controller.password.value = '';
@@ -867,25 +915,26 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
     controller.numPerTime.value = int.parse(numPerTimeCtl.text);
     controller.address.value = addressCtl.text;
 
-    var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
-
-    if (res.statusCode == 200) {
-      Get.snackbar(
-        'ข้อผิดพลาด',
-        'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
-        colorText: Colors.white,
-        borderRadius: 12,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-        snackStyle: SnackStyle.FLOATING,
-        isDismissible: true,
-      );
-      return;
-    } else {
-      Get.to(() => CliniclocationselectPage());
-    }
+    // var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
+    Get.back();
+    Get.to(() => CliniclocationselectPage());
+    // if (res.statusCode == 200) {
+    //   Get.snackbar(
+    //     'ข้อผิดพลาด',
+    //     'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
+    //     snackPosition: SnackPosition.TOP,
+    //     backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+    //     colorText: Colors.white,
+    //     borderRadius: 12,
+    //     margin: const EdgeInsets.all(16),
+    //     duration: const Duration(seconds: 2),
+    //     snackStyle: SnackStyle.FLOATING,
+    //     isDismissible: true,
+    //   );
+    //   return;
+    // } else {
+    //   Get.to(() => CliniclocationselectPage());
+    // }
   }
 
   void _showOpenSelectTime() async {
@@ -1106,12 +1155,15 @@ class TimePickerBottomSheet extends StatefulWidget {
   final bool isOpenTime;
   final TimeOfDay? initialTime;
   final Function(TimeOfDay) onTimeSelected;
+  final TimeOfDay?
+      openTime; // Add this parameter to pass opening time for closing picker
 
   const TimePickerBottomSheet({
     Key? key,
     required this.isOpenTime,
     this.initialTime,
     required this.onTimeSelected,
+    this.openTime, // Optional opening time for validation
   }) : super(key: key);
 
   @override
@@ -1129,17 +1181,52 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
   // เวลาที่เหมาะสมสำหรับคลินิก
   List<int> get availableHours {
     if (widget.isOpenTime) {
-      // เวลาเปิด: 6:00 - 12:00
-      return List.generate(7, (index) => 6 + index); // 6,7,8,9,10,11,12
+      // เวลาเปิด: แสดงทุกชั่วโมง 0-23
+      return List.generate(24, (index) => index); // 0,1,2,...,23
     } else {
-      // เวลาปิด: 12:00 - 22:00
-      return List.generate(
-          11, (index) => 12 + index); // 12,13,14,15,16,17,18,19,20,21,22
+      // เวลาปิด: แสดงเฉพาะชั่วโมงที่มากกว่าเวลาเปิด
+      if (widget.openTime != null) {
+        final openHour = widget.openTime!.hour;
+        final openMinute = widget.openTime!.minute;
+
+        List<int> hours = [];
+
+        // Add hours after opening hour
+        for (int hour = openHour + 1; hour <= 23; hour++) {
+          hours.add(hour);
+        }
+
+        // If opening minute is 0, also allow same hour with 30 minutes
+        if (openMinute == 0) {
+          hours.insert(0, openHour);
+        }
+
+        return hours.isEmpty ? [openHour + 1] : hours;
+      } else {
+        // Default fallback if no opening time provided
+        return List.generate(
+            11, (index) => 12 + index); // 12,13,14,15,16,17,18,19,20,21,22
+      }
     }
   }
 
   // นาทีทีละ 30 นาที
-  List<int> get availableMinutes => [0, 30];
+  List<int> get availableMinutes {
+    if (!widget.isOpenTime && widget.openTime != null) {
+      final openHour = widget.openTime!.hour;
+      final openMinute = widget.openTime!.minute;
+
+      // If selected hour is same as opening hour, only show minutes after opening minute
+      if (selectedHour == openHour) {
+        if (openMinute == 0) {
+          return [30]; // Only 30 minutes available
+        } else {
+          return []; // No available minutes if opening is at 30
+        }
+      }
+    }
+    return [0, 30]; // Default: 0 and 30 minutes
+  }
 
   @override
   void initState() {
@@ -1156,8 +1243,11 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
     if (!availableHours.contains(selectedHour)) {
       selectedHour = availableHours.first;
     }
-    if (!availableMinutes.contains(selectedMinute)) {
-      selectedMinute = availableMinutes.first;
+
+    // Update available minutes after setting hour
+    final currentAvailableMinutes = availableMinutes;
+    if (!currentAvailableMinutes.contains(selectedMinute)) {
+      selectedMinute = currentAvailableMinutes.first;
     }
   }
 
@@ -1260,15 +1350,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
           Expanded(
             child: Column(
               children: [
-                // SizedBox(height: 10),
-                // Text(
-                //   'เลือกเวลา',
-                //   style: TextStyle(
-                //     fontSize: 18,
-                //     fontWeight: FontWeight.bold,
-                //     color: primaryColor,
-                //   ),
-                // ),
                 SizedBox(height: 10),
                 Expanded(
                   child: Container(
@@ -1332,11 +1413,24 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                                 physics: FixedExtentScrollPhysics(),
                                 controller: FixedExtentScrollController(
                                   initialItem:
-                                      availableHours.indexOf(selectedHour),
+                                      availableHours.contains(selectedHour)
+                                          ? availableHours.indexOf(selectedHour)
+                                          : 0,
                                 ),
                                 onSelectedItemChanged: (index) {
                                   setState(() {
                                     selectedHour = availableHours[index];
+
+                                    // Update minutes when hour changes (for closing time)
+                                    final currentAvailableMinutes =
+                                        availableMinutes;
+                                    if (!currentAvailableMinutes
+                                        .contains(selectedMinute)) {
+                                      selectedMinute =
+                                          currentAvailableMinutes.isNotEmpty
+                                              ? currentAvailableMinutes.first
+                                              : 0;
+                                    }
                                   });
                                 },
                                 childDelegate: ListWheelChildBuilderDelegate(
@@ -1394,56 +1488,79 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                             // Minute Picker
                             Expanded(
                               flex: 2,
-                              child: ListWheelScrollView.useDelegate(
-                                itemExtent: 50,
-                                diameterRatio: 2.5,
-                                perspective: 0.002,
-                                squeeze: 1.0,
-                                physics: FixedExtentScrollPhysics(),
-                                controller: FixedExtentScrollController(
-                                  initialItem:
-                                      availableMinutes.indexOf(selectedMinute),
-                                ),
-                                onSelectedItemChanged: (index) {
-                                  setState(() {
-                                    selectedMinute = availableMinutes[index];
-                                  });
-                                },
-                                childDelegate: ListWheelChildBuilderDelegate(
-                                  childCount: availableMinutes.length,
-                                  builder: (context, index) {
-                                    if (index < 0 ||
-                                        index >= availableMinutes.length)
-                                      return null;
-                                    final minute = availableMinutes[index];
-                                    final isSelected = minute == selectedMinute;
+                              child: availableMinutes.isNotEmpty
+                                  ? ListWheelScrollView.useDelegate(
+                                      itemExtent: 50,
+                                      diameterRatio: 2.5,
+                                      perspective: 0.002,
+                                      squeeze: 1.0,
+                                      physics: FixedExtentScrollPhysics(),
+                                      controller: FixedExtentScrollController(
+                                        initialItem: availableMinutes
+                                                .contains(selectedMinute)
+                                            ? availableMinutes
+                                                .indexOf(selectedMinute)
+                                            : 0,
+                                      ),
+                                      onSelectedItemChanged: (index) {
+                                        setState(() {
+                                          selectedMinute =
+                                              availableMinutes[index];
+                                        });
+                                      },
+                                      childDelegate:
+                                          ListWheelChildBuilderDelegate(
+                                        childCount: availableMinutes.length,
+                                        builder: (context, index) {
+                                          if (index < 0 ||
+                                              index >= availableMinutes.length)
+                                            return null;
+                                          final minute =
+                                              availableMinutes[index];
+                                          final isSelected =
+                                              minute == selectedMinute;
 
-                                    return Opacity(
-                                      opacity: (index -
-                                                      availableMinutes.indexOf(
-                                                          selectedMinute))
-                                                  .abs() <=
-                                              1
-                                          ? 1.0
-                                          : 0.3,
-                                      child: Center(
-                                        child: Text(
-                                          minute.toString().padLeft(2, '0'),
-                                          style: TextStyle(
-                                            fontSize: isSelected ? 28 : 22,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                            color: isSelected
-                                                ? primaryColor
-                                                : primaryColor.withOpacity(0.6),
-                                          ),
+                                          return Opacity(
+                                            opacity: (index -
+                                                            availableMinutes
+                                                                .indexOf(
+                                                                    selectedMinute))
+                                                        .abs() <=
+                                                    1
+                                                ? 1.0
+                                                : 0.3,
+                                            child: Center(
+                                              child: Text(
+                                                minute
+                                                    .toString()
+                                                    .padLeft(2, '0'),
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      isSelected ? 28 : 22,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                  color: isSelected
+                                                      ? primaryColor
+                                                      : primaryColor
+                                                          .withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        '00',
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryColor.withOpacity(0.3),
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
+                                    ),
                             ),
                           ],
                         ),
@@ -1465,7 +1582,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      // backgroundColor: Colors.grey.shade,
                       side: BorderSide(color: primaryColor, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1487,9 +1603,6 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: primaryColor,
-                      // gradient: LinearGradient(
-                      //   colors:primaryColor,
-                      // ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -1500,12 +1613,15 @@ class _TimePickerBottomSheetState extends State<TimePickerBottomSheet> {
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        widget.onTimeSelected(
-                          TimeOfDay(hour: selectedHour, minute: selectedMinute),
-                        );
-                        Navigator.pop(context);
-                      },
+                      onPressed: availableMinutes.isNotEmpty
+                          ? () {
+                              widget.onTimeSelected(
+                                TimeOfDay(
+                                    hour: selectedHour, minute: selectedMinute),
+                              );
+                              Navigator.pop(context);
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,

@@ -489,6 +489,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                           : int.tryParse(dogDogIdRaw.toString()) ?? 0;
 
                       final dogDetails = await getdog(dogDogId);
+
                       if (generalEmail != null && generalEmail.isNotEmpty) {
                         await getGeneral(generalEmail);
                       }

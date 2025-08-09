@@ -83,6 +83,7 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
       currentIndex = index;
       navController.updateIndex(index);
     });
+    log('Index: ${currentIndex.toString()}');
   }
 
   Widget? buildAppBar() {
@@ -305,7 +306,6 @@ class _ClinicmainbottomnavigateState extends State<Clinicmainbottomnavigate> {
                             title: 'คุณยังไม่มีบัญชีผู้ใช้ทั่วไป!',
                             message: 'กด ตกลง เพื่อไปยังหน้าสมัครผู้ใช้ทั่วไป',
                             onConfirm: () async {
-                              await FirebaseMessaging.instance.deleteToken();
                               Get.back();
                               Get.to(() => RegisterusergooglePage());
                             },

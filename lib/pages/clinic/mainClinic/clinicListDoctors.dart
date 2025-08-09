@@ -477,7 +477,7 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                   Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
-                                                            .spaceAround,
+                                                            .center,
                                                     children: [
                                                       Text(
                                                         doctor.name,
@@ -490,6 +490,10 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                         ),
                                                         textAlign:
                                                             TextAlign.center,
+                                                      ),
+                                                      SizedBox(
+                                                        width:
+                                                            screenWidth * 0.025,
                                                       ),
                                                       Text(
                                                         doctor.surname,
@@ -526,8 +530,8 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       Get.to(
                                                         () =>
                                                             Clinicdoctoreditprofile(
-                                                                name: doctor
-                                                                    .name),
+                                                                careerNo: doctor
+                                                                    .careerNo),
                                                       );
                                                     },
                                                     child: const Text(

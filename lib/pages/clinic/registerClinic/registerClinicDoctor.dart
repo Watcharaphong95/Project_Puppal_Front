@@ -39,6 +39,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   final box = GetStorage();
 
   List<SpecialPost> special = [];
+  List<int> doctorSpecial = [];
   String? selectedSpecialty;
 
   String? get specialName => null;
@@ -296,8 +297,8 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
     );
   }
 
-  void registerClinicAndAddDoctor() {
-    insertToDB();
+  Future<void> registerClinicAndAddDoctor() async {
+    await insertToDB();
     doctorListController.doctorList.clear();
   }
 
@@ -696,38 +697,59 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   }
 
   Future<void> doctorAdd() async {
-    DoctorPost doctorReq = DoctorPost(
-      userEmail: clinic.email.value,
-      name: doctor.name.value,
-      surname: doctor.surname.value,
-      careerNo: doctor.careerNo.value,
-      image: doctor.image.value,
-    );
+    // showLoadingDialog(context)
+    for (var doc in doctorListController.doctorList) {
+      DoctorPost req = DoctorPost(
+        userEmail: clinic.email.value,
+        name: doc.name,
+        surname: doc.surname,
+        careerNo: doc.careerNo,
+        image: doc.image,
+      );
 
-    var doctorRes = await http.post(
-      Uri.parse("$url/doctor"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: doctorPostToJson(doctorReq),
-    );
+      var res = await http.post(
+        Uri.parse("$url/doctor"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: doctorPostToJson(req),
+      );
 
-    log("Doctor ${doctor.name} creation status: ${doctorRes.statusCode}");
+      log(res.statusCode.toString());
 
-    if (doctorRes.statusCode == 200 || doctorRes.statusCode == 201) {
-      for (var sp in special) {
-        if (sp.specialId == null) {
-          log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
-          continue;
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        var jsonResponse = json.decode(res.body);
+        String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+        if (doc.special != null && doc.special!.isNotEmpty) {
+          // แยกตาม comma แล้ว trim ช่องว่าง
+          List<String> specialNames = doc.special!
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+          for (var name in specialNames) {
+            final id = await getSpecialIdByName(name);
+            if (id != null) {
+              doctorSpecial.add(id);
+            } else {
+              log("ไม่พบ specialId สำหรับ '$name'");
+            }
+          }
         }
+        for (var special in doctorSpecial) {
+          if (special == null) {
+            log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
+            continue;
+          }
+          log("doctorId: ${doc.careerNo}, specialId: ${special}");
 
-        log("Adding specialty - doctorId: ${doctor.careerNo}, specialId: ${sp.specialId}");
-
-        await docspecialAdd(
-          doctorId: doctor.careerNo.value,
-          specialId: sp.specialId!,
-        );
+          await docspecialAdd(
+            doctorId: doc.careerNo,
+            specialId: special,
+          );
+        }
+      } else {
+        log("Failed to add doctor ${doc.name} ${doc.surname}");
       }
-    } else {
-      log("Failed to add doctor ${doctor.name} ${doctor.surname} - Status: ${doctorRes.statusCode}");
     }
   }
 

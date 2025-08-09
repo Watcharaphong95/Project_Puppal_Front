@@ -25,7 +25,7 @@ class Mainclinicnavigatecontroller extends GetxController {
       1: 'PUPPAL',
       2: 'การแจ้งเตือน',
       3: 'หมอ',
-      4: 'ประวัติการฉีดยา',
+      4: 'ประวัติการฉีดวัคซีน',
       5: 'ตั้งค่า',
     });
   }

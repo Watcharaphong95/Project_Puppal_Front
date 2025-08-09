@@ -408,9 +408,69 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                   final isLastClinic =
                       clinic.userEmail == lastClinic && _hasLatestClinic;
 
-                  // // Determine if clinic is interactable (closed clinics are not clickable)
+                  // Determine if clinic is interactable (closed clinics are not clickable)
                   final isClinicInteractable =
                       filterClinics[index].toDayOpen && !isDisabled;
+
+                  // Format opening days
+                  String formatOpeningDays(String weekdays) {
+                    if (weekdays == null || weekdays.isEmpty) return '';
+
+                    List<String> days = weekdays.split(',');
+                    Map<String, String> dayMap = {
+                      'Monday': 'จ',
+                      'Tuesday': 'อ',
+                      'Wednesday': 'พ',
+                      'Thursday': 'พฤ',
+                      'Friday': 'ศ',
+                      'Saturday': 'ส',
+                      'Sunday': 'อา',
+                    };
+
+                    // Convert to Thai abbreviations
+                    List<String> thaiDays =
+                        days.map((day) => dayMap[day] ?? day).toList();
+
+                    // Check for consecutive weekdays pattern
+                    List<String> weekdayOrder = [
+                      'จ',
+                      'อ',
+                      'พ',
+                      'พฤ',
+                      'ศ',
+                      'ส',
+                      'อา'
+                    ];
+
+                    // Check if it's Monday to Friday
+                    if (thaiDays.length == 5 &&
+                        thaiDays.contains('จ') &&
+                        thaiDays.contains('อ') &&
+                        thaiDays.contains('พ') &&
+                        thaiDays.contains('พฤ') &&
+                        thaiDays.contains('ศ')) {
+                      return 'จ-ศ';
+                    }
+
+                    // Check if it's Monday to Saturday
+                    if (thaiDays.length == 6 &&
+                        thaiDays.contains('จ') &&
+                        thaiDays.contains('อ') &&
+                        thaiDays.contains('พ') &&
+                        thaiDays.contains('พฤ') &&
+                        thaiDays.contains('ศ') &&
+                        thaiDays.contains('ส')) {
+                      return 'จ-ส';
+                    }
+
+                    // Check if it's all 7 days
+                    if (thaiDays.length == 7) {
+                      return 'ทุกวัน';
+                    }
+
+                    // Otherwise, return individual days
+                    return thaiDays.join(', ');
+                  }
 
                   return Container(
                     margin: EdgeInsets.only(bottom: 12),
@@ -653,21 +713,58 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
                                               size: 16,
                                             ),
                                             SizedBox(width: 4),
-                                            Text(
-                                              filterClinics[index].toDayOpen
-                                                  ? 'เปิด ${clinic.open.substring(0, 5)} - ${clinic.close.substring(0, 5)}'
-                                                  : 'ปิดวันนี้',
-                                              style: TextStyle(
-                                                color: !filterClinics[index]
-                                                        .toDayOpen
-                                                    ? Colors.red.shade600
-                                                    : isDisabled
-                                                        ? Colors.grey.shade500
-                                                        : Colors.green.shade600,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
+                                            Expanded(
+                                              child: Text(
+                                                filterClinics[index].toDayOpen
+                                                    ? 'เปิด ${clinic.open.substring(0, 5)} - ${clinic.close.substring(0, 5)}'
+                                                    : 'ปิดวันนี้',
+                                                style: TextStyle(
+                                                  color: !filterClinics[index]
+                                                          .toDayOpen
+                                                      ? Colors.red.shade600
+                                                      : isDisabled
+                                                          ? Colors.grey.shade500
+                                                          : Colors
+                                                              .green.shade600,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                               ),
                                             )
+                                          ],
+                                        ),
+                                        // Add opening days information
+                                        SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today,
+                                              color: !filterClinics[index]
+                                                      .toDayOpen
+                                                  ? Colors.grey.shade400
+                                                  : isDisabled
+                                                      ? Colors.grey.shade500
+                                                      : Colors.purple.shade600,
+                                              size: 16,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                formatOpeningDays(
+                                                    clinic.weekdays),
+                                                style: TextStyle(
+                                                  color: !filterClinics[index]
+                                                          .toDayOpen
+                                                      ? Colors.grey.shade400
+                                                      : isDisabled
+                                                          ? Colors.grey.shade500
+                                                          : Colors
+                                                              .purple.shade600,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                         // Show specialties if available
@@ -1129,6 +1226,7 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
           filterClinics = clinics.where((clinic) {
             return clinic.name.toLowerCase().contains(value.toLowerCase());
           }).toList();
+          setState(() {});
         },
         decoration: InputDecoration(
           hintText: 'ค้นหาคลินิก',

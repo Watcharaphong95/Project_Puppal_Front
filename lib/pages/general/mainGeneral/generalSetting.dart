@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -633,6 +634,26 @@ class _GeneralprofilePageState extends State<GeneralprofilePage> {
     await deletePictureSupabase();
     var resUpdateType = await http
         .put(Uri.parse("$url/user/deleteGeneral/${box.read('email')}"));
+
+    final reserveSnapshot = await FirebaseFirestore.instance
+        .collection('reserve')
+        .where('generalEmail', isEqualTo: box.read('email'))
+        .get();
+
+    for (var doc in reserveSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+// Delete all notifications
+    final notificationSnapshot = await FirebaseFirestore.instance
+        .collection('generalNotifications')
+        .where('receiverEmail', isEqualTo: box.read('email'))
+        .get();
+
+    for (var doc in notificationSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
     Get.back();
     if (res.statusCode == 200 && resUpdateType.statusCode == 200) {
       showAlertNoClose(

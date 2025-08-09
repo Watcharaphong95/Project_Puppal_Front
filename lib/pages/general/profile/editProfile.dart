@@ -666,6 +666,44 @@ class _EditprofilePageState extends State<EditprofilePage> {
   }
 
   void confirmButton() {
+    if (usernameCtl.text.trim().isEmpty ||
+        nameCtl.text.trim().isEmpty ||
+        surnameCtl.text.trim().isEmpty ||
+        emailCtl.text.trim().isEmpty ||
+        phoneCtl.text.trim().isEmpty ||
+        addressCtl.text.trim().isEmpty) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกข้อมูลให้ครบถ้วน',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
+
+    // Phone number format check (simple 10-digit validation).
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
+    if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
+      Get.snackbar(
+        'ข้อผิดพลาด',
+        'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
+      return;
+    }
     showAlert(
         title: 'ต้องการบันทึกข้อมูล?',
         message: 'ข้อมูลเก่าจะถูกลบถาวร',

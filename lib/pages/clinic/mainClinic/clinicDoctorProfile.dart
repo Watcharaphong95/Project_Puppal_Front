@@ -362,7 +362,7 @@ class _ClinicdoctorprofileState extends State<Clinicdoctorprofile> {
                                 onPressed: () {
                                   Get.to(
                                     () => Clinicdoctoreditprofile(
-                                        name: doctors.name),
+                                        careerNo: doctors.careerNo),
                                   );
                                 },
                                 icon: Icon(

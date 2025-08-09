@@ -32,14 +32,18 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
   @override
   void initState() {
     super.initState();
-    Configuration.getConfig().then((config) {
-      url = config['apiEndPoint'];
-    });
+    init();
     if (box.read('emailGoogleRegister') != null) {
       emailCtl.text = box.read('emailGoogleRegister');
     } else {
       emailCtl.text = box.read('email');
     }
+  }
+
+  void init() async {
+    await Configuration.getConfig().then((config) {
+      url = config['apiEndPoint'];
+    });
   }
 
   @override
@@ -136,6 +140,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
                   label: 'อีเมล',
                   controller: emailCtl,
                   readOnly: true,
+                  enable: false,
                   icon: Icons.email,
                 ),
                 buildInputField(
@@ -156,7 +161,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            Color(0xFFDBA871), // Golden Brown for buttons
+                            Color(0xFF916b44), // Golden Brown for buttons
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -190,6 +195,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
     required String label,
     required TextEditingController controller,
     bool readOnly = false,
+    bool enable = true,
     bool isPhone = false,
     IconData? icon,
   }) {
@@ -212,6 +218,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
           child: TextField(
             controller: controller,
             readOnly: readOnly,
+            enabled: enable,
             keyboardType: isPhone ? TextInputType.phone : null,
             style: const TextStyle(color: Color(0xFF916B44)),
             decoration: InputDecoration(
@@ -247,7 +254,6 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
   }
 
   Future<void> userRegisterNextButton() async {
-    showLoadingDialog();
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -289,7 +295,7 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
     }
 
 // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -306,6 +312,8 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
       return;
     }
 
+    showLoadingDialog();
+
     controller.username.value = usernameCtl.text;
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
@@ -314,27 +322,28 @@ class _RegisterusergooglePageState extends State<RegisterusergooglePage> {
     controller.phone.value = phoneCtl.text;
     controller.address.value = addressCtl.text;
 
-    var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
+    // var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
 
     Get.back();
+    Get.to(() => UserlocationselectPage());
 
-    if (res.statusCode == 200) {
-      Get.snackbar(
-        'ข้อผิดพลาด',
-        'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นคลินิกแล้วต้องการเปลี่ยนไปยังผู้ใช้ทั่วไป',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color.fromARGB(255, 211, 89, 89),
-        colorText: Colors.white,
-        borderRadius: 12,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-        snackStyle: SnackStyle.FLOATING,
-        isDismissible: true,
-      );
-      return;
-    } else {
-      Get.to(() => UserlocationselectPage());
-    }
+    // if (res.statusCode == 200) {
+    //   Get.snackbar(
+    //     'ข้อผิดพลาด',
+    //     'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นคลินิกแล้วต้องการเปลี่ยนไปยังผู้ใช้ทั่วไป',
+    //     snackPosition: SnackPosition.TOP,
+    //     backgroundColor: const Color.fromARGB(255, 211, 89, 89),
+    //     colorText: Colors.white,
+    //     borderRadius: 12,
+    //     margin: const EdgeInsets.all(16),
+    //     duration: const Duration(seconds: 2),
+    //     snackStyle: SnackStyle.FLOATING,
+    //     isDismissible: true,
+    //   );
+    //   return;
+    // } else {
+    //   Get.to(() => UserlocationselectPage());
+    // }
   }
 
   void showLoadingDialog({String? message}) {

@@ -96,12 +96,15 @@ class _LoadingcheckPageState extends State<LoadingcheckPage> {
   Future<void> checkLogin() async {
     await Future.delayed(Duration(seconds: 1));
     if (box.read('email') == null) {
-      Get.to(() => IndexPage());
+      Get.offAll(() => IndexPage());
     } else {
-      if (box.read('type') == 'general') {
+      var res = await http.get(Uri.parse("$url/user/${box.read('email')}"));
+      if (box.read('type') == 'general' && res.statusCode == 200) {
         Get.offAll(() => GeneralMainBottomNavigate(indexPage: 1));
-      } else {
+      } else if (box.read('type') == 'clinic' && res.statusCode == 200) {
         Get.offAll(() => Clinicmainbottomnavigate(indexPage: 1));
+      } else {
+        Get.offAll(() => IndexPage());
       }
     }
   }

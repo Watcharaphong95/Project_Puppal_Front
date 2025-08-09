@@ -219,14 +219,16 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            Color(0xFFDBA871), // Golden Brown for buttons
+                            Color(0xFF916b44), // Golden Brown for buttons
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 6,
                         shadowColor: Colors.black26,
                       ),
-                      onPressed: userRegisterNextButton,
+                      onPressed: () {
+                        userRegisterNextButton();
+                      },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Text(
@@ -459,8 +461,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
   }
 
   Future<void> userRegisterNextButton() async {
-    showLoadingDialog();
-
     // Assuming you have a confirmPasswordCtl for confirming the password.
     if (usernameCtl.text.trim().isEmpty ||
         nameCtl.text.trim().isEmpty ||
@@ -469,7 +469,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
         passwordCtl.text.trim().isEmpty ||
         phoneCtl.text.trim().isEmpty ||
         addressCtl.text.trim().isEmpty) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -488,7 +487,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     // Email format check
     RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegExp.hasMatch(emailCtl.text.trim())) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกอีเมลที่ถูกต้อง',
@@ -505,9 +503,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     }
 
     // Phone number format check (simple 10-digit validation).
-    RegExp phoneRegExp = RegExp(r'^[0-9]{10}$');
+    RegExp phoneRegExp = RegExp(r'^0[0-9]{9}$');
     if (!phoneRegExp.hasMatch(phoneCtl.text.trim())) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'กรุณากรอกหมายเลขโทรศัพท์ที่ถูกต้อง',
@@ -534,7 +531,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
         !hasLower ||
         !hasDigit ||
         !hasSpecial) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านควรมีอย่างน้อย 8 ตัวอักษรและประกอบด้วย A-Z, a-z, ตัวเลข และอักขระพิเศษ',
@@ -552,7 +548,6 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
 
     // Password match check
     if (passwordCtl.text != confirmPasswordCtl.text) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'รหัสผ่านไม่ตรงกัน',
@@ -568,6 +563,8 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
       return;
     }
 
+    showLoadingDialog();
+
     controller.username.value = usernameCtl.text;
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
@@ -579,6 +576,7 @@ class _RegisteruserPageState extends State<RegisteruserPage> {
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
 
     Get.back();
+    // Get.back();
 
     if (res.statusCode == 200) {
       Get.snackbar(

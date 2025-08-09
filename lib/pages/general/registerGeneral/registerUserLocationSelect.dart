@@ -58,7 +58,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
           ),
           centerTitle: true,
           iconTheme: IconThemeData(color: Colors.white),
-          backgroundColor: Color(0xFF916B44)),
+          backgroundColor: Color(0xFFDBA871)),
       body: SingleChildScrollView(
         child: Container(
           height: screenHeight * 0.89,
@@ -359,6 +359,7 @@ class _UserlocationselectPageState extends State<UserlocationselectPage> {
       log('Selected LatLng: ${selectedLatLng!.latitude.toString()}, ${selectedLatLng!.longitude.toString()}');
 
       // ไปที่หน้าถัดไป
+      Get.back();
       Get.to(() => UseravatarPage());
     } else {
       // ถ้า selectedLatLng เป็น null ให้แสดง Snackbar

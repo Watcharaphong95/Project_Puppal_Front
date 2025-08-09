@@ -22,6 +22,7 @@ import 'package:puppal_application/pages/general/mainGeneral/generalMain.dart';
 import 'package:puppal_application/pages/general/registerGeneral/registerUserGoogle.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class Clinicopeninghours extends StatefulWidget {
   const Clinicopeninghours({super.key});
@@ -126,32 +127,159 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
     );
   }
 
-  void _pickHolidayDate() async {
-    final picked = await showDatePicker(
+  void _pickHolidayDate() {
+    FocusScope.of(context).requestFocus(FocusNode());
+
+    DateTime selectedDate = DateTime.now();
+    DateTime focusedDate = DateTime.now();
+
+    showDialog(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: primaryColor,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: primaryColor,
-            ),
-          ),
-          child: child!,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Color(0xFFFAF8F5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDBA871),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'เลือกวันหยุดพิเศษ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              content: Container(
+                width: double.maxFinite,
+                height: screenHeight * 0.525,
+                child: TableCalendar<DateTime>(
+                  firstDay: DateTime.now().subtract(Duration(days: 365)),
+                  lastDay: DateTime.now().add(Duration(days: 365)),
+                  focusedDay: focusedDate,
+                  selectedDayPredicate: (day) {
+                    return isSameDay(selectedDate, day);
+                  },
+                  calendarFormat: CalendarFormat.month,
+                  startingDayOfWeek: StartingDayOfWeek.sunday,
+                  locale: 'th',
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    weekendTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    defaultTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Color(0xFFDBA871),
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Color(0xFF916B44).withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    leftChevronIcon: Icon(
+                      Icons.chevron_left,
+                      color: Color(0xFF916B44),
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFF916B44),
+                    ),
+                    titleTextStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    titleTextFormatter: (date, locale) {
+                      int buddhistYear = date.year + 543;
+                      String monthName = DateFormat.MMMM('th').format(date);
+                      return '$monthName พ.ศ. $buddhistYear';
+                    },
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    weekendStyle: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      selectedDate = selectedDay;
+                      focusedDate = focusedDay;
+                    });
+                  },
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      focusedDate = focusedDay;
+                    });
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'ยกเลิก',
+                    style: TextStyle(
+                      color: Color(0xFF916B44),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final cleanedDate = DateTime(selectedDate.year,
+                        selectedDate.month, selectedDate.day);
+                    if (!specialHolidays.contains(cleanedDate)) {
+                      this.setState(() => specialHolidays.add(cleanedDate));
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFDBA871),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'เพิ่มวันหยุด',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
-    if (picked != null) {
-      final cleanedDate = DateTime(picked.year, picked.month, picked.day);
-      if (!specialHolidays.contains(cleanedDate)) {
-        setState(() => specialHolidays.add(cleanedDate));
-      }
-    }
   }
 
   @override

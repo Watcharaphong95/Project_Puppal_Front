@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
+import 'package:puppal_application/main.dart';
 import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/docspecialPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
@@ -17,8 +18,10 @@ import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dar
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicMain.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/doctor/registerDocter.dart';
+import 'package:puppal_application/pages/clinicMainBottomNavigate.dart';
 import 'package:puppal_application/pages/login/index.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Clinicregisterdoctor extends StatefulWidget {
   const Clinicregisterdoctor({super.key});
@@ -39,6 +42,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
   final box = GetStorage();
 
   List<SpecialPost> special = [];
+  List<int> doctorSpecial = [];
   String? selectedSpecialty;
   bool _loadingData = true;
 
@@ -77,13 +81,16 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         ),
         backgroundColor: Color(0xFFDBA871),
         iconTheme: IconThemeData(color: Colors.white),
-
         elevation: 0,
         centerTitle: true,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF916B44)),
+          onPressed: () async {
+            doctorListController.doctorList.clear();
+            await deleteImageSupabase();
+            Get.off(() => Clinicmainbottomnavigate(indexPage: 3));
+          },
+        ),
       ),
 
       body: _loadingData
@@ -305,7 +312,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
               context: context,
               title: 'เพิ่มหมอ?',
               message: 'คุณต้องการเพิ่มหมอทั้งหมดนี้ใช่หรือไม่?',
-              onConfirm: doctorAdd,
+              onConfirm: registerClinicAndAddDoctor,
             );
           },
           style: ElevatedButton.styleFrom(
@@ -353,7 +360,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       List<SpecialPost> allResults = [];
 
       for (var name in names) {
-        final res = await http.get(Uri.parse("$url/special/search?name=$name"));
+        final res = await http.get(Uri.parse("$url/special/search/$name"));
 
         if (res.statusCode == 200) {
           var jsonData = json.decode(res.body);
@@ -378,15 +385,37 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
     }
   }
 
-  void registerClinicAndAddDoctor() {
-    doctorAdd();
+  Future<void> registerClinicAndAddDoctor() async {
+    await doctorAdd();
     doctorListController.doctorList.clear();
+  }
+
+  Future<void> deleteImageSupabase() async {
+    await Supabase.instance.client.auth.signInWithPassword(
+      email: '65011212077@msu.ac.th',
+      password: '1234',
+    );
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      log("User not logged in. Cannot upload.");
+      return;
+    }
+    try {
+      for (var doc in doctorListController.doctorList) {
+        var imagePathAll = doc.image.split('/');
+        var imagePath = imagePathAll.last;
+
+        await supabase.storage.from('doctor-image').remove([imagePath]);
+      }
+    } catch (e) {
+      log("Error during upload: $e");
+    }
   }
 
   Future<int?> getSpecialIdByName(String specialName) async {
     try {
-      final res =
-          await http.get(Uri.parse("$url/special/search?name=$specialName"));
+      final res = await http.get(Uri.parse("$url/special/search/$specialName"));
 
       if (res.statusCode == 200) {
         var jsonData = json.decode(res.body);
@@ -431,17 +460,34 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
       if (res.statusCode == 200 || res.statusCode == 201) {
         var jsonResponse = json.decode(res.body);
         String doctorId = jsonResponse['doctorId'] ?? doc.careerNo;
+        if (doc.special != null && doc.special!.isNotEmpty) {
+          // แยกตาม comma แล้ว trim ช่องว่าง
+          List<String> specialNames = doc.special!
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
 
-        for (var special in special) {
-          if (special.specialId == null) {
+          for (var name in specialNames) {
+            final id = await getSpecialIdByName(name);
+            if (id != null) {
+              doctorSpecial.add(id);
+            } else {
+              log("ไม่พบ specialId สำหรับ '$name'");
+            }
+          }
+        }
+        log(doctorSpecial.join(','));
+        for (var special in doctorSpecial) {
+          if (special == null) {
             log("ไม่มีค่า specialId สำหรับสาขานี้ => ข้าม");
             continue;
           }
-          log("doctorId: ${doc.careerNo}, specialId: ${special.specialId}");
+          log("doctorId: ${doc.careerNo}, specialId: ${special}");
 
           await docspecialAdd(
             doctorId: doc.careerNo,
-            specialId: special.specialId!,
+            specialId: special,
           );
         }
       } else {
@@ -471,9 +517,8 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              // Get.to(() => Cliniclistdoctors());
-              Get.back();
-              Get.back();
+              doctorListController.doctorList.clear();
+              Get.off(() => Clinicmainbottomnavigate(indexPage: 3));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF795548),
