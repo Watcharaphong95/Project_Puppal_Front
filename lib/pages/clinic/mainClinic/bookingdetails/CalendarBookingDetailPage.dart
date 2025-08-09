@@ -1074,33 +1074,13 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
           .doc(docId)
           .get();
 
-      // if (doc.exists) {
-      //   final data = doc.data();
-      //   log('✅ Data for docId=$docId: $data');
-
-      //   final dynamic dogDogIdRaw = data?['dogDogId'];
-
-      //   // แปลงให้เป็น int ถ้า dogDogIdRaw เป็น String หรือ int
-      //   final int? dogDogId = dogDogIdRaw is int
-      //       ? dogDogIdRaw
-      //       : int.tryParse(dogDogIdRaw?.toString() ?? '');
-
-      //   if (dogDogId != null) {
-      //     await getdog(dogDogId);
-      //   } else {
-      //     log('⚠️ dogDogId is invalid or empty.');
-      //   }
-      // } else {
-      //   log('❌ No document found for docId=$docId');
-      // }
       if (doc.exists) {
         final data = doc.data();
         log('✅ Data for docId=$docId: $data');
 
         if (data != null) {
-          reserveList.clear(); // เคลียร์ก่อนใส่ใหม่
+          reserveList.clear();
 
-          // ✅ ใช้ model ที่ตรง
           reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
 
           final dynamic dogDogIdRaw = data['dogDogId'];
@@ -1218,11 +1198,81 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
         });
 
         log('✅ Updated status to $status for docId=$docId');
+        // 2. ดึงข้อมูลของ reserve
+        final doc = await FirebaseFirestore.instance
+            .collection('reserve')
+            .doc(docId)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data();
+          final generalEmail = data?['generalEmail'];
+          final clinicEmail = data?['clinicEmail'];
+          final date = data?['date'];
+
+          if (generalEmail != null) {
+            final generalUser = await getGeneral(generalEmail);
+            final userName = generalUser?.name;
+            final dateRaw = data?['date'];
+            DateTime? date;
+
+            if (dateRaw is Timestamp) {
+              date = dateRaw.toDate();
+            } else if (dateRaw is String) {
+              date = DateTime.tryParse(dateRaw);
+            }
+
+            if (userName != null && clinicEmail != null && date != null) {
+              await sendClinicRefuseNotification(
+                clinicEmail: clinicEmail,
+                userName: box.read('clinicName'),
+                date: date.toString(),
+                generalEmail: generalEmail,
+              );
+            } else {
+              log("⚠️ Missing required data for notification");
+            }
+          } else {
+            log("⚠️ Missing generalEmail in document");
+          }
+        }
       } catch (e) {
         log('❌ Failed to update status: $e');
       }
     } else {
       log('⚠️ Status not allowed to update: $status');
+    }
+  }
+
+  Future<void> sendClinicRefuseNotification({
+    required String clinicEmail,
+    required String generalEmail,
+    required String userName,
+    required String date,
+  }) async {
+    final apiUrl = Uri.parse("$url/reserve/notify/clinicrefuse/clinic-request");
+
+    final Map<String, dynamic> data = {
+      'clinicEmail': clinicEmail,
+      'generalEmail': generalEmail,
+      'userName': userName,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ ส่งแจ้งเตือนสำเร็จ: ${response.body}');
+      } else {
+        print('❌ เกิดข้อผิดพลาด: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('❗ ไม่สามารถเชื่อมต่อกับ server: $e');
     }
   }
 

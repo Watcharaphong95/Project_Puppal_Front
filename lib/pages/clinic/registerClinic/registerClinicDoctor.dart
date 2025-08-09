@@ -534,8 +534,6 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
           lat: clinic.lat.value,
           lng: clinic.lng.value,
           image: clinic.imageUrl.value,
-          // open: clinic.open.value,
-          // close: clinic.close.value,
           numPerTime: clinic.numPerTime.value);
 
       var clinicRes = await http.post(
