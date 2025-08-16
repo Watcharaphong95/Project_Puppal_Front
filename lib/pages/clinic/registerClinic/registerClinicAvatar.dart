@@ -29,6 +29,8 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
   @override
   void initState() {
     super.initState();
+    log('Current route: ${Get.currentRoute}');
+    log('Previous route: ${Get.previousRoute}');
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
     });
@@ -169,7 +171,7 @@ class _ClinicavatarPageState extends State<ClinicavatarPage> {
       log("Confirmed with file: ${_imageFile!.path}");
       log("Public image URL: $publicUrl");
       controller.imageUrl.value = publicUrl;
-
+      Get.back();
       Get.to(() => RegisterclinicdoctorPage());
     } catch (e) {
       log("Error during upload: $e");

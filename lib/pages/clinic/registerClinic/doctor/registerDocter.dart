@@ -35,7 +35,14 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
   @override
   void initState() {
     super.initState();
-    Configuration.getConfig().then((config) {
+    log('testsetests');
+    log('Current route: ${Get.currentRoute}');
+    log('Previous route: ${Get.previousRoute}');
+    init();
+  }
+
+  Future<void> init() async {
+    await Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
       getSpecialData();
     });

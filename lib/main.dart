@@ -17,6 +17,8 @@ import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/controller/registerDogCtl.dart';
 import 'package:puppal_application/controller/registerDogInjectionHistoryCtl.dart';
 import 'package:puppal_application/controller/registerGeneralCtl.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicAvatar.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicDoctor.dart';
 import 'package:puppal_application/pages/generalAppNavigator.dart';
 import 'package:puppal_application/pages/clinicAppNavigator.dart';
 import 'package:puppal_application/pages/generalMainBottomNavigate.dart';
@@ -119,6 +121,12 @@ class _MyAppState extends State<MyApp> {
       splitScreenMode: true,
       builder: (context, child) {
         return GetMaterialApp(
+          getPages: [
+            GetPage(
+                name: '/registerclinicdoctor',
+                page: () => RegisterclinicdoctorPage()),
+            GetPage(name: '/clinicAvatar', page: () => ClinicavatarPage())
+          ],
           title: 'Flutter Demo',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

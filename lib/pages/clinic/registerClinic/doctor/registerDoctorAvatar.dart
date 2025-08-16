@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:puppal_application/controller/registerClinicCtl.dart';
 import 'package:puppal_application/controller/registerDoctorCtl.dart';
 import 'package:puppal_application/model/doctorPost.dart';
+import 'package:puppal_application/pages/clinic/registerClinic/registerClinicAvatar.dart';
 import 'package:puppal_application/pages/clinic/registerClinic/registerClinicDoctor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,6 +28,14 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
   final controller = Get.find<registerDoctorCtl>();
   final clinic = Get.find<registerClinicCtl>();
   final doctorList = Get.find<doctorDataList>();
+
+  @override
+  void initState() {
+    log('test');
+    log('Current route: ${Get.currentRoute}');
+    log('Previous route: ${Get.previousRoute}');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +181,10 @@ class _RegisterdoctoravatarPageState extends State<RegisterdoctoravatarPage> {
 
       doctorList.addDoctor(newDoctor);
 
+      Get.back();
+
+      Get.back();
+      Get.back();
       Get.to(() => RegisterclinicdoctorPage());
     } catch (e) {
       log("Error during upload: $e");

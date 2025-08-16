@@ -47,6 +47,8 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
   @override
   void initState() {
     super.initState();
+    log('Current route: ${Get.currentRoute}');
+    log('Previous route: ${Get.previousRoute}');
     Configuration.getConfig().then((config) {
       url = config['apiEndPoint'];
       getSpecialData(doctor.special.value);

@@ -237,79 +237,114 @@ class _RegisterclinicgooglePageState extends State<RegisterclinicgooglePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "เลือกวันเปิดทำการ",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF916B44),
+                      Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          "เลือกวันเปิดทำการ",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF916B44),
+                          ),
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(7, (index) {
-                          final days = [
-                            'Monday',
-                            'Tuesday',
-                            'Wednesday',
-                            'Thursday',
-                            'Friday',
-                            'Saturday',
-                            'Sunday'
-                          ];
-                          final daysShort = [
-                            'จ',
-                            'อ',
-                            'พ',
-                            'พฤ',
-                            'ศ',
-                            'ส',
-                            'อา'
-                          ];
-                          final day = days[index];
-                          final isSelected = selectedWeekdays.contains(day);
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFE9CBAF),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF916B44).withOpacity(0.05),
+                              offset: Offset(0, 2),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Wrap(
+                          alignment: WrapAlignment.center, // เพิ่มตรงนี้
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: List.generate(7, (index) {
+                            final days = [
+                              'Monday',
+                              'Tuesday',
+                              'Wednesday',
+                              'Thursday',
+                              'Friday',
+                              'Saturday',
+                              'Sunday'
+                            ];
+                            final daysShort = [
+                              'จ',
+                              'อ',
+                              'พ',
+                              'พฤ',
+                              'ศ',
+                              'ส',
+                              'อา'
+                            ];
+                            final day = days[index];
+                            final isSelected = selectedWeekdays.contains(day);
 
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  selectedWeekdays.remove(day);
-                                } else {
-                                  selectedWeekdays.add(day);
-                                }
-                              });
-                            },
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Color(0xFF916B44)
-                                    : Colors.white,
-                                border: Border.all(
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    selectedWeekdays.remove(day);
+                                  } else {
+                                    selectedWeekdays.add(day);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
                                   color: isSelected
                                       ? Color(0xFF916B44)
-                                      : Colors.grey,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  daysShort[index],
-                                  style: TextStyle(
+                                      : Colors.white,
+                                  border: Border.all(
                                     color: isSelected
-                                        ? Colors.white
-                                        : Color(0xFF916B44),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                        ? Color(0xFF916B44)
+                                        : Color(0xFFE9CBAF),
+                                    width: 1.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: Color(0xFF916B44)
+                                                .withOpacity(0.3),
+                                            offset: Offset(0, 2),
+                                            blurRadius: 8,
+                                            spreadRadius: 0,
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    daysShort[index],
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Color(0xFF916B44),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          }),
+                        ),
                       ),
                     ],
                   ),
