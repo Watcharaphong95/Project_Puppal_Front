@@ -115,7 +115,7 @@ class _ClinicregisterdoctorState extends State<Clinicregisterdoctor> {
               ),
             )
           : Container(
-              color: const Color(0xFFE9CBAF).withOpacity(0.1),
+              color: const Color(0xFFFAF8F5),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(

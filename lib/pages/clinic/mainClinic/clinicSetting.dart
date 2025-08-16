@@ -16,6 +16,7 @@ import 'package:puppal_application/model/clinicPost.dart';
 import 'package:puppal_application/model/doctorPost.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicNotification/notificationPage.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/clinicVaccineHistory/VaccineHistoryPage.dart';
+import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicEditProfile.dart';
 import 'package:puppal_application/pages/clinic/mainClinic/profileclinic/clinicProfile.dart';
 
 import 'package:puppal_application/pages/clinic/mainClinic/clinicListDoctors.dart';
@@ -381,7 +382,7 @@ class _ClinicsettingState extends State<Clinicsetting> {
                               title: 'แก้ไขโปรไฟล์',
                               subtitle: 'จัดการข้อมูลส่วนตัว',
                               onTap: () {
-                                Get.to(() => (Clinicprofile()));
+                                Get.to(() => (EitprofilePage()));
                               },
                               screenWidth: screenWidth,
                             ),

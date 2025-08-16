@@ -349,7 +349,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
   void startRealtimeGet() {
     showLoadingDialog();
 
-    stopRealTime(); // หยุดก่อนถ้ามี listener เดิม
+    stopRealTime();
 
     _reserveListener = FirebaseFirestore.instance
         .collection('reserve')
@@ -365,7 +365,6 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
             .toList()
           ..sort((a, b) => b.date.compareTo(a.date));
 
-        // เคลียร์ลิสต์เก่า
         todayList.clear();
         yesterdayList.clear();
         earlierList.clear();
@@ -382,9 +381,8 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         }
 
         if (!mounted) return;
-        setState(() {}); // ✅ อัปเดตก็ต่อเมื่อ widget ยังอยู่
+        setState(() {});
 
-        // ✅ ตรวจสอบ mounted ก่อนและหลัง await แต่ละตัว
         if (todayList.isNotEmpty) {
           if (!mounted) return;
           await getReserveBook(todayList[0].docId);
@@ -1253,7 +1251,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
     } catch (e) {
       log('getGeneralName error: $e');
     }
-    return ''; // ไม่เจอชื่อ
+    return '';
   }
 
   Future<GeneralPost?> getGeneral(String generalEmail) async {

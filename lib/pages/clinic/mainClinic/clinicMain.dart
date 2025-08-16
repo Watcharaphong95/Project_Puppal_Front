@@ -1866,8 +1866,6 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
       for (var booking in reservebookingListAll) {
         log("📌 Booking - ID: ${booking.docId}, Date: ${booking.date}, User: ${booking.generalEmail}");
       }
-
-      // ✅ กรองเฉพาะ status == 2 และเซ็ต events
       final filteredList = reservebookingListAll.where((e) {
         return e.status == 2 &&
             normalizeDate(e.date!) == normalizeDate(_selectedDay!);
@@ -2018,6 +2016,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
             .collection('reserve')
             .doc(docId)
             .update({'status': status});
+
         // 2. ดึงข้อมูลของ reserve
         final doc = await FirebaseFirestore.instance
             .collection('reserve')
@@ -2043,12 +2042,12 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
             }
 
             if (userName != null && clinicEmail != null && date != null) {
-              await sendNotificationRefuse(
-                clinicEmail: clinicEmail,
-                generalEmail: generalEmail,
-                userName: userName,
-                date: date,
-              );
+              // await sendNotificationRefuse(
+              //   clinicEmail: clinicEmail,
+              //   generalEmail: generalEmail,
+              //   userName: userName,
+              //   date: date,
+              // );
               await sendClinicRefuseNotification(
                 clinicEmail: clinicEmail,
                 userName: box.read('clinicName'),

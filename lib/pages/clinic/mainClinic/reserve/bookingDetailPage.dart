@@ -1189,13 +1189,11 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
 
     if (status == 0 || status == 2) {
       try {
-        // 1. อัปเดต status
         await FirebaseFirestore.instance
             .collection('reserve')
             .doc(docId)
             .update({'status': status});
 
-        // 2. ดึงข้อมูลของ reserve
         final doc = await FirebaseFirestore.instance
             .collection('reserve')
             .doc(docId)
