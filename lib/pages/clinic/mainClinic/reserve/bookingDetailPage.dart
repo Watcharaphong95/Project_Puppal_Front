@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:puppal_application/config/config.dart';
+import 'package:puppal_application/model/appointmentGetvaccine.dart';
 import 'package:puppal_application/model/clinicGetInjectionRecord.dart';
 
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
@@ -49,7 +50,8 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   final Color secondaryBrown = const Color(0xFFDBA871);
   final Color lightBrown = const Color(0xFFE9CBAF);
   List<getInjection.Datum>? clinicRecord; // เก็บจาก injection list API
-
+  AppointmentGetvaccine? appointmentData;
+  AppointmentGetvaccine? get appointment => null;
   List<dynamic> get combinedList {
     final List<dynamic> combined = [];
     if (clinicRecord != null) combined.addAll(clinicRecord!);
@@ -293,6 +295,31 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                           ),
                                           child: Text(
                                             'พันธุ์: ${dog.breed}   เพศ: ${dog.gender}',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Color(0xFF916B44),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 10),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE9CBAF)
+                                                .withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            border: Border.all(
+                                              color: const Color(0xFF916B44)
+                                                  .withOpacity(0.2),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'วัคซีนที่ฉีด: ${appointmentData?.vaccine ?? 'ไม่มีข้อมูล'}',
                                             style: const TextStyle(
                                               fontSize: 14,
                                               color: Color(0xFF916B44),
@@ -560,7 +587,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                                         _buildInfoRow(
                                                             'วัคซีน',
                                                             vaccine ??
-                                                                'ไม่ระบุวัคซีน'),
+                                                                'ไม่มีข้อมูลวัคซีน'),
                                                         _buildInfoRow(
                                                             'วันที่',
                                                             formatThaiDateTime(
@@ -1112,25 +1139,34 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
           reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
 
           final dynamic dogDogIdRaw = data['dogDogId'];
-          final String? email = data['generalEmail'];
+          final String? generalEmail = data['generalEmail'];
+          final String? clinicEmail = data['clinicEmail'];
           final String? date = data['date'];
 
           final int? dogDogId = dogDogIdRaw is int
               ? dogDogIdRaw
               : int.tryParse(dogDogIdRaw?.toString() ?? '');
 
-          if (dogDogId != null && email != null && email.isNotEmpty) {
+          if (dogDogId != null &&
+              generalEmail != null &&
+              generalEmail.isNotEmpty) {
             await getdog(dogDogId);
-            await getGeneral(email);
+            await getGeneral(generalEmail);
           } else {
             log('⚠️ dogDogId หรือ email ไม่ถูกต้องหรือว่าง');
           }
-          final latestRecords = await getInjectionList(dogDogId!, date!);
-          final oldRecords = await gethistoryvaccine(dogDogId, email!);
+          // final latestRecords = await getInjectionList(dogDogId!, date!);
+          final oldRecords =
+              await gethistoryvaccine(dogDogId!, generalEmail!, clinicEmail!);
+          // ✅ แก้ตรงนี้ ให้เรียก ID จริงจาก data
+          final appointmentId = data['appointmentAid']?.toString() ?? '';
+          final appointment =
+              await getAppointment(appointmentId); // ตัวแปรชั่วคราว
 
           setState(() {
-            clinicRecord = latestRecords;
+            // clinicRecord = latestRecords;
             vaccineHistory = oldRecords;
+            appointmentData = appointment;
           });
         }
       } else {
@@ -1149,10 +1185,10 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
   }
 
   Future<List<ClinicinjectionRecordPost>?> gethistoryvaccine(
-      int dogId, String generalEmail) async {
+      int dogId, String generalEmail, String clinicEmail) async {
     try {
-      final res = await http.get(
-          Uri.parse("$url/clinicinjectionRecord/history/$dogId/$generalEmail"));
+      final res = await http.get(Uri.parse(
+          "$url/clinicinjectionRecord/history/$dogId/$generalEmail/$clinicEmail"));
       if (res.statusCode == 200) {
         print('API response body: ${res.body}');
         return clinicinjectionRecordPostFromJson(res.body);
@@ -1180,6 +1216,33 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
       }
     } catch (e) {
       log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
+  }
+
+  Future<AppointmentGetvaccine?> getAppointment(String appointmentId) async {
+    log("📅 Fetching appointment with ID: $appointmentId");
+    try {
+      final id = int.tryParse(appointmentId);
+      log(id.toString());
+      if (id == null) {
+        log("❌ Invalid appointmentId: $appointmentId");
+        return null;
+      }
+
+      var res = await http.get(Uri.parse("$url/appointment/$id"));
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return AppointmentGetvaccine.fromJson(jsonMap);
+      } else if (res.statusCode == 404) {
+        log("❌ Appointment not found: $id");
+        return null; // เปลี่ยนจาก AppointmentPost
+      } else {
+        log("❌ Failed to load appointment: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
       return null;
     }
   }

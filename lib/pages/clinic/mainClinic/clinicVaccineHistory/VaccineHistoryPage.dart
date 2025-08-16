@@ -784,7 +784,10 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                   onTap: () {
                                                     Get.to(() =>
                                                         Vaccinehistorydetailspage(
-                                                            docId: item.docId));
+                                                          docId: item.docId,
+                                                          selectedDate:
+                                                              _selectedDay,
+                                                        ));
                                                   },
                                                   borderRadius:
                                                       BorderRadius.circular(18),

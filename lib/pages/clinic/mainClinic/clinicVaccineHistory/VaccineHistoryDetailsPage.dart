@@ -22,7 +22,12 @@ import 'package:puppal_application/model/clinicGetInjectionRecord.dart'
 
 class Vaccinehistorydetailspage extends StatefulWidget {
   final String docId;
-  const Vaccinehistorydetailspage({super.key, required this.docId});
+  final DateTime? selectedDate;
+  const Vaccinehistorydetailspage({
+    Key? key,
+    required this.docId,
+    this.selectedDate,
+  }) : super(key: key);
 
   @override
   State<Vaccinehistorydetailspage> createState() =>
@@ -56,28 +61,6 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
   void dispose() {
     _vaccinePageController.dispose();
     super.dispose();
-  }
-
-  void _previousVaccinePage() {
-    if (mounted &&
-        _vaccinePageController.hasClients &&
-        _currentVaccineIndex > 0) {
-      _vaccinePageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _nextVaccinePage() {
-    if (mounted &&
-        _vaccinePageController.hasClients &&
-        _currentVaccineIndex < combinedList.length - 1) {
-      _vaccinePageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
   }
 
   @override
@@ -336,7 +319,7 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
 
                                 /// 💉 ประวัติการฉีดยา
                                 SizedBox(
-                                  height: 550,
+                                  height: 500,
                                   width: double.infinity,
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
@@ -433,193 +416,99 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                                         const SizedBox(height: 12),
 
                                         // Content Area
+                                        // Content Area
                                         if (combinedList.isNotEmpty) ...[
-                                          // Navigation Controls
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              IconButton(
-                                                onPressed:
-                                                    _currentVaccineIndex > 0
-                                                        ? _previousVaccinePage
-                                                        : null,
-                                                icon: Icon(
-                                                  Icons.arrow_back_ios,
-                                                  color: _currentVaccineIndex >
-                                                          0
-                                                      ? const Color(0xFF916B44)
-                                                      : Colors.grey[400],
-                                                ),
-                                              ),
-                                              Text(
-                                                '${_currentVaccineIndex + 1} / ${combinedList.length}',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Color(0xFF916B44),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              IconButton(
-                                                onPressed:
-                                                    _currentVaccineIndex <
-                                                            combinedList
-                                                                    .length -
-                                                                1
-                                                        ? _nextVaccinePage
-                                                        : null,
-                                                icon: Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  color: _currentVaccineIndex <
-                                                          combinedList.length -
-                                                              1
-                                                      ? const Color(0xFF916B44)
-                                                      : Colors.grey[400],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                          // PageView for Cards
-                                          SizedBox(
-                                            height: 380,
-                                            child: PageView.builder(
-                                              controller:
-                                                  _vaccinePageController,
-                                              onPageChanged: (index) {
-                                                if (mounted) {
-                                                  setState(() {
-                                                    _currentVaccineIndex =
-                                                        index;
-                                                  });
-                                                }
-                                              },
-                                              itemCount: combinedList.length,
-                                              itemBuilder: (context, index) {
-                                                final item =
-                                                    combinedList[index];
-
-                                                final vaccine = item
-                                                        is ClinicinjectionRecordPost
-                                                    ? item.vaccine
-                                                    : (item as getInjection
-                                                            .Datum)
-                                                        .vaccine;
-
-                                                final date = item
-                                                        is ClinicinjectionRecordPost
-                                                    ? item.date
-                                                    : (item as getInjection
-                                                            .Datum)
-                                                        .date;
-
-                                                final label = item
-                                                        is ClinicinjectionRecordPost
-                                                    ? item.vaccineLabel
-                                                    : (item as getInjection
-                                                            .Datum)
-                                                        .vaccineLabel;
-
-                                                return Container(
-                                                  width: 280,
-                                                  margin: const EdgeInsets
-                                                      .symmetric(horizontal: 8),
-                                                  padding:
-                                                      const EdgeInsets.all(16),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: const Color(
-                                                                0xFF916B44)
-                                                            .withOpacity(0.1),
-                                                        blurRadius: 8,
-                                                        offset:
-                                                            const Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      _buildInfoRow(
-                                                          'วัคซีน',
-                                                          vaccine ??
-                                                              'ไม่ระบุวัคซีน'),
-                                                      _buildInfoRow(
-                                                          'วันที่',
-                                                          formatThaiDateTime(
-                                                              date!)),
-                                                      const SizedBox(
-                                                          height: 12),
-                                                      Center(
-                                                        child: ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(16),
-                                                          child: Image.network(
-                                                            label ?? '',
-                                                            width: 200,
-                                                            height: 200,
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder:
-                                                                (context, error,
-                                                                    stackTrace) {
-                                                              return Container(
-                                                                width: 200,
-                                                                height: 200,
-                                                                color: Colors
-                                                                    .grey[200],
-                                                                child: const Icon(
-                                                                    Icons
-                                                                        .image_not_supported),
-                                                              );
-                                                            },
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-
                                           const SizedBox(height: 12),
 
-                                          // Page Indicators
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: List.generate(
-                                              combinedList.length,
-                                              (index) => AnimatedContainer(
-                                                duration: const Duration(
-                                                    milliseconds: 300),
+                                          // การ์ดเดียว (เอาอันแรกสุด หรือจะเปลี่ยนเป็น last ก็ได้)
+                                          Builder(
+                                            builder: (context) {
+                                              final item = combinedList
+                                                  .first; // หรือใช้ combinedList.last;
+
+                                              final vaccine = item
+                                                      is ClinicinjectionRecordPost
+                                                  ? item.vaccine
+                                                  : (item as getInjection.Datum)
+                                                      .vaccine;
+
+                                              final date = item
+                                                      is ClinicinjectionRecordPost
+                                                  ? item.date
+                                                  : (item as getInjection.Datum)
+                                                      .date;
+
+                                              final label = item
+                                                      is ClinicinjectionRecordPost
+                                                  ? item.vaccineLabel
+                                                  : (item as getInjection.Datum)
+                                                      .vaccineLabel;
+
+                                              return Container(
+                                                width: double.infinity,
                                                 margin:
                                                     const EdgeInsets.symmetric(
-                                                        horizontal: 4),
-                                                height: 8,
-                                                width: _currentVaccineIndex ==
-                                                        index
-                                                    ? 24
-                                                    : 8,
+                                                        horizontal: 8),
+                                                padding:
+                                                    const EdgeInsets.all(16),
                                                 decoration: BoxDecoration(
-                                                  color: _currentVaccineIndex ==
-                                                          index
-                                                      ? const Color(0xFF916B44)
-                                                      : const Color(0xFF916B44)
-                                                          .withOpacity(0.3),
+                                                  color: Colors.white,
                                                   borderRadius:
-                                                      BorderRadius.circular(4),
+                                                      BorderRadius.circular(12),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(
+                                                              0xFF916B44)
+                                                          .withOpacity(0.1),
+                                                      blurRadius: 8,
+                                                      offset:
+                                                          const Offset(0, 2),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                            ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    _buildInfoRow(
+                                                        'วัคซีน',
+                                                        vaccine ??
+                                                            'ไม่ระบุวัคซีน'),
+                                                    _buildInfoRow(
+                                                        'วันที่',
+                                                        formatThaiDateTime(
+                                                            date!)),
+                                                    const SizedBox(height: 12),
+                                                    Center(
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        child: Image.network(
+                                                          label ?? '',
+                                                          width: 200,
+                                                          height: 200,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (context, error,
+                                                                  stackTrace) {
+                                                            return Container(
+                                                              width: 200,
+                                                              height: 200,
+                                                              color: Colors
+                                                                  .grey[200],
+                                                              child: const Icon(
+                                                                  Icons
+                                                                      .image_not_supported),
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ] else
                                           Expanded(
@@ -817,6 +706,8 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
                 color: Colors.black87,
                 fontSize: 14,
               ),
+              maxLines: 1, // จำกัด 1 บรรทัด
+              overflow: TextOverflow.clip, // ตัดข้อความเกินโดยไม่เติม '...'
             ),
           ),
         ],
@@ -1006,7 +897,8 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
           reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
 
           final dynamic dogDogIdRaw = data['dogDogId'];
-          final String? email = data['generalEmail'];
+          final String? generalEmail = data['generalEmail'];
+          final String? clinicEmail = data['clinicEmail'];
           final String? date = data['date'];
 
           // แปลง dogDogId เป็น int
@@ -1014,15 +906,18 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
               ? dogDogIdRaw
               : int.tryParse(dogDogIdRaw?.toString() ?? '');
 
-          if (dogDogId != null && email != null && email.isNotEmpty) {
+          if (dogDogId != null &&
+              generalEmail != null &&
+              generalEmail.isNotEmpty) {
             await getdog(dogDogId);
-            await getGeneral(email);
-            final latestRecords = await getInjectionList(dogDogId, date!);
-            final oldRecords = await gethistoryvaccine(dogDogId, email);
+            await getGeneral(generalEmail);
+            // final latestRecords = await getInjectionList(dogDogId, date!);
+            final oldRecords = await gethistoryvaccine(dogDogId, clinicEmail!);
 
             setState(() {
-              clinicRecord = latestRecords;
-              vaccineHistory = oldRecords;
+              // clinicRecord = latestRecords;
+              // vaccineHistory = oldRecords;
+              vaccineHistory = oldRecords != null ? [oldRecords] : [];
             });
           } else {
             log('⚠️ dogDogId หรือ email ไม่ถูกต้องหรือว่าง');
@@ -1036,21 +931,25 @@ class _VaccinehistorydetailspageState extends State<Vaccinehistorydetailspage> {
     }
   }
 
-  List<ClinicinjectionRecordPost> clinicinjectionRecordPostFromJson(
-      String str) {
-    final jsonData = json.decode(str);
-    final list = jsonData['data'] as List;
-    return list.map((x) => ClinicinjectionRecordPost.fromJson(x)).toList();
-  }
+  ClinicinjectionRecordPost clinicinjectionRecordPostFromJson(String str) =>
+      ClinicinjectionRecordPost.fromJson(json.decode(str)['data']);
 
-  Future<List<ClinicinjectionRecordPost>?> gethistoryvaccine(
-      int dogId, String generalEmail) async {
+  Future<ClinicinjectionRecordPost?> gethistoryvaccine(
+      int dogId, String clinicEmail) async {
+    if (widget.selectedDate == null) return null;
+
+    String onlyDate =
+        widget.selectedDate!.toUtc().toIso8601String().substring(0, 10);
+
+    log("Selected date: $onlyDate");
+
     try {
-      final res = await http.get(
-          Uri.parse("$url/clinicinjectionRecord/history/$dogId/$generalEmail"));
+      final res = await http.get(Uri.parse(
+          "$url/clinicinjectionRecord/newhistory/$dogId/$onlyDate/$clinicEmail"));
+
       if (res.statusCode == 200) {
         print('API response body: ${res.body}');
-        return clinicinjectionRecordPostFromJson(res.body);
+        return clinicinjectionRecordPostFromJson(res.body); // single object
       } else {
         log("❌ Failed to load vaccine data: ${res.statusCode}");
         return null;

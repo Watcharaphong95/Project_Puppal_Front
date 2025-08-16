@@ -15,6 +15,7 @@ import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/appointmentClinic.dart';
 import 'package:puppal_application/model/appointmentGet.dart';
 import 'package:puppal_application/model/appointmentGetEmail.dart';
+import 'package:puppal_application/model/appointmentGetvaccine.dart';
 import 'package:puppal_application/model/appointmentPost.dart';
 import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
@@ -942,12 +943,13 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
                                                                                 final vaccineName = appointmentData.data.first.vaccines ?? '';
                                                                                 final dogName = dogData?.name ?? 'ไม่ระบุชื่อสุนัข';
+                                                                                final dogBreed = dogData?.breed ?? 'ไม่ระบุพันธุ์';
 
                                                                                 return Row(
                                                                                   children: [
                                                                                     Flexible(
                                                                                       child: Text(
-                                                                                        '(${dogName}) - $vaccineName',
+                                                                                        '(${dogBreed}) - $vaccineName',
                                                                                         style: TextStyle(
                                                                                           fontSize: 13,
                                                                                           fontWeight: FontWeight.w600,
@@ -1194,6 +1196,11 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
     String docId,
     GeneralPost generalData,
   ) async {
+    AppointmentGetvaccine? appointmentData =
+        await getAppointment(reserveData['appointmentAid']?.toString() ?? '');
+
+// สมมติว่าเราเอา item แรกใน data list
+    final vaccine = appointmentData?.vaccine ?? 'ไม่ระบุ';
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: true,
@@ -1250,21 +1257,29 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            "คำขอจองฉีดวัคซีนจากคุณ",
-                            style: TextStyle(
-                              color: primaryBrown,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              "คำขอจองฉีดวัคซีนจากคุณ",
+                              style: TextStyle(
+                                color: primaryBrown,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           SizedBox(width: 10),
-                          Text(
-                            generalData.username,
-                            style: TextStyle(
-                              color: primaryBrown,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              generalData.username,
+                              style: TextStyle(
+                                color: primaryBrown,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -1390,11 +1405,13 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
 
                       // Details
                       _buildPopupDetailRow(
-                          'ชื่อ :', generalData.name ?? 'ไม่มีข้อมูล'),
-                      _buildPopupDetailRow(
-                          'นามสกุล :', generalData.surname ?? 'ไม่มีข้อมูล'),
+                          'ชื่อ :', generalData.username ?? 'ไม่มีข้อมูล'),
+                      // _buildPopupDetailRow(
+                      //     'นามสกุล :', generalData.surname ?? 'ไม่มีข้อมูล'),
                       _buildPopupDetailRow(
                           'เบอร์โทร :', generalData.phone ?? 'ไม่มีข้อมูล'),
+                      _buildPopupDetailRow(
+                          'วัคซีน :', vaccine ?? 'ไม่มีข้อมูล'),
                       _buildPopupDetailRow(
                         'วันที่จอง :',
                         _formatDateString(reserveData['date']) ?? 'ไม่มีข้อมูล',
@@ -1450,6 +1467,33 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
       }
     } else if (result == 'record' && mounted && !_isDisposed) {
       Get.to(() => AddVaccinationRecordPage(docId: reserveList[0].docId));
+    }
+  }
+
+  Future<AppointmentGetvaccine?> getAppointment(String appointmentId) async {
+    log("📅 Fetching appointment with ID: $appointmentId");
+    try {
+      final id = int.tryParse(appointmentId);
+      log(id.toString());
+      if (id == null) {
+        log("❌ Invalid appointmentId: $appointmentId");
+        return null;
+      }
+
+      var res = await http.get(Uri.parse("$url/appointment/$id"));
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final Map<String, dynamic> jsonMap = json.decode(res.body);
+        return AppointmentGetvaccine.fromJson(jsonMap);
+      } else if (res.statusCode == 404) {
+        log("❌ Appointment not found: $id");
+        return null; // เปลี่ยนจาก AppointmentPost
+      } else {
+        log("❌ Failed to load appointment: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("Error: $e");
+      return null;
     }
   }
 
