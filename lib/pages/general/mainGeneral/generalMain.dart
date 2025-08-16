@@ -1114,7 +1114,16 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
           var data = change.doc.data();
 
           if (change.type == DocumentChangeType.removed) {
-            fireStoreRemoveListen();
+            // Remove the deleted dog from eventMap
+            eventMap.forEach((date, dogList) {
+              dogList.removeWhere((dog) => dog.reserveId == docId);
+            });
+
+            // Rebuild events for the selected day
+            events = getEventsForDay(_selectedDay);
+
+            // Trigger UI update
+            if (mounted) setState(() {});
           } else if (data != null && data.containsKey('status')) {
             int newStatus = data['status'];
             log("🔄 Change type: ${change.type}");
@@ -1137,11 +1146,10 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
   }
 
   Future<void> fireStoreRemoveListen() async {
+    log('testest');
     await getAppointmentEmail();
     events = getEventsForDay(_selectedDay);
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   void stopRealTime() {

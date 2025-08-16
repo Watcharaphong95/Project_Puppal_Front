@@ -1909,6 +1909,7 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
               if (picked != null) {
                 final pickedFile =
                     await ImagePicker().pickImage(source: ImageSource.gallery);
+                dataChange = true;
                 setState(() => _imageFile = File(picked.path));
                 _imageFile = File(pickedFile!.path);
               }

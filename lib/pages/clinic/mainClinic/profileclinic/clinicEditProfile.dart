@@ -1240,11 +1240,11 @@ class _CliniceditprofileState extends State<EitprofilePage> {
         title: 'อัพเดทเสร็จสิ้น',
         message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
         onConfirm: () {
-          Get.to(() => Clinicprofile());
+          Get.off(() => Clinicprofile());
         });
     if (res.statusCode == 200) {
       log("Update data clinic success");
-      Get.snackbar('Success', 'แก้ไขข้อมูลเรียบร้อย');
+      // Get.snackbar('Success', 'แก้ไขข้อมูลเรียบร้อย');
     } else {
       log("Failed to update doctor info: ${res.statusCode}");
       Get.snackbar('Error', 'ไม่สามารถแก้ไขข้อมูลได้');

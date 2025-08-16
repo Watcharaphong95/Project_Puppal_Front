@@ -363,7 +363,8 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
     return SafeArea(
       bottom: false,
       child: SizedBox(
-        height: _isDogInfoExpanded ? screenHeight * 0.5 : screenHeight * 0.5,
+        height:
+            _isDogInfoExpanded ? screenHeight * 0.375 : screenHeight * 0.375,
         child: clinics.isEmpty
             ? Center(
                 child: Column(

@@ -1340,7 +1340,7 @@ class _RegisterdocterPageState extends State<RegisterdocterPage> {
 
     controller.name.value = nameCtl.text;
     controller.surname.value = surnameCtl.text;
-    controller.special.value = selectedSpecialId?.toString() ?? '';
+    // controller.special.value = selectedSpecialId?.toString() ?? '';
     controller.special.value = selectedSpecialty.join(', ');
     controller.careerNo.value = careerNoCtl.text;
 

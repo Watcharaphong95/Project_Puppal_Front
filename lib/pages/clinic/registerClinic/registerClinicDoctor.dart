@@ -346,8 +346,7 @@ class _RegisterclinicdoctorPageState extends State<RegisterclinicdoctorPage> {
 
   Future<int?> getSpecialIdByName(String specialName) async {
     try {
-      final res =
-          await http.get(Uri.parse("$url/special/search?name=$specialName"));
+      final res = await http.get(Uri.parse("$url/special/search/$specialName"));
 
       if (res.statusCode == 200) {
         var jsonData = json.decode(res.body);

@@ -770,8 +770,8 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
 
     var res = await http.get(Uri.parse("$url/user/${emailCtl.text}"));
     Get.back();
+
     if (res.statusCode == 200) {
-      Get.back();
       Get.snackbar(
         'ข้อผิดพลาด',
         'อีเมลนี้เคยสมัครสมาชิกไปแล้ว\nกรุณาเข้าสู่ระบบหากเป็นผู้ใช้ทั่วไปแล้วต้องการเปลี่ยนไปยังคลินิก',
@@ -786,7 +786,6 @@ class _RegisterclinicPageState extends State<RegisterclinicPage> {
       );
       return;
     } else {
-      Get.back();
       Get.to(() => CliniclocationselectPage());
     }
     log(res.body);
