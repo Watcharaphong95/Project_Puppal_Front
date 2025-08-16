@@ -44,6 +44,10 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
   @override
   void initState() {
     init();
+    // เรียกหน้าแก้ไขหลังจาก widget ถูกวาดเสร็จ
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // openEditDoctorScreen(); // เรียกเมื่ออยากเปิดหน้าแก้ไขทันที
+    });
     super.initState();
   }
 
@@ -526,13 +530,25 @@ class _CliniclistdoctorsState extends State<Cliniclistdoctors> {
                                                       ),
                                                       elevation: 2,
                                                     ),
-                                                    onPressed: () {
-                                                      Get.to(
+                                                    onPressed: () async {
+                                                      final result =
+                                                          await Get.to(
                                                         () =>
                                                             Clinicdoctoreditprofile(
                                                                 careerNo: doctor
                                                                     .careerNo),
                                                       );
+
+                                                      if (result == true) {
+                                                        setState(() {
+                                                          _loadingData =
+                                                              true; // เริ่มโหลดใหม่
+                                                        });
+                                                        await getDoctor(); // โหลดรายชื่อคุณหมอใหม่
+                                                        setState(() {
+                                                          _loadingData = false;
+                                                        });
+                                                      }
                                                     },
                                                     child: const Text(
                                                       'ดูประวัติ',

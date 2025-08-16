@@ -969,46 +969,61 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
   }
 
   Future<void> updateSchedule() async {
-    showLoadingDialog();
+    showLoadingDialog(); // แสดง loading dialog
 
-    bool isConfirmed = await confirmDialog(context);
-    if (!isConfirmed) {
-      log("ผู้ใช้ยกเลิกการบันทึก");
-      return;
-    }
-    final clinicEmail = box.read('email');
-    ClinicSchedulePost req = ClinicSchedulePost(
-      weekdays: selectedWeekdays.join(','),
-      openTime:
-          "${openTime!.hour.toString().padLeft(2, '0')}:${openTime!.minute.toString().padLeft(2, '0')}",
-      closeTime:
-          "${closeTime!.hour.toString().padLeft(2, '0')}:${closeTime!.minute.toString().padLeft(2, '0')}",
-    );
+    try {
+      bool isConfirmed = await confirmDialog(context);
 
-    final res = await http.put(
-      Uri.parse("$url/schedule/$clinicEmail"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(req),
-    );
-
-    if (res.statusCode == 200) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: const Text("บันทึกสำเร็จ"),
-      //     backgroundColor: primaryColor,
-      //     behavior: SnackBarBehavior.floating,
-      //     shape: RoundedRectangleBorder(
-      //       borderRadius: BorderRadius.circular(8),
-      //     ),
-      //   ),
-      // );
-
-      if (specialHolidays.isNotEmpty) {
-        await insertSpecialSchedule();
+      if (!isConfirmed) {
+        log("ผู้ใช้ยกเลิกการบันทึก");
+        Get.back(); // ปิด loading dialog
+        return;
       }
-      Get.back();
-    } else {
-      log("❌ บันทึกข้อมูลไม่สำเร็จ: ${res.statusCode}");
+
+      final clinicEmail = box.read('email');
+
+      ClinicSchedulePost req = ClinicSchedulePost(
+        weekdays: selectedWeekdays.join(','),
+        openTime:
+            "${openTime!.hour.toString().padLeft(2, '0')}:${openTime!.minute.toString().padLeft(2, '0')}",
+        closeTime:
+            "${closeTime!.hour.toString().padLeft(2, '0')}:${closeTime!.minute.toString().padLeft(2, '0')}",
+      );
+
+      final res = await http.put(
+        Uri.parse("$url/schedule/$clinicEmail"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(req),
+      );
+
+      if (res.statusCode == 200) {
+        log("บันทึกสำเร็จ");
+
+        if (specialHolidays.isNotEmpty) {
+          await insertSpecialSchedule();
+        }
+
+        Get.back(); // ปิด loading dialog
+        // แสดง snackbar
+        Get.snackbar(
+          'บันทึกข้อมูลสำเร็จ',
+          'ตารางเวลาเปิด-ปิดคลินิกถูกบันทึกเรียบร้อยแล้ว',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFF916B44),
+          colorText: Colors.white,
+          borderRadius: 12,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+          snackStyle: SnackStyle.FLOATING,
+          isDismissible: true,
+        );
+      } else {
+        log("❌ บันทึกข้อมูลไม่สำเร็จ: ${res.statusCode}");
+        Get.back(); // ปิด loading dialog
+      }
+    } catch (e) {
+      log("❌ เกิดข้อผิดพลาด: $e");
+      Get.back(); // ปิด loading dialog
     }
   }
 
@@ -1160,7 +1175,7 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  "คุณต้องการบันทึกข้อมูลการฉีดวัคซีนหรือไม่?",
+                  "คุณต้องการบันทึกข้อมูลเปิด-ปิดคลินิกหรือไม่?",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Color(0xFF916B44),
@@ -1363,7 +1378,7 @@ class _ClinicOpeningHoursState extends State<Clinicopeninghours>
                 child: Container(
                   height: 40,
                   child: TextButton(
-                    onPressed: () => Get.back(),
+                    onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF8D6E63),
                       backgroundColor: Colors.transparent,

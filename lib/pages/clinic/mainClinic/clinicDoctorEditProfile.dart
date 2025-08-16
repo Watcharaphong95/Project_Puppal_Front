@@ -96,6 +96,14 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
           ),
         ),
         iconTheme: IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // ส่งค่า true กลับให้หน้าก่อนหน้าให้รีโหลด
+            Navigator.pop(
+                context, true); // หรือใช้ Get.back(result: true) ถ้าใช้ GetX
+          },
+        ),
       ),
       body: _loadingData
           ? Center(
@@ -1907,11 +1915,8 @@ class _ClinicdoctoreditprofileState extends State<Clinicdoctoreditprofile> {
               final picked = await ImagePicker()
                   .pickImage(source: ImageSource.gallery, imageQuality: 80);
               if (picked != null) {
-                final pickedFile =
-                    await ImagePicker().pickImage(source: ImageSource.gallery);
                 dataChange = true;
                 setState(() => _imageFile = File(picked.path));
-                _imageFile = File(pickedFile!.path);
               }
             },
           ),

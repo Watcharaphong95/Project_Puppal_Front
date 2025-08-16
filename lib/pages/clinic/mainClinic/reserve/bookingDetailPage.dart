@@ -1589,7 +1589,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: const BorderSide(
-                color: const Color.fromARGB(255, 203, 22, 9),
+                color: Color(0xFF916B44),
                 width: 2,
               ),
             ),
@@ -1614,7 +1614,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                 const Text(
                   "ปฏิเสธการขอจอง!!!",
                   style: TextStyle(
-                    color: const Color.fromARGB(255, 203, 22, 9),
+                    color: Color(0xFF916B44),
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -1624,7 +1624,7 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                   "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: const Color.fromARGB(255, 203, 22, 9),
+                    color: Color(0xFF916B44),
                     fontSize: 16,
                     height: 1.4,
                   ),
@@ -1639,14 +1639,14 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: const Color.fromARGB(255, 203, 22, 9),
+                    color: Colors.grey.shade500,
                     width: 1.5,
                   ),
                 ),
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color.fromARGB(255, 203, 22, 9),
+                    foregroundColor: Colors.grey.shade700,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -1667,11 +1667,10 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: const Color.fromARGB(255, 203, 22, 9),
+                  color: Color(0xFF916B44),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 203, 22, 9)
-                          .withOpacity(0.3),
+                      color: Color(0xFF916B44).withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),

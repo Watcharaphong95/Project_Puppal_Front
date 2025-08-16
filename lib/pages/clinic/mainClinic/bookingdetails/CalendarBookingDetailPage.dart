@@ -807,8 +807,14 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                                             horizontal: 8),
                                         child: _buildPopupActionButton(
                                           label: "ยกเลิกการจอง",
-                                          onPressed: () {
-                                            _showRejectDialog(0);
+                                          onPressed: () async {
+                                            // _showRejectDialog(0);
+                                            bool isConfirmed =
+                                                await RejectDialog(context, 0);
+                                            if (!isConfirmed) {
+                                              log("ผู้ใช้ยกเลิกการบันทึก");
+                                              return;
+                                            }
                                           },
                                           isPrimary:
                                               false, // ปุ่มสีเทาแบบ secondary
@@ -1286,12 +1292,16 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
             }
 
             if (userName != null && clinicEmail != null && date != null) {
+              final doc = await FirebaseFirestore.instance
+                  .collection('reserve')
+                  .doc(docId)
+                  .delete();
+
               await sendClinicRefuseNotification(
-                clinicEmail: clinicEmail,
-                userName: box.read('clinicName'),
-                date: date.toString(),
-                generalEmail: generalEmail,
-              );
+                  clinicEmail: clinicEmail,
+                  userName: box.read('clinicName'),
+                  date: data?['date'] ?? '',
+                  generalEmail: generalEmail);
             } else {
               log("⚠️ Missing required data for notification");
             }
@@ -1415,6 +1425,129 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
     );
   }
 
+  Future<bool> RejectDialog(BuildContext context, int status) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 203, 22, 9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ปฏิเสธการขอจอง!!!",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.grey.shade500,
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey.shade700,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: const Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).pop(true);
+                    updatestatus(widget.docId, 0);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   void _showRejectDialog(int status) {
     showDialog(
       context: context,
@@ -1474,7 +1607,7 @@ class _CalendarbookingdetailpageState extends State<Calendarbookingdetailpage> {
                       Navigator.pop(context);
                       Navigator.pop(context, true);
                       updatestatus(widget.docId, 0);
-                      _rejectReservation();
+                      // _rejectReservation();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,

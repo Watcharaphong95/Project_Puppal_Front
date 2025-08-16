@@ -1205,6 +1205,14 @@ class _CliniceditprofileState extends State<EitprofilePage> {
       return;
     }
     showLoadingDialog(message: "กำลังโหลด...");
+
+    bool isConfirmed = await confirmDialog(context);
+
+    if (!isConfirmed) {
+      log("ผู้ใช้ยกเลิกการบันทึก");
+      Get.back(); // ปิด loading dialog
+      return;
+    }
     if (nameCtl.text.isEmpty) nameCtl.text = clinicList[0].name;
     if (phoneCtl.text.isEmpty) phoneCtl.text = clinicList[0].phone;
     if (addressCtl.text.isEmpty) addressCtl.text = clinicList[0].address;
@@ -1236,19 +1244,161 @@ class _CliniceditprofileState extends State<EitprofilePage> {
     );
     // ปิด loading dialog ก่อน
     Get.back(); // ปิด dialog โหลด
-    showAlertNoClose(
-        title: 'อัพเดทเสร็จสิ้น',
-        message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
-        onConfirm: () {
-          Get.off(() => Clinicprofile());
-        });
+    // showAlertNoClose(
+    //     title: 'อัพเดทเสร็จสิ้น',
+    //     message: 'อัพเดทข้อมูลส่วนตัวเรียบร้อยแล้ว',
+    //     onConfirm: () {
+    //       Get.off(() => Clinicprofile());
+    //     });
     if (res.statusCode == 200) {
+      Get.snackbar(
+        'บันทึกข้อมูลสำเร็จ',
+        'ข้อมูลคลินิกของคุณถูกบันทึกเรียบร้อยแล้ว',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF916B44),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+        snackStyle: SnackStyle.FLOATING,
+        isDismissible: true,
+      );
       log("Update data clinic success");
       // Get.snackbar('Success', 'แก้ไขข้อมูลเรียบร้อย');
     } else {
       log("Failed to update doctor info: ${res.statusCode}");
       Get.snackbar('Error', 'ไม่สามารถแก้ไขข้อมูลได้');
     }
+  }
+
+  Future<bool> confirmDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          barrierDismissible: false, // ป้องกันการปิดโดยการแตะข้างนอก
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // กลางแนวนอน
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.timelapse,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการบันทึก",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการบันทึกข้อมูลคลินิกหรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center, // ปุ่มอยู่ตรงกลาง
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF916B44),
+                      Color(0xFFDBA871),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void showAlert({
@@ -1601,14 +1751,11 @@ class _CliniceditprofileState extends State<EitprofilePage> {
             leading: const Icon(Icons.photo_library, color: Color(0xFF795548)),
             title: const Text('เลือกรูปจากคลัง'),
             onTap: () async {
-              Navigator.pop(context);
+              Navigator.pop(context); // ปิด bottom sheet
               final picked = await ImagePicker()
                   .pickImage(source: ImageSource.gallery, imageQuality: 80);
               if (picked != null) {
-                final pickedFile =
-                    await ImagePicker().pickImage(source: ImageSource.gallery);
-                setState(() => _imageFile = File(picked.path));
-                _imageFile = File(pickedFile!.path);
+                setState(() => _imageFile = File(picked.path)); // อัพเดต UI
               }
             },
           ),

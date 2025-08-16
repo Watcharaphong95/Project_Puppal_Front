@@ -2092,12 +2092,16 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
               //   userName: userName,
               //   date: date,
               // );
+              final doc = await FirebaseFirestore.instance
+                  .collection('reserve')
+                  .doc(docId)
+                  .delete();
+
               await sendClinicRefuseNotification(
-                clinicEmail: clinicEmail,
-                userName: box.read('clinicName'),
-                date: date.toString(),
-                generalEmail: generalEmail,
-              );
+                  clinicEmail: clinicEmail,
+                  userName: box.read('clinicName'),
+                  date: data?['date'] ?? '',
+                  generalEmail: generalEmail);
             } else {
               log("⚠️ Missing required data for notification");
             }
@@ -2192,7 +2196,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: const BorderSide(
-                color: Color.fromARGB(255, 203, 22, 9),
+                color: Color(0xFF916B44),
                 width: 2,
               ),
             ),
@@ -2217,7 +2221,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                 const Text(
                   "ปฏิเสธการขอจอง!!!",
                   style: TextStyle(
-                    color: Color.fromARGB(255, 203, 22, 9),
+                    color: Color(0xFF916B44),
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -2227,7 +2231,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                   "คุณต้องการปฏิเสธการขอจองนี้หรือไม่?",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color.fromARGB(255, 203, 22, 9),
+                    color: Color(0xFF916B44),
                     fontSize: 16,
                     height: 1.4,
                   ),
@@ -2241,14 +2245,14 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: const Color.fromARGB(255, 203, 22, 9),
+                    color: Colors.grey.shade500,
                     width: 1.5,
                   ),
                 ),
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color.fromARGB(255, 203, 22, 9),
+                    foregroundColor: Colors.grey.shade700,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -2268,11 +2272,10 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: const Color.fromARGB(255, 203, 22, 9),
+                  color: const Color(0xFF916B44),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 203, 22, 9)
-                          .withOpacity(0.3),
+                      color: const Color(0xFF916B44).withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
