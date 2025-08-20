@@ -372,12 +372,17 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
         earlierList.clear();
 
         for (var item in allData) {
-          final date = item.date.toLocal();
+          final date = item.createAt;
+          log("📅 Checking reserve: ${item.docId} | date = $date");
+
           if (isToday(date)) {
+            log("➡️ Added to todayList");
             todayList.add(item);
           } else if (isYesterday(date)) {
+            log("➡️ Added to yesterdayList");
             yesterdayList.add(item);
           } else {
+            log("➡️ Added to earlierList");
             earlierList.add(item);
           }
         }

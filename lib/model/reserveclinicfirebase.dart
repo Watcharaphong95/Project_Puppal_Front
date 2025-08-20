@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ReserveClinicFirebase {
   String? appointmentAid; // Nullable String
   String clinicEmail;
+  DateTime createAt;
   DateTime date;
   String dogDogId;
   String generalEmail;
@@ -13,6 +14,7 @@ class ReserveClinicFirebase {
   ReserveClinicFirebase({
     this.appointmentAid, // nullable
     required this.clinicEmail,
+    required this.createAt,
     required this.date,
     required this.dogDogId,
     required this.generalEmail,
@@ -26,6 +28,10 @@ class ReserveClinicFirebase {
       ReserveClinicFirebase(
         appointmentAid: json["appointmentAid"]?.toString(), // อาจเป็น null
         clinicEmail: json["clinicEmail"] ?? '',
+        createAt: json["createAt"] is Timestamp
+            ? (json["createAt"] as Timestamp).toDate()
+            : DateTime.tryParse(json["createAt"]?.toString() ?? '') ??
+                DateTime.now(),
         date: json["date"] is Timestamp
             ? (json["date"] as Timestamp).toDate()
             : DateTime.tryParse(json["date"]?.toString() ?? '') ??
@@ -44,6 +50,7 @@ class ReserveClinicFirebase {
   Map<String, dynamic> toJson() => {
         "appointmentAid": appointmentAid,
         "clinicEmail": clinicEmail,
+        "createAt": createAt.toIso8601String(),
         "date": date.toIso8601String(),
         "dogDogId": dogDogId,
         "generalEmail": generalEmail,
