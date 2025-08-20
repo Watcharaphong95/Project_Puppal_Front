@@ -613,70 +613,80 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                             ),
                                           ),
                                         ),
-                                  Card(
-                                    color: Color(0xFF916B44),
-                                    elevation: 2,
-                                    child: InkWell(
-                                      onTap: () {
-                                        GeneralAppNavigation
-                                            .printStack(); // ก่อนนำทาง
-                                        // log(_selectedDay.toString());
-                                        final localSelectedDay = DateTime(
+                                  if (!DateTime(
+                                          DateTime.now().year,
+                                          DateTime.now().month,
+                                          DateTime.now().day)
+                                      .isAfter(DateTime(
                                           _selectedDay.year,
                                           _selectedDay.month,
-                                          _selectedDay.day,
-                                        );
-                                        GeneralAppNavigation.toWidget(
-                                            DogselectPage(
-                                                date: _selectedDay,
-                                                dogHasAppointment:
-                                                    eventMap[localSelectedDay]
-                                                            ?.map((dog) =>
-                                                                dog.dogId)
-                                                            .toList() ??
-                                                        [],
-                                                dogData: Map.fromEntries(
-                                                  eventMap.entries
-                                                      // 1. Keep only dates before now
-                                                      .where((entry) =>
-                                                          entry.key.isBefore(
-                                                              DateTime.now()))
-                                                      // 2. Map to new entries with filtered dog lists (only status == 0)
-                                                      .map((entry) => MapEntry(
-                                                            entry.key,
-                                                            entry.value
-                                                                .where((dog) =>
-                                                                    dog.status ==
-                                                                    0)
-                                                                .toList(),
-                                                          ))
-                                                      // 3. Keep only entries where filtered list is not empty
-                                                      .where((entry) => entry
-                                                          .value.isNotEmpty),
-                                                )),
-                                            title: 'เลือกสุนัข');
-                                        GeneralAppNavigation.printStack();
-                                      },
-                                      child: ListTile(
-                                        title: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'จองคลินิก  ',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600),
-                                            ),
-                                            Icon(
-                                              FontAwesomeIcons.plus,
-                                              color: Colors.white,
-                                            ),
-                                          ],
+                                          _selectedDay.day)))
+                                    Card(
+                                      color: Color(0xFF916B44),
+                                      elevation: 2,
+                                      child: InkWell(
+                                        onTap: () {
+                                          GeneralAppNavigation
+                                              .printStack(); // ก่อนนำทาง
+                                          // log(_selectedDay.toString());
+                                          final localSelectedDay = DateTime(
+                                            _selectedDay.year,
+                                            _selectedDay.month,
+                                            _selectedDay.day,
+                                          );
+                                          GeneralAppNavigation.toWidget(
+                                              DogselectPage(
+                                                  date: _selectedDay,
+                                                  dogHasAppointment:
+                                                      eventMap[localSelectedDay]
+                                                              ?.map((dog) =>
+                                                                  dog.dogId)
+                                                              .toList() ??
+                                                          [],
+                                                  dogData: Map.fromEntries(
+                                                    eventMap.entries
+                                                        // 1. Keep only dates before now
+                                                        .where((entry) =>
+                                                            entry.key.isBefore(
+                                                                DateTime.now()))
+                                                        // 2. Map to new entries with filtered dog lists (only status == 0)
+                                                        .map(
+                                                            (entry) => MapEntry(
+                                                                  entry.key,
+                                                                  entry.value
+                                                                      .where((dog) =>
+                                                                          dog.status ==
+                                                                          0)
+                                                                      .toList(),
+                                                                ))
+                                                        // 3. Keep only entries where filtered list is not empty
+                                                        .where((entry) => entry
+                                                            .value.isNotEmpty),
+                                                  )),
+                                              title: 'เลือกสุนัข');
+                                          GeneralAppNavigation.printStack();
+                                        },
+                                        child: ListTile(
+                                          title: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                'จองคลินิก  ',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                              Icon(
+                                                FontAwesomeIcons.plus,
+                                                color: Colors.white,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ),
