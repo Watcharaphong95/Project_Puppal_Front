@@ -770,7 +770,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 // สมมติว่าเราเอา item แรกใน data list
     final vaccine = appointmentData?.vaccine ?? 'ไม่มีข้อมูล';
 
-    final ownerName = generalData?.name ?? 'ไม่มีข้อมูล';
+    final ownerName = generalData?.username ?? 'ไม่มีข้อมูล';
     final ownerPhone = generalData?.phone ?? 'ไม่มีข้อมูล';
     showDialog(
       context: context,
@@ -821,7 +821,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
                 // Card Content
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1061,7 +1061,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
 
           if (generalEmail != null) {
             final generalUser = await getGeneral(generalEmail);
-            final userName = generalUser?.name;
+            final userName = generalUser?.username;
 
             if (userName != null) {
               if (status == 2) {
@@ -1255,7 +1255,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
       final res = await http.get(Uri.parse("$url/general/$email"));
       if (res.statusCode == 200) {
         final list = generalPostFromJson(res.body); // <= list<GeneralPost>
-        if (list.isNotEmpty) return list[0].name;
+        if (list.isNotEmpty) return list[0].username;
       }
     } catch (e) {
       log('getGeneralName error: $e');

@@ -511,15 +511,20 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                           children: events.map((e) {
                                             return InkWell(
                                               onTap: () {
-                                                if (DateTime.now()
-                                                    .isAfter(_selectedDay)) {
-                                                  return;
-                                                }
-
                                                 if (e.status != 0) {
                                                   showReserveInfoAlert(
                                                       context, e);
                                                 } else {
+                                                  if (!DateTime(
+                                                          DateTime.now().year,
+                                                          DateTime.now().month,
+                                                          DateTime.now().day)
+                                                      .isAfter(DateTime(
+                                                          _selectedDay.year,
+                                                          _selectedDay.month,
+                                                          _selectedDay.day))) {
+                                                    return;
+                                                  }
                                                   GeneralAppNavigation.toWidget(
                                                     ClinicsearchPage(
                                                       dogId: e.dogId,

@@ -498,7 +498,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                                     ),
                                                                     TextSpan(
                                                                       text: general
-                                                                              .name ??
+                                                                              .username ??
                                                                           'ไม่ระบุชื่อ',
                                                                       style:
                                                                           TextStyle(

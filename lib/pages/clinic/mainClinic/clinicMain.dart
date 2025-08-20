@@ -800,7 +800,7 @@ class _ClinicmainPageState extends State<ClinicmainPage> {
                                                                           ),
                                                                           TextSpan(
                                                                             text:
-                                                                                general.name ?? 'ไม่ระบุชื่อ',
+                                                                                general.username ?? 'ไม่ระบุชื่อ',
                                                                             style:
                                                                                 TextStyle(
                                                                               fontWeight: FontWeight.w700,
