@@ -11,6 +11,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:puppal_application/config/config.dart';
 import 'package:puppal_application/model/appointmentClinic.dart';
 import 'package:puppal_application/model/appointmentPost.dart';
+import 'package:puppal_application/model/clinicinjectionRecordPost.dart';
 import 'package:puppal_application/model/dogdetalisPost.dart';
 import 'package:puppal_application/model/generalPost.dart';
 import 'package:puppal_application/model/reserveClinicPost.dart';
@@ -47,6 +48,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
   final Color secondaryBrown = const Color(0xFFDBA871);
   final Color lightBrown = const Color(0xFFE9CBAF);
   DateTime _focusedDay = DateTime.now();
+  List<ClinicinjectionRecordPost>? vaccineHistory;
   DateTime? _selectedDay;
   List<ReserveClinicFirebase> reserveList = [];
   List<ReserveClinicFirebase> reservebookingList = [];
@@ -579,9 +581,130 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                               SizedBox(
                                                                   width: 8),
                                                               Expanded(
-                                                                child: (item.appointmentAid ==
+                                                                child: FutureBuilder<
+                                                                    List<
+                                                                        dynamic>>(
+                                                                  future:
+                                                                      () async {
+                                                                    final doc = await FirebaseFirestore
+                                                                        .instance
+                                                                        .collection(
+                                                                            'reserve')
+                                                                        .doc(item
+                                                                            .docId)
+                                                                        .get();
+
+                                                                    final data =
+                                                                        doc.data();
+                                                                    if (data ==
                                                                         null)
-                                                                    ? Text(
+                                                                      return [
+                                                                        <ClinicinjectionRecordPost>[],
+                                                                        null
+                                                                      ];
+
+                                                                    final dynamic
+                                                                        dogDogIdRaw =
+                                                                        data[
+                                                                            'dogDogId'];
+                                                                    final String?
+                                                                        generalEmail =
+                                                                        data[
+                                                                            'generalEmail'];
+                                                                    final String?
+                                                                        clinicEmail =
+                                                                        data[
+                                                                            'clinicEmail'];
+
+                                                                    final int? dogDogId = dogDogIdRaw
+                                                                            is int
+                                                                        ? dogDogIdRaw
+                                                                        : int.tryParse(dogDogIdRaw?.toString() ??
+                                                                            '');
+
+                                                                    final futures =
+                                                                        <Future>[];
+
+                                                                    // ตรวจสอบก่อนเรียก gethistoryvaccine
+                                                                    if (dogDogId != null &&
+                                                                        clinicEmail !=
+                                                                            null &&
+                                                                        clinicEmail
+                                                                            .isNotEmpty &&
+                                                                        _selectedDay !=
+                                                                            null) {
+                                                                      futures.add(gethistoryvaccine(
+                                                                          dogDogId,
+                                                                          clinicEmail,
+                                                                          _selectedDay!));
+                                                                    } else {
+                                                                      futures.add(
+                                                                          Future.value(
+                                                                              <ClinicinjectionRecordPost>[]));
+                                                                    }
+
+                                                                    // เรียก getdog
+                                                                    final dogId =
+                                                                        dogDogId ??
+                                                                            0;
+                                                                    futures.add(
+                                                                        getdog(
+                                                                            dogId));
+
+                                                                    return Future
+                                                                        .wait(
+                                                                            futures);
+                                                                  }(),
+                                                                  builder: (context,
+                                                                      snapshot) {
+                                                                    if (snapshot
+                                                                            .connectionState ==
+                                                                        ConnectionState
+                                                                            .waiting) {
+                                                                      return Container(
+                                                                        height:
+                                                                            16,
+                                                                        width:
+                                                                            120,
+                                                                        decoration:
+                                                                            BoxDecoration(
+                                                                          gradient:
+                                                                              LinearGradient(
+                                                                            colors: [
+                                                                              Color(0xFFE9CBAF).withOpacity(0.3),
+                                                                              Color(0xFFE9CBAF).withOpacity(0.1),
+                                                                            ],
+                                                                          ),
+                                                                          borderRadius:
+                                                                              BorderRadius.circular(8),
+                                                                        ),
+                                                                      );
+                                                                    } else if (snapshot
+                                                                        .hasError) {
+                                                                      return Text(
+                                                                        'เกิดข้อผิดพลาด',
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                13,
+                                                                            color:
+                                                                                Colors.red,
+                                                                            fontWeight: FontWeight.w500),
+                                                                      );
+                                                                    }
+
+                                                                    // vaccineList อยู่ใน snapshot.data[0]
+                                                                    final vaccineList =
+                                                                        snapshot.data?[0]
+                                                                                as List<ClinicinjectionRecordPost>? ??
+                                                                            [];
+                                                                    // dogData อยู่ใน snapshot.data[1]
+                                                                    final dogData =
+                                                                        snapshot.data?[1]
+                                                                            as DogDetailsPost?;
+
+                                                                    if (vaccineList
+                                                                        .isEmpty) {
+                                                                      return Text(
                                                                         'ไม่มีข้อมูลวัคซีน',
                                                                         style:
                                                                             TextStyle(
@@ -594,92 +717,36 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
                                                                           fontStyle:
                                                                               FontStyle.italic,
                                                                         ),
-                                                                      )
-                                                                    : FutureBuilder<
-                                                                        List<
-                                                                            dynamic>>(
-                                                                        future:
-                                                                            Future.wait([
-                                                                          getvaccine(
-                                                                              item.appointmentAid.toString(),
-                                                                              item.generalEmail),
-                                                                          getdog(
-                                                                            item.dogDogId is int
-                                                                                ? item.dogDogId as int
-                                                                                : int.tryParse(item.dogDogId.toString()) ?? 0,
-                                                                          ),
-                                                                        ]),
-                                                                        builder:
-                                                                            (context,
-                                                                                snapshot) {
-                                                                          if (snapshot.connectionState ==
-                                                                              ConnectionState.waiting) {
-                                                                            return Container(
-                                                                              height: 16,
-                                                                              width: 120,
-                                                                              decoration: BoxDecoration(
-                                                                                gradient: LinearGradient(
-                                                                                  colors: [
-                                                                                    Color(0xFFE9CBAF).withOpacity(0.3),
-                                                                                    Color(0xFFE9CBAF).withOpacity(0.1),
-                                                                                  ],
-                                                                                ),
-                                                                                borderRadius: BorderRadius.circular(8),
-                                                                              ),
-                                                                            );
-                                                                          } else if (snapshot.hasError) {
-                                                                            return Text(
-                                                                              'เกิดข้อผิดพลาด',
-                                                                              style: TextStyle(
-                                                                                fontSize: 13,
-                                                                                color: Colors.red,
-                                                                                fontWeight: FontWeight.w500,
-                                                                              ),
-                                                                            );
-                                                                          }
+                                                                      );
+                                                                    }
 
-                                                                          final appointmentData =
-                                                                              snapshot.data?[0] as AppointmentClinic?;
-                                                                          final dogData =
-                                                                              snapshot.data?[1] as DogDetailsPost?;
+                                                                    final vaccineName =
+                                                                        vaccineList.first.vaccine ??
+                                                                            '';
+                                                                    final dogName =
+                                                                        dogData?.name ??
+                                                                            'ไม่ระบุชื่อสุนัข';
 
-                                                                          if (appointmentData == null ||
-                                                                              appointmentData.data.isEmpty) {
-                                                                            return Text(
-                                                                              'ไม่มีข้อมูลวัคซีน',
-                                                                              style: TextStyle(
-                                                                                fontSize: 13,
-                                                                                fontWeight: FontWeight.w500,
-                                                                                color: Color(0xFF916B44).withOpacity(0.6),
-                                                                                fontStyle: FontStyle.italic,
-                                                                              ),
-                                                                            );
-                                                                          }
-
-                                                                          final vaccineName =
-                                                                              appointmentData.data.first.vaccines ?? '';
-                                                                          final dogName =
-                                                                              dogData?.name ?? 'ไม่ระบุชื่อสุนัข';
-
-                                                                          return Row(
-                                                                            children: [
-                                                                              Flexible(
-                                                                                child: Text(
-                                                                                  '(${dogName}) - $vaccineName',
-                                                                                  style: TextStyle(
-                                                                                    fontSize: 13,
-                                                                                    fontWeight: FontWeight.w600,
-                                                                                    color: Color(0xFF916B44),
-                                                                                    height: 1.2,
-                                                                                  ),
-                                                                                  overflow: TextOverflow.ellipsis,
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
+                                                                    return Text(
+                                                                      '($dogName) - $vaccineName',
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            13,
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                        color: Color(
+                                                                            0xFF916B44),
+                                                                        height:
+                                                                            1.2,
                                                                       ),
-                                                              ),
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              )
                                                             ],
                                                           ),
                                                         ),
@@ -851,12 +918,31 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
         ),
         focusedDay: focusedDay,
         selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-        onDaySelected: (selected, focused) {
+        onDaySelected: (selected, focused) async {
           setState(() {
             _focusedDay = focused;
             _selectedDay = selected;
             events = getEventsForDay(selected);
           });
+          if (events.isNotEmpty) {
+            // แปลง dogDogId เป็น int
+            final dogIdRaw = events.first.dogDogId;
+            final int? dogId = (dogIdRaw is int
+                ? dogIdRaw
+                : int.tryParse(dogIdRaw.toString())) as int?;
+
+            final clinicEmail = events.first.clinicEmail;
+
+            if (dogId != null &&
+                clinicEmail != null &&
+                clinicEmail.isNotEmpty) {
+              final oldRecords =
+                  await gethistoryvaccine(dogId, clinicEmail, selected);
+              log("Fetched oldRecords for selected day: ${oldRecords?.length}");
+            } else {
+              log("⚠️ dogId หรือ clinicEmail ไม่ถูกต้อง");
+            }
+          }
         },
         onPageChanged: onPageChanged,
         calendarBuilders: CalendarBuilders(
@@ -988,12 +1074,7 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
 
   AppointmentClinic appointmentClinicFromJson(String str) {
     final jsonData = json.decode(str);
-    if (jsonData is Map && jsonData['data'] != null) {
-      return AppointmentClinic.fromJson(
-        Map<String, dynamic>.from(jsonData),
-      );
-    }
-    throw Exception("Invalid JSON format");
+    return AppointmentClinic.fromJson(jsonData);
   }
 
   Future<AppointmentClinic?> getvaccine(
@@ -1145,10 +1226,81 @@ class _VaccinehistorypageState extends State<Vaccinehistorypage> {
       } else {
         log('❌ No document found for docId=$docId');
       }
+
+      if (doc.exists) {
+        final data = doc.data();
+        log('✅ Data for docId=$docId: $data');
+
+        if (data != null) {
+          // ล้าง reserveList ก่อนถ้าต้องการโหลดใหม่
+          reserveList.clear();
+
+          // สร้าง model จากข้อมูลและเพิ่มเข้า list
+          reserveList.add(ReserveClinicFirebase.fromJson(data, doc.id));
+
+          final dynamic dogDogIdRaw = data['dogDogId'];
+          final String? generalEmail = data['generalEmail'];
+          final String? clinicEmail = data['clinicEmail'];
+          final String? date = data['date'];
+
+          // แปลง dogDogId เป็น int
+          final int? dogDogId = dogDogIdRaw is int
+              ? dogDogIdRaw
+              : int.tryParse(dogDogIdRaw?.toString() ?? '');
+
+          if (dogDogId != null &&
+              generalEmail != null &&
+              generalEmail.isNotEmpty) {
+            await getdog(dogDogId);
+            await getGeneral(generalEmail);
+            // final latestRecords = await getInjectionList(dogDogId, date!);
+            final oldRecords =
+                await gethistoryvaccine(dogDogId, clinicEmail!, _selectedDay!);
+
+            setState(() {
+              // clinicRecord = latestRecords;
+              // vaccineHistory = oldRecords;
+              vaccineHistory = oldRecords;
+            });
+          } else {
+            log('⚠️ dogDogId หรือ email ไม่ถูกต้องหรือว่าง');
+          }
+        }
+      } else {
+        log('❌ No document found for docId=$docId');
+      }
     } catch (e) {
       log('❌ Error while fetching document: $e');
     }
     return null;
+  }
+
+  Future<List<ClinicinjectionRecordPost>?> gethistoryvaccine(
+      int dogId, String clinicEmail, DateTime selectedDate) async {
+    if (selectedDate == null) return null;
+
+    String onlyDate = selectedDate.toUtc().toIso8601String().substring(0, 10);
+
+    log("Selected date: $onlyDate");
+
+    try {
+      final res = await http.get(Uri.parse(
+          "$url/clinicinjectionRecord/newhistory/$dogId/$onlyDate/$clinicEmail"));
+
+      if (res.statusCode == 200) {
+        log('API response body: ${res.body}');
+        final jsonData = json.decode(res.body)['data'];
+        if (jsonData == null) return [];
+        // Wrap object เป็น List
+        return [ClinicinjectionRecordPost.fromJson(jsonData)];
+      } else {
+        log("❌ Failed to load name vaccine data: ${res.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      log("❌ Exception while fetching vaccine info: $e");
+      return null;
+    }
   }
 
   void showLoadingDialog({String? message}) {
