@@ -77,7 +77,7 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
     url = config['apiEndPoint'];
 
     await getReserve(widget.docId);
-
+    log(reserveList[0].docId);
     setState(() {
       _loadingData = false;
     });
@@ -1685,7 +1685,6 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
         nextVaccineController.text.trim().isEmpty ||
         dateController.text.trim().isEmpty ||
         _imageFile == null ||
-        nextDateController.text.trim().isEmpty ||
         reserveList.isEmpty) {
       Get.snackbar(
         'ข้อผิดพลาด',
@@ -1702,48 +1701,63 @@ class _AddVaccinationRecordPageState extends State<AddVaccinationRecordPage> {
       return;
     }
 
-    showLoadingDialog();
+    if (nextDateController.text.trim().isEmpty) {
+      showAlert(
+          title: 'ไม่มีวันนัดครั้งถัดไป?',
+          message: '',
+          context: context,
+          onConfirm: () async {
+            showLoadingDialog();
 
-    // log ตรวจสอบค่า vaccine ก่อนส่ง
-    log("📌 vaccineController.text ก่อนส่ง: ${vaccineController.text}");
+            // log ตรวจสอบค่า vaccine ก่อนส่ง
+            log("📌 vaccineController.text ก่อนส่ง: ${vaccineController.text}");
 
-    // ถามยืนยันจากผู้ใช้
-    // bool isConfirmed = await confirmDialog(context);
-    // if (!isConfirmed) {
-    //   log("ผู้ใช้ยกเลิกการบันทึก");
-    //   return;
-    // }
+            // ถามยืนยันจากผู้ใช้
+            // bool isConfirmed = await confirmDialog(context);
+            // if (!isConfirmed) {
+            //   log("ผู้ใช้ยกเลิกการบันทึก");
+            //   return;
+            // }
 
-    // อัปโหลดรูปภาพและรับ URL
-    final imageUrl = await confirmAvatarButton();
-    log("imageUrl ก่อนส่ง: $imageUrl");
+            // อัปโหลดรูปภาพและรับ URL
+            final imageUrl = await confirmAvatarButton();
+            log("imageUrl ก่อนส่ง: $imageUrl");
 
-    if (imageUrl.isEmpty) {
-      log("Upload failed, cancel saving.");
-      showTopNotification(
-        context,
-        'การอัปโหลดรูปภาพล้มเหลว',
-        isSuccess: false,
-      );
-      return;
+            if (imageUrl.isEmpty) {
+              log("Upload failed, cancel saving.");
+              showTopNotification(
+                context,
+                'การอัปโหลดรูปภาพล้มเหลว',
+                isSuccess: false,
+              );
+              return;
+            }
+
+            DateTime nextDate;
+
+            if (!nextDateController.text.trim().isEmpty) {
+              DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
+                  .parse(nextDateController.text);
+              nextDate = DateTime(
+                  parsedThai.year - 543, parsedThai.month, parsedThai.day);
+            } else {
+              nextDate = DateTime(0000, 00, 00);
+            }
+
+            final String dogIdStr = reserveList[0].dogDogId;
+            final int dogId = int.tryParse(dogIdStr) ?? 0;
+
+            AppointmentPost appReq = AppointmentPost(
+              dogId: dogId,
+              generalUserEmail: reserveList[0].generalEmail,
+              vaccine: nextVaccineController.text,
+              date: nextDate,
+            );
+
+            await InsertionjectionRecord(
+                appReq, imageUrl, reserveList[0].docId);
+          });
     }
-
-    DateTime parsedThai = DateFormat('วันที่ d MMMM yyyy', 'th_TH')
-        .parse(nextDateController.text);
-    DateTime nextDate =
-        DateTime(parsedThai.year - 543, parsedThai.month, parsedThai.day);
-
-    final String dogIdStr = reserveList[0].dogDogId;
-    final int dogId = int.tryParse(dogIdStr) ?? 0;
-
-    AppointmentPost appReq = AppointmentPost(
-      dogId: dogId,
-      generalUserEmail: reserveList[0].generalEmail,
-      vaccine: nextVaccineController.text,
-      date: nextDate,
-    );
-
-    await InsertionjectionRecord(appReq, imageUrl, reserveList[0].docId);
   }
 
   Future<void> InsertionjectionRecord(

@@ -434,9 +434,8 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                                   ),
                                                   SizedBox(height: 2),
                                                   Text(
-                                                    record.injectionDate != null
-                                                        ? 'วันที่ฉีด: ${DateFormat('d MMMM', 'th').format(DateTime.parse(record.injectionDate!).toLocal())} ${DateTime.parse(record.injectionDate!).toLocal().year + 543}'
-                                                        : "ไม่มีข้อมูลวันที่ฉีด",
+                                                    formatThaiDate(
+                                                        record.injectionDate),
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       color: Color(0xFF718096),
@@ -464,6 +463,20 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
               ),
             ),
     );
+  }
+
+  String formatThaiDate(String? dateString) {
+    try {
+      if (dateString == null ||
+          dateString.isEmpty ||
+          dateString == "0000-00-00") {
+        return "ไม่มีข้อมูลวันที่ฉีด";
+      }
+      final date = DateTime.parse(dateString).toLocal();
+      return "${DateFormat('d MMMM', 'th').format(date)} ${date.year + 543}";
+    } catch (e) {
+      return "ไม่มีข้อมูลวันที่ฉีด";
+    }
   }
 
   void showRecordInfo(BuildContext context, DogsRecordIdGet record) {
@@ -663,8 +676,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                             child: _buildEnhancedInfoCard(
                               title: 'วันที่ฉีด',
                               content: record.injectionDate != null
-                                  ? _formatDate(
-                                      DateTime.parse(record.injectionDate!))
+                                  ? formatThaiDate(record.injectionDate)
                                   : 'ไม่ทราบ',
                               icon: Icons.calendar_today,
                               color: Color(0xFF2196F3),
@@ -733,7 +745,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
                                       SizedBox(height: 4),
                                       Text(
                                         record.nextDate != null
-                                            ? 'ครบกำหนด: ${_formatDate(DateTime.parse(record.nextDate!))}'
+                                            ? 'ครบกำหนด: ${_formatDate(record.nextDate)}'
                                             : '',
                                         style: TextStyle(
                                           fontSize: 14,
@@ -1103,7 +1115,7 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
   }
 
 // Date formatting helper
-  String _formatDate(DateTime date) {
+  String _formatDate(String? dateString) {
     const List<String> months = [
       'มกราคม',
       'กุมภาพันธ์',
@@ -1119,7 +1131,19 @@ class _GeneralrecordPageState extends State<GeneralrecordPage> {
       'ธันวาคม'
     ];
 
-    return '${date.day} ${months[date.month - 1]} ${date.year + 543}';
+    try {
+      if (dateString == null ||
+          dateString.isEmpty ||
+          dateString == "0000-00-00" ||
+          dateString.toLowerCase() == "invalid date") {
+        return "ไม่มีข้อมูลวันที่";
+      }
+
+      final date = DateTime.parse(dateString).toLocal();
+      return '${date.day} ${months[date.month - 1]} ${date.year + 543}';
+    } catch (e) {
+      return "ไม่มีข้อมูลวันที่";
+    }
   }
 
   Future<void> getDogData() async {

@@ -2017,10 +2017,13 @@ class _ClinicsearchPageState extends State<ClinicsearchPage> {
         for (var entry in widget.dogData!.entries) {
           List<Dog> dogData = entry.value;
           for (var v in dogData) {
+            for (var e in v.aid ?? []) {
+              log(e.toString());
+            }
             vaccinePastList
                 .addAll(v.vaccines.where((e) => e.trim().isNotEmpty));
             if (v.aid != null) {
-              widget.aid.addAll(v.aid ?? []);
+              widget.aid.addAll(List.from(v.aid!)); // make a safe copy
             }
           }
         }

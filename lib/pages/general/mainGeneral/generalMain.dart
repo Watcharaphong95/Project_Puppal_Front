@@ -515,7 +515,8 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
                                                   showReserveInfoAlert(
                                                       context, e);
                                                 } else {
-                                                  if (!DateTime(
+                                                  log('test');
+                                                  if (DateTime(
                                                           DateTime.now().year,
                                                           DateTime.now().month,
                                                           DateTime.now().day)
@@ -720,16 +721,12 @@ class _GeneralmainPageState extends State<GeneralmainPage> {
       print("⚠️ Error parsing time: $e");
     }
 
-    final selectedDateTime = DateTime(
-      _selectedDay.year,
-      _selectedDay.month,
-      _selectedDay.day,
-      hour,
-      minute,
-    );
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final selectedDate =
+        DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
 
-    final bool isDisabled =
-        e == null || DateTime.now().isAfter(selectedDateTime);
+    final bool isDisabled = e == null || todayDate.isAfter(selectedDate);
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
