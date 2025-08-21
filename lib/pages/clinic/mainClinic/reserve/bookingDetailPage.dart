@@ -842,15 +842,59 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                                         child: _buildPopupActionButton(
                                           label: 'ยืนยันการจอง',
                                           onPressed: () async {
-                                            // Navigator.pop(context);
-                                            bool isConfirmed =
-                                                await confirmDialog(
-                                                    context, widget.docid);
-                                            if (!isConfirmed) {
-                                              log("ผู้ใช้ยกเลิกการบันทึก");
-                                              return;
+                                            try {
+                                              // ดึง reserve ทั้งหมด
+                                              final snapshot =
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('reserve')
+                                                      .get();
+
+                                              if (snapshot.docs.isEmpty) return;
+
+                                              // หา document ปัจจุบัน
+                                              final currentDoc =
+                                                  snapshot.docs.firstWhere(
+                                                (d) => d.id == widget.docid,
+                                              );
+                                              if (currentDoc == null) return;
+
+                                              final data = currentDoc.data();
+                                              if (data == null) return;
+
+                                              // สมมติว่ามีฟิลด์ type ที่เก็บว่าเป็น special หรือไม่
+                                              final isSpecial =
+                                                  data['type'] == 1;
+
+                                              bool isConfirmed;
+                                              if (isSpecial) {
+                                                final reserveDate =
+                                                    DateTime.parse(
+                                                        data['date'] ?? '');
+                                                log("🔎 วันที่จอง: $reserveDate");
+
+                                                isConfirmed =
+                                                    await confirmDialogSpecial(
+                                                  context,
+                                                  widget.docid,
+                                                  reserveDate,
+                                                  snapshot, // ส่ง snapshot ทั้งหมดไปด้วย
+                                                );
+                                              } else {
+                                                isConfirmed =
+                                                    await confirmDialog(
+                                                        context, widget.docid);
+                                              }
+
+                                              if (!isConfirmed) {
+                                                log("ผู้ใช้ยกเลิกการบันทึก");
+                                                return;
+                                              }
+
+                                              // _showAcceptDialog(widget.docid);
+                                            } catch (e) {
+                                              log("❌ Error: $e");
                                             }
-                                            // _showAcceptDialog(docId);
                                           },
                                           isPrimary: true,
                                         ),
@@ -1571,6 +1615,158 @@ class _BookingdetailPageState extends State<BookingdetailPage> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<bool> confirmDialogSpecial(
+    BuildContext context,
+    String docId,
+    DateTime bookingDate,
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    log("🔎 bookingDate ที่ส่งมา: $bookingDate");
+
+    final confirmedCount = snapshot.docs.where((d) {
+      final dData = d.data();
+      if (dData == null) return false;
+      if (dData['status'] != 2) return false;
+
+      final dateStr = dData['date'] ?? '';
+      final itemDate = DateTime.tryParse(dateStr);
+      if (itemDate == null) return false;
+
+      final itemDay = DateTime(itemDate.year, itemDate.month, itemDate.day);
+      final bookingDay =
+          DateTime(bookingDate.year, bookingDate.month, bookingDate.day);
+
+      return itemDay == bookingDay;
+    }).length;
+
+    log("จำนวนที่ยืนยันแล้ววันนี้: $confirmedCount");
+
+    return await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการขอจองพิเศษ",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันการขอจองพิเศษนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "วันนี้มีการยืนยันแล้ว: $confirmedCount รายการ",
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 2);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
               ),

@@ -871,7 +871,7 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1019,13 +1019,29 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                               label: 'ยืนยันการจอง',
                               onPressed: () async {
                                 Navigator.pop(context);
-                                bool isConfirmed =
-                                    await confirmDialog(context, docId);
+
+                                // สมมติว่ามีฟิลด์ reserveData['type'] ที่เก็บว่าเป็น special หรือไม่
+                                final isSpecial = reserveData['type'] == 1;
+
+                                bool isConfirmed;
+                                if (isSpecial) {
+                                  final DateTime reserveDate =
+                                      DateTime.parse(reserveData['date']);
+
+                                  isConfirmed = await confirmDialogSpecial(
+                                    context,
+                                    docId,
+                                    reserveDate, // ✅ ตอนนี้เป็น DateTime แล้ว
+                                  );
+                                } else {
+                                  isConfirmed =
+                                      await confirmDialog(context, docId);
+                                }
+
                                 if (!isConfirmed) {
                                   log("ผู้ใช้ยกเลิกการบันทึก");
                                   return;
                                 }
-                                // _showAcceptDialog(docId);
                               },
                               isPrimary: true,
                             ),
@@ -1563,6 +1579,144 @@ class _ClinicConfirmRequestState extends State<VaccineRequestsPage> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<bool> confirmDialogSpecial(
+      BuildContext context, String docId, DateTime bookingDate) async {
+    // นับจำนวน status == 2 ที่ตรงกับวันเดียวกัน
+    final confirmedCount = todayList
+        .where((item) =>
+            item.status == 2 &&
+            item.date.year == bookingDate.year &&
+            item.date.month == bookingDate.month &&
+            item.date.day == bookingDate.day)
+        .length;
+
+    return await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(
+                color: Color(0xFF916B44),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF916B44),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.vaccines,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "ยืนยันการขอจองพิเศษ",
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "คุณต้องการยืนยันการขอจองพิเศษนี้หรือไม่?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF916B44),
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // ✅ แสดงจำนวนที่ยืนยันแล้ว
+                Text(
+                  "วันนี้มีการยืนยันแล้ว: $confirmedCount รายการ",
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 12, top: 4),
+            actions: [
+              // ปุ่มยกเลิก
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xFF916B44),
+                    width: 1.5,
+                  ),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF916B44),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยกเลิก",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // ปุ่มยืนยัน
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Color(0xFF916B44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF916B44).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                    acceptrequest(docId, 2);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    "ยืนยัน",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
               ),
